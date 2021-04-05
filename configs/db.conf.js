@@ -1,0 +1,51 @@
+const debug = require('debug')(`${process.env.npm_package_name}:mongoose`);
+const chalk = require('chalk');
+const mongoose = require('mongoose');
+const host = 'cluster0.ivozh.mongodb.net';
+const dbName = 'chickin';
+const user = 'forSale';
+const pass = 'IniN4manyaP4ssw0rd';
+const mongoString = `mongodb+srv://${user}:${pass}@${host}/${dbName}?retryWrites=true&w=majority`;
+const db = mongoose.connection
+
+const options = {
+    useFindAndModify: false,
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useCreateIndex: true,
+    auth: {
+        authdb: 'admin'
+    }
+}
+
+let initialRetry = 0;
+const handleError = (err) => {
+    if (err) {
+        const {name, errorLabels} = err;
+        debug(`${name} : ${errorLabels}`);
+        if (initialRetry < 3) {
+            initialRetry++
+            debug(chalk.bgCyanBright(`${initialRetry} retry...`));
+            setTimeout(() => {
+                mongoose.connect(mongoString, options, handleError);
+            }, 3000);
+        } else if(initialRetry === 3) {
+            debug(chalk.bgCyanBright(`failed to connect db`));
+            mongoose.disconnect();
+            process.exit(1);
+        }
+    } else {
+        initialRetry = 0;
+    }
+}
+
+db.once('open', () => {
+    debug(chalk.yellow('db connected!'));
+})
+
+exports.connect = () => {
+    debug(chalk.gray('init db connect.....'));
+    mongoose.connect(mongoString, options, handleError);
+}
+
+exports.connection = db;
