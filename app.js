@@ -3,6 +3,9 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
+const swaggerJsDoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express');
+
 const cors = require('cors');
 const db = require('./configs/db.conf');
 
@@ -15,6 +18,35 @@ const staticFile = 'public';
 const passport = require('passport');
 
 var app = express();
+
+const options = {
+    definition: {
+        openapi: "3.0.0",
+        info: {
+            title: "",
+            version: "0.0.1",
+            description: "",
+            license: {
+                name: "MIT",
+                url: "https://spdx.org/licenses/MIT.html",
+            },
+            contact: {
+                name: "",
+                url: "",
+                email: ""
+            }
+        },
+        servers: [
+            {
+                url: "http://localhost:3000/api"
+            }
+        ],
+    },
+    apis: ["./routes/documentation/*.js"]
+}
+
+const specs = swaggerJsDoc(options);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
 
 app.use(logger('dev'));
 app.use(express.json({limit: '50mb'}));

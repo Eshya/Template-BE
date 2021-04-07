@@ -16,3 +16,91 @@ exports.findAll = async (req, res, next) => {
         next(error);
     }
 }
+
+exports.count = async (req, res, next) => {
+    const {where} = parseQuery(req.query);
+    try {
+        const results = await Model.countDocuments(where);
+        res.json({length: results})
+    } catch (error) {
+        next(error);
+    }
+}
+
+exports.findById = async (req, res, next) => {
+    try {
+        const results = await Model.findById(req.params.id);
+        res.json({
+            data: results,
+            message: 'Ok'
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
+exports.insert = async (req, res, next) => {
+    const data = req.body;
+    try {
+        const results = await Model.create(data);
+        res.json({
+            data: results,
+            message: 'Ok'
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
+exports.updateById = async (req, res, next) => {
+    const id = req.params.id;
+    const data = req.body;
+    try {
+        const results = await Model.findByIdAndUpdate(id, data, {new: true}).exec();
+        res.json({
+            data: results,
+            message: 'Ok'
+        })
+    } catch (error) {
+        next(error);
+    }
+}
+
+exports.updateWhere = async (req, res, next) => {
+    const {where} = parseQuery(req.query);
+    const data = req.body;
+    try {
+        const results = await Model.updateMany(where, data, {new: true, upsert: false, multiple: false}).exec();
+        res.json({
+            data: results,
+            message: 'Ok'
+        })
+    } catch (error) {
+        next(error);
+    }
+}
+
+exports.remove = async (req, res, next) => {
+    const {where} = parseQuery(req.query);
+    try {
+        const results = await Model.deleteMany(where).exec();
+        res.json({
+            data: results,
+            message: 'OK'
+        })
+    } catch (error) {
+        next(error);
+    }
+}
+
+exports.removeById = async (req, res, next) => {
+    try {
+        const results = await Model.findByIdAndRemove(req.params.id).exec();
+        res.json({
+            data: results,
+            message: 'Ok'
+        })
+    } catch (error) {
+        next(error);
+    }
+}
