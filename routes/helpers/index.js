@@ -10,3 +10,8 @@ exports.parseQuery = parse;
 exports.paramCek = param;
 exports.createError = createError;
 exports.projectName = process.env.npm_package_name;
+exports.isDevMode = process.env.NODE_ENV === 'development';
+exports.fname = (fname) => {
+    const splited = fname.split('/');
+    return splited[splited.length-1];
+} 
