@@ -20,8 +20,10 @@
     "formidable": "^1.2.2",
     "http-errors": "^1.6.3",
     "mongoose": "^5.12.3",
+    "mongoose-autopopulate": "^0.12.3",
     "morgan": "~1.9.1",
     "passport": "^0.4.1",
+    "password-hash": "^1.2.2",
     "swagger-jsdoc": "5.0.1",
     "swagger-ui-express": "^4.1.6"
   },

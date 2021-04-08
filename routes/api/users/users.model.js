@@ -33,4 +33,4 @@ const scheme = new Schema({
     },
 }, {timestamps: true, versionKey: false});
 scheme.plugin(require('mongoose-autopopulate'));
-module.exports = model('Roles', scheme, 'roles');
+module.exports = model('Users', scheme, 'users');

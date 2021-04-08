@@ -1,0 +1,14 @@
+[
+    {
+        "name": "superadmin",
+        "desc": "Super Administrator"
+    },
+    {
+        "name": "ppl",
+        "desc": "Petugas PPL"
+    },
+    {
+        "name": "peternak",
+        "desc": "Peternak"
+    }
+]
