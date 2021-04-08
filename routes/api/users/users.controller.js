@@ -130,3 +130,22 @@ exports.removeById = async (req, res, next) => {
         
     }
 }
+
+//auth
+
+exports.login = (username, password) => {
+    return new Promise((resolve, reject) => {
+        Model.findOne({username})
+        .select('_id password username roles')
+        .then((foundUser) => {
+            if(!foundUser) return reject(createError(400, 'Username not found!'));
+            const hashedPassword = foundUser.password;
+            const isValidPassword = passwordHash.verify(password, hashedPassword);
+            if(isValidPassword){
+                resolve(foundUser);
+            } else {
+                reject(createError(400, 'Wrong Password'));
+            }
+        })
+    })
+}
