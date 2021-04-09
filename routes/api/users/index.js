@@ -2,16 +2,16 @@ const express = require('express');
 const router = express.Router();
 const c = require('./users.controller');
 const {schema} = require('./users.validation');
-const {queryCek, schemaCek, paramCek, after} = require('../../helpers');
+const {auth, queryCek, schemaCek, paramCek, after} = require('../../helpers');
 
-router.get('/', queryCek, c.findAll);
+router.get('/', auth, queryCek, c.findAll);
 router.get('/public', queryCek, c.findPublic);
 router.get('/count', queryCek, c.count);
-router.get('/:id', paramCek, c.findById);
-router.post('/', schemaCek(schema), after, c.insert);
-router.put('/:id', paramCek, c.updateById);
-router.put('/', c.updateWhere);
-router.delete('/:id', paramCek, c.removeById);
-router.delete('/', c.remove);
+router.get('/:id', auth, paramCek, c.findById);
+router.post('/', auth, schemaCek(schema), after, c.insert);
+router.put('/:id', auth, paramCek, c.updateById);
+router.put('/', auth, c.updateWhere);
+router.delete('/:id', auth, paramCek, c.removeById);
+router.delete('/', auth, c.remove);
 
 module.exports = router;

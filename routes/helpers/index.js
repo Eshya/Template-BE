@@ -2,7 +2,9 @@ const createError = require('http-errors');
 const {parse} = require('./query.parser');
 const {param, query, after} = require('./request.validation');
 const {checkSchema} = require('express-validator');
+const passport = require('passport');
 
+exports.auth = passport.authenticate('jwt', {session: false});
 exports.schemaCek = checkSchema;
 exports.after = after;
 exports.queryCek = query;
