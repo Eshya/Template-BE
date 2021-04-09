@@ -11,7 +11,7 @@ router.get('/:id', paramCek, c.findById);
 router.post('/', schemaCek(schema), after, c.insert);
 router.put('/:id', paramCek, c.updateById);
 router.put('/', c.updateWhere);
-router.delete('/:id', paramCek, c.remove);
-router.delete('/', c,remove);
+router.delete('/:id', paramCek, c.removeById);
+router.delete('/', c.remove);
 
 module.exports = router;
