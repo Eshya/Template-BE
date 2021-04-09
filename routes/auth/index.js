@@ -13,7 +13,7 @@ const loginCtrl = (req, res, next) => {
     console.log('---origin---');
     const user = req.user;
     user.expireAt = moment().add(12, req.body.rememberMe ? 'd' : 'h');
-    const token = jwt.sign(user.toJSON(), JWT_SECRET, {expressIn: req.body.rememberMe ? '12d' : '12h'});
+    const token = jwt.sign(user.toJSON(), JWT_SECRET, {expiresIn: req.body.rememberMe ? '12d' : '12h'});
     res.json({token, user});
 }
 
