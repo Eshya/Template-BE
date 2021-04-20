@@ -25,7 +25,7 @@ const scheme = new Schema({
     ],
     flock: [{
         type: Schema.Types.ObjectId,
-        ref: Flock,
+        ref: 'Flock',
         autopopulate: {maxDepth: 2}
     }],
     isActive: {
