@@ -3,14 +3,11 @@ const scheme = new Schema({
     kode: {
         type: String,
         required: true,
-        trim: true
+        trim: true,
+        unique: true
     },
     alamat: {
         type: String,
-        required: true
-    },
-    jumlahFlock: {
-        type: Number,
         required: true
     },
     tipe: {
@@ -21,14 +18,16 @@ const scheme = new Schema({
     periode: [
         {
             type: Schema.Types.ObjectId,
-            ref: 'Periode', select: true,
+            ref: 'Periode', 
+            default: null,
             autopopulate: {maxDepth: 2},
         }
     ],
-    totalPopulasi: {
-        type: Number,
-        required: true
-    },
+    flock: [{
+        type: Schema.Types.ObjectId,
+        ref: Flock,
+        autopopulate: {maxDepth: 2}
+    }],
     isActive: {
         type: Boolean,
         default: false

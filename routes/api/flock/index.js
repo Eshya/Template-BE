@@ -1,11 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const c = require('./kandang.controller');
-const {schema} = require('./kandang.validation');
+const  c = require('./flock.controller');
+const {schema} = require('./flock.validation');
 const {auth, queryCek, schemaCek, paramCek, after} = require('../../helpers');
 
 router.get('/', auth, queryCek, c.findAll);
-router.get('/active', auth, queryCek, c.findActive);
 router.get('/public', queryCek, c.findPublic);
 router.get('/count', queryCek, c.count);
 router.get('/:id', auth, paramCek, c.findById);
