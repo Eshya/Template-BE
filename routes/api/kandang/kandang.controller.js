@@ -1,6 +1,8 @@
+const mongoose = require('mongoose');
 const {parseQuery} = require('../../helpers');
 const Model = require('./kandang.model');
 const selectPublic = '-createdAt -updatedAt';
+
 
 const _find = async (req, isPublic = false) => {
     const {where, limit, offset, sort} = parseQuery(req.query);
@@ -13,6 +15,30 @@ const _find = async (req, isPublic = false) => {
     return {length: results[0], data: results[1]};
 }
 
+exports.countPopulasi = async (req, res, next) => {
+    const id = req.params.id
+    try {
+        const results = await Model.aggregate([
+            {
+                // 
+                $lookup: {
+                    from: 'flock',
+                    localField: 'flock',
+                    foreignField: '_id',
+                    as: 'flock'
+                }
+            }, 
+            {$unwind: '$flock'},
+            {$group: {_id: id, 'total populasi': {$sum: '$flock.populasi'}}}
+        ]).exec()
+        res.json({
+            data: results,
+            message: 'Ok'
+        })
+    } catch (error) {
+        next(error);
+    }
+}
 exports.findAll = async (req, res, next) => {
     try {
         const results = await _find(req, false)

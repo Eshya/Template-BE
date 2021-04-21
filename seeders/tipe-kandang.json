@@ -1,0 +1,8 @@
+[
+    {"tipe": "Open House"},
+    {"tipe": "Closed House"},
+    {"tipe": "Semi Closed House"},
+    {"tipe": "Panggung"},
+    {"tipe": "Postal"},
+    {"tipe": "Tingkat"}
+]

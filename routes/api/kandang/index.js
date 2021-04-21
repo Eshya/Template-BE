@@ -6,6 +6,7 @@ const {auth, queryCek, schemaCek, paramCek, after} = require('../../helpers');
 
 router.get('/', auth, queryCek, c.findAll);
 router.get('/active', auth, queryCek, c.findActive);
+router.get('/populasi/:id', auth, paramCek, c.countPopulasi);
 router.get('/public', queryCek, c.findPublic);
 router.get('/count', queryCek, c.count);
 router.get('/:id', auth, paramCek, c.findById);

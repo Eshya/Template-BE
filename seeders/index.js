@@ -6,14 +6,22 @@ db.connect()
 
 const rolesPath = path.join(__dirname, '..', 'seeders', 'roles.json')
 const usersPath = path.join(__dirname, '..', 'seeders', 'users.json')
+const tipeKandangPath = path.join(__dirname, '..', 'seeders', 'tipe-kandang.json')
 
 const rolesData = JSON.parse(fs.readFileSync(rolesPath, 'utf-8'))
 const userData = JSON.parse(fs.readFileSync(usersPath, 'utf-8'))
+const tipeKandangData = JSON.parse(fs.readFileSync(tipeKandangPath, 'utf-8'))
 
 const Roles = require('../routes/api/roles/roles.model')
 const Users = require('../routes/api/users/users.model')
+const TipeKandang = require('../routes/api/tipe-kandang/tipe-kandang.model')
 
 const passwordHash = require('password-hash')
+
+exports.createTipeKandang = async (tipeKandang) => {
+    const defaultTipeKandang = await TipeKandang.create(tipeKandang);
+    return defaultTipeKandang;
+}
 
 exports.createRoles = async (role) => {
     const defaultRole = await Roles.findOneAndUpdate({name: role.name}, role, {upsert: true, new: true}).exec()
@@ -41,4 +49,9 @@ Promise.all(addRoles).then((role) => {
   userData.forEach((user) => {
       this.createUser(user)
   })
+})
+
+const addTipeKandang = tipeKandangData.map((tipeKandang) => this.createTipeKandang(tipeKandang))
+Promise.all(addTipeKandang).then((tipeKandang) => {
+    console.log(tipeKandang);
 })
