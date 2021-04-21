@@ -20,7 +20,7 @@ const scheme = new Schema({
             type: Schema.Types.ObjectId,
             ref: 'Periode', 
             default: null,
-            autopopulate: {maxDepth: 2},
+            autopopulate: {maxDepth: 1},
         }
     ],
     flock: [{

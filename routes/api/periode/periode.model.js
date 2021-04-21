@@ -28,7 +28,7 @@ const scheme = new Schema({
     },
     isEnd: {
         type: Boolean,
-        default: true
+        default: false
     }
 }, {versionKey: false, timestamps: true})
 scheme.plugin(require('mongoose-autopopulate'));

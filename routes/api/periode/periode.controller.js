@@ -59,7 +59,7 @@ exports.insert = async (req, res, next) => {
     const data = req.body
     try {
         const isActive =  Kandang.findByIdAndUpdate(data.kandang, {isActive: true}, {new: true, upsert: false, multi: false})
-        const dataPeriode = Model.insert(data)
+        const dataPeriode = Model.create(data)
         const results = await Promise.all([isActive, dataPeriode])
         res.json({results})
     } catch (error) {
