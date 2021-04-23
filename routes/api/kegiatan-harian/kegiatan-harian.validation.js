@@ -1,6 +1,6 @@
 exports.schema = {
     tanggal: {
-        isISO8610: true,
+        // isISO8601: true,
         isEmpty: false
     },
     pemusnahan: {

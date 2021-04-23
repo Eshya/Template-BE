@@ -15,6 +15,23 @@ const _find = async (req, isPublic = false) => {
     return {length: results[0], data: results[1]};
 }
 
+exports.umurAyam = async (req, res, next) => {
+    try {
+        const data = await Model.findById(req.params.id);
+        const oneDay = 24 * 60 * 60 * 1000;
+        const now = new Date(Date.now());
+        const start = new Date(data.tanggalMulai);
+        const result = Math.round(Math.abs((now - start) / oneDay))
+        console.log(start, now)
+        res.json({
+            data: result,
+            message: 'Ok'
+        })
+    } catch (error) {
+        next(error);
+    }
+}
+
 exports.findAll = async (req, res, next) => {
     try {
         const results = await _find(req, false);
