@@ -36,6 +36,11 @@ const scheme = new Schema({
         type: Boolean,
         required: true
     },
+    createdBy: {
+        type: Schema.Types.ObjectId,
+        ref: 'Users',
+        autopopulate: {maxDepth: 1}
+    }
 }, {versionKey: false, timestamps: true})
 scheme.plugin(require('mongoose-autopopulate'));
 module.exports = model('Kandang', scheme, 'kandang');
