@@ -1,4 +1,15 @@
 const { Schema, model } = require("mongoose");
+
+const pakanPakaiSchema = new Schema({
+    jenisPakan: {type: String, required: true}, 
+    beratPakan: {type: Number, required: true}
+})
+
+const beratSchema = new Schema({
+    beratTimbang: {type: Number, required: true},
+    populasi: {type: Number, default: 1}
+})
+
 const scheme = new Schema({
     periode: {
         type: Schema.Types.ObjectId,
@@ -9,14 +20,7 @@ const scheme = new Schema({
         type: Date,
         required: true,
     },
-    jenisPakan: {
-        type: String,
-        required: true
-    },
-    beratPakan: {
-        type: Number,
-        required: true
-    },
+    pakanPakai: [pakanPakaiSchema],
     pemusnahan: {
         type: Number,
         required: true
@@ -25,10 +29,7 @@ const scheme = new Schema({
         type: Number,
         required: true
     },
-    beratBadan: {
-        type: Number,
-        required: true
-    }
+    berat: [beratSchema]
 }, {versionKey: false, timestamps: true})
 scheme.plugin(require('mongoose-autopopulate'));
 module.exports = model('KegiatanHarian', scheme, 'kegiatan-harian')
