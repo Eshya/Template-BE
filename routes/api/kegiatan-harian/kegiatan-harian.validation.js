@@ -1,10 +1,9 @@
 exports.schema = {
-    beratPakan: {
-        isFloat: {errorMessage: 'must be a decimal'},
-        isEmpty: false,
+    tanggal: {
+        isISO8610: true,
+        isEmpty: false
     },
-    beratBadan: {
-        isFloat: {errorMessage: 'must be a decimal'},
+    pemusnahan: {
         isEmpty: false
     }
 }
