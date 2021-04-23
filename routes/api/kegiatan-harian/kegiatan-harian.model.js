@@ -21,6 +21,10 @@ const scheme = new Schema({
         type: Number,
         required: true
     },
+    deplesi: {
+        type: Number,
+        required: true
+    },
     beratBadan: {
         type: Number,
         required: true
