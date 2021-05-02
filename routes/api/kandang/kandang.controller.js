@@ -19,17 +19,19 @@ exports.countPopulasi = async (req, res, next) => {
     const id = req.params.id
     try {
         const results = await Model.aggregate([
+            {$match: {_id: mongoose.Types.ObjectId(id)}},
+            {'$unwind': '$flock'},
             {
                 // 
                 $lookup: {
                     from: 'flock',
                     localField: 'flock',
                     foreignField: '_id',
-                    as: 'flock'
+                    as: 'flock_join'
                 }
-            }, 
-            {$unwind: '$flock'},
-            {$group: {_id: id, 'total populasi': {$sum: '$flock.populasi'}}}
+            },
+            {$unwind: '$flock_join'},
+            {$group: {_id: '$flock_join.kandang', 'total populasi': {$sum: '$flock_join.populasi'}}},
         ]).exec()
         res.json({
             data: results,

@@ -54,6 +54,28 @@ exports.findById = async (req, res, next) => {
     }
 }
 
+exports.findSisaAyam = async (req, res, next) => {
+    const id = req.params.id;
+    try {
+        const results = await Model.aggregate([
+            {
+                $lookup: {
+                    from: 'periode',
+                    localField: 'periode',
+                    foreignField: '_id',
+                    as: 'periode'
+                }
+            }
+        ])
+        res.json({
+            data: results,
+            message: 'Ok'
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
 exports.insert = async (req, res, next) => {
     const data = req.body
     try {

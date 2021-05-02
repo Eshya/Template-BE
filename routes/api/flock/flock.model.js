@@ -12,6 +12,12 @@ const scheme = new Schema({
     keterangan: {
         type: String,
         default: null
+    },
+    kandang: {
+        type: Schema.Types.ObjectId,
+        ref: 'Kandang',
+        default: null,
+        autopopulate: {maxDepth: 1}
     }
 }, {versionKey: false, timestamps: true});
 scheme.plugin(require('mongoose-autopopulate'));
