@@ -31,7 +31,7 @@ exports.countPopulasi = async (req, res, next) => {
                 }
             },
             {$unwind: '$flock_join'},
-            {$group: {_id: '$flock_join.kandang', 'total populasi': {$sum: '$flock_join.populasi'}}},
+            {$group: {_id: '$flock_join.name', 'total populasi': {$sum: '$flock_join.populasi'}}},
         ]).exec()
         res.json({
             data: results,

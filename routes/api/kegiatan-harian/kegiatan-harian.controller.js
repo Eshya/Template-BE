@@ -1,6 +1,7 @@
 const {parseQuery, createError} = require('../../helpers');
 const Model = require('./kegiatan-harian.model');
 const Sapronak = require('../sapronak/sapronak.model');
+const mongoose = require('mongoose');
 const selectPublic = '-createdAt -updatedAt';
 
 const _find = async (req, isPublic = false) => {
@@ -58,14 +59,18 @@ exports.findSisaAyam = async (req, res, next) => {
     const id = req.params.id;
     try {
         const results = await Model.aggregate([
+            {$match: {_id: mongoose.Types.ObjectId(id)}},
+            {$unwind: '$periode'},
             {
                 $lookup: {
                     from: 'periode',
                     localField: 'periode',
                     foreignField: '_id',
-                    as: 'periode'
+                    as: 'periode_join'
                 }
-            }
+            },
+            {$unwind: '$periode_join'},
+            {$project: {'results' : {$subtract: ['$periode_join.populasi', '$deplesi']}}}
         ])
         res.json({
             data: results,
