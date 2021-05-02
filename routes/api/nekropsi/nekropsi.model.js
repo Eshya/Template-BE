@@ -26,12 +26,12 @@ const kotoranSchema = new Schema({
 const mataSchema = new Schema({
     TAPMata: {default: false, type: Boolean},
     pendarahan: {default: false, type: Boolean}
-}),
+})
 
 const telapakKakiSchema = new Schema({
     kapalan: {default: false, type: Boolean},
     TAPKaki: {default: false, type: Boolean}
-}),
+})
 
 const kulitSchema = new Schema({
     normal: {default: false, type: Boolean},
@@ -58,8 +58,8 @@ const tenggorokanSchema = new Schema({
 })
 
 const bronkusSchema = new Schema({
-    TAPBronchus = {default: false, type: Boolean},
-    peradanganBronchus = {default: false, type: Boolean},
+    TAPBronchus: {default: false, type: Boolean},
+    peradanganBronchus: {default: false, type: Boolean},
     perkejuanbronchus: {default: false, type: Boolean},
 })
 
@@ -82,11 +82,11 @@ const tembolokSchema = new Schema ({
 })
 
 const proventikulusSchema = new Schema({
-    peradanganDiAntaraTonjolan = {default: false, type: Boolean},
-    peradanganDiBatasProventikulusDanVentri = {default: false, type: Boolean},
-    peradanganDiTonjolan = {default: false, type: Boolean},
-    membesar = {default: false, type: Boolean},
-    TAPProventikulus = {default: false, type: Boolean},
+    peradanganDiAntaraTonjolan: {default: false, type: Boolean},
+    peradanganDiBatasProventikulusDanVentri: {default: false, type: Boolean},
+    peradanganDiTonjolan: {default: false, type: Boolean},
+    membesar: {default: false, type: Boolean},
+    TAPProventikulus: {default: false, type: Boolean},
 })
 
 const ventrikulusSchema = new Schema({
