@@ -1,9 +1,9 @@
 const { Schema, model } = require("mongoose");
 
 const kepalaSchema = new Schema({
-    bengkakDibawahMata: {required: true, type: Boolean},
-    bengkakDiatasMata: {required: true, type: Boolean},
-    TAPKepala: {required: true, type: Boolean}
+    bengkakDibawahMata: {default: null, type: Boolean},
+    bengkakDiatasMata: {default: null, type: Boolean},
+    TAPKepala: {default: null, type: Boolean}
 })
 
 const hidungSchema = new Schema ({
@@ -188,6 +188,7 @@ const scheme = new Schema({
     }],
     kepala: [kepalaSchema],
     hidung: [hidungSchema],
+    kotoran: [kotoranSchema],
     mata: [mataSchema],
     telapakKaki: [telapakKakiSchema],
     kulit: [kulitSchema],
