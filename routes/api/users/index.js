@@ -9,6 +9,7 @@ router.get('/public', queryCek, c.findPublic);
 router.get('/count', queryCek, c.count);
 router.get('/:id', auth, paramCek, c.findById);
 router.post('/', auth, schemaCek(schema), after, c.insert);
+router.post('/signup', schemaCek(schema), after, c.register);
 router.put('/:id', auth, paramCek, c.updateById);
 router.put('/', auth, c.updateWhere);
 router.delete('/:id', auth, paramCek, c.removeById);
