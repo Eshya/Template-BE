@@ -100,7 +100,7 @@ exports.insert = async (req, res, next) => {
 }
 
 exports.updateById = async (req, res, next) => {
-    const id = req.params;
+    const id = req.params.id;
     const data = req.body;
     try {
         const results = await Model.findByIdAndUpdate(id, data, {new: true}).exec();
@@ -142,7 +142,7 @@ exports.remove = async (req, res, next) => {
 
 exports.removeById = async (req, res, next) => {
     try {
-        const results = await (await Model.findByIdAndRemove(req.paramsid)).exec();
+        const results = await Model.findByIdAndRemove(req.params.id).exec();
         res.json({
             data: results,
             message: 'Ok'
