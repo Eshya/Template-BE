@@ -4,6 +4,7 @@ const Model = require('./users.model');
 const selectPublic = '-createdAt -updatedAt -password';
 const passwordHash = require('password-hash');
 
+
 const _find = async (req, isPublic = false) => {
     const {where, limit, offset, sort} = parseQuery(req.query);
     const count = Model.countDocuments(where);
@@ -18,6 +19,10 @@ const _find = async (req, isPublic = false) => {
 const _beforeSave = (data) => {
     if(data.password){
         data.password = passwordHash.generate(data.password, {saltLength: 10});
+    }
+    if (!data.noKTP || !data.asalKemitraan){
+        delete data.noKTP
+        delete data.asalKemitraan
     }
     return data;
 }
@@ -79,7 +84,7 @@ exports.updateById = async (req, res, next) => {
     const id = req.params.id;
     const data = _beforeSave(req.body)
     try {
-        const result = await (await Model.findByIdAndUpdate(id, data, {new: true})).exec();
+        const result = await Model.findByIdAndUpdate(id, data, {new: true}).exec();
         res.json({
             data: result,
             message: 'Ok'
@@ -151,15 +156,16 @@ exports.register = async (req, res, next) => {
     let {fullname, username, email, phoneNumber, password, noKTP, asalKemitraan, image} = _beforeSave(req.body);
     let result = []
     try {
-        if(req.body.noKTP  && req.body.asalKemitraan){
-            let role = await Role.findOne({name: 'ppl'}, {_id: true})
-            const resultUser = await createUser({fullname, username, email, phoneNumber, password, noKTP, asalKemitraan, image, role})
-            result.push(resultUser)
-        } else {
+        if(req.body.noKTP == null  && req.body.asalKemitraan == null){
             let role = await Role.findOne({name: 'peternak'}, {_id: true})
             const resultUser = await createUser({fullname, username, email, phoneNumber, password, image, role})
             result.push(resultUser)
+        } else {
+            let role = await Role.findOne({name: 'ppl'}, {_id: true})
+            const resultUser = await createUser({fullname, username, email, phoneNumber, password, noKTP, asalKemitraan, image, role})
+            result.push(resultUser)
         }
+        
         res.json({
             data: result,
             message: 'Ok'

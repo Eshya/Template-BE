@@ -1,7 +1,6 @@
 exports.schema = {
     fullname: {
       isString: true,
-      trim: true,
       isEmpty: false,
     },
     username: {
