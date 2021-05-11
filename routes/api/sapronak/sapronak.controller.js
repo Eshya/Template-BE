@@ -67,7 +67,7 @@ exports.insert = async (req, res, next) => {
 }
 
 exports.updateById = async (req, res, next) => {
-    const id = req.params;
+    const id = req.params.id;
     const data = req.body;
     try {
         const results = await Model.findByIdAndUpdate(id, data, {new: true}).exec();

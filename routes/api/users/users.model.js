@@ -31,6 +31,19 @@ const scheme = new Schema({
         ref: 'Roles', select: true,
         autopopulate: true
     },
+    image: {
+        type: Schema.Types.ObjectId,
+        ref: 'UserImage', select: true,
+        autopopulate: {maxDepth: 1}
+    },
+    noKTP: {
+        type: String,
+        default: null
+    },
+    asalKemitraan: {
+        type: String,
+        default: null
+    }
 }, {timestamps: true, versionKey: false});
 scheme.plugin(require('mongoose-autopopulate'));
 module.exports = model('Users', scheme, 'users');

@@ -19,9 +19,6 @@ const _beforeSave = (data) => {
     if(data.password){
         data.password = passwordHash.generate(data.password, {saltLength: 10});
     }
-    if(!data.username){
-        delete data.username;
-    }
     return data;
 }
 
@@ -147,5 +144,42 @@ exports.login = (username, password) => {
                 reject(createError(400, 'Wrong Password'));
             }
         })
+    })
+}
+
+exports.register = async (req, res, next) => {
+    let {fullname, username, email, phoneNumber, password, noKTP, asalKemitraan, image} = _beforeSave(req.body);
+    let result = []
+    try {
+        if(req.body.noKTP  && req.body.asalKemitraan){
+            let role = await Role.findOne({name: 'ppl'}, {_id: true})
+            const resultUser = await createUser({fullname, username, email, phoneNumber, password, noKTP, asalKemitraan, image, role})
+            result.push(resultUser)
+        } else {
+            let role = await Role.findOne({name: 'peternak'}, {_id: true})
+            const resultUser = await createUser({fullname, username, email, phoneNumber, password, image, role})
+            result.push(resultUser)
+        }
+        res.json({
+            data: result,
+            message: 'Ok'
+        })
+    } catch(err){
+        next(err)
+    }
+}
+
+const createUser = (data) => {
+    return new Promise((resolve, reject) => {
+        const findUname = Model.findOne({username: data.username})
+        const findEmail = Model.findOne({email: data.email})
+        let actions = [findUname, findEmail]
+        Promise.all(actions).then(cb => {
+            if(cb[0]) throw createError(400, 'username already registered')
+            if(cb[1]) throw createError(400, 'email already registered')
+            return Model.create(data)
+        })
+        .then(results => resolve(results))
+        .catch(err=>reject(err))
     })
 }
