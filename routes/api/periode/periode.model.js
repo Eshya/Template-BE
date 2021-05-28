@@ -2,7 +2,7 @@ const { Schema, model } = require("mongoose");
 const scheme = new Schema({
     kandang: {
         type: Schema.Types.ObjectId,
-        ref: 'Kandang', select: true,
+        ref: 'Kandang', select: false,
         autopopulate: {maxdepth: 1}
     },
     jenisDOC: {
