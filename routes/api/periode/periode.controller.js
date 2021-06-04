@@ -2,7 +2,6 @@ const { parseQuery, createError } = require("../../helpers");
 const Model = require("./periode.model");
 const Kandang = require('../kandang/kandang.model');
 const KegiatanHarian = require('../kegiatan-harian/kegiatan-harian.model')
-const Iot = require('../iot-flock/iot-flock.model')
 const moment = require("moment");
 const Nekropsi = require("../nekropsi/nekropsi.model");
 const Penjualan = require("../penjualan/penjualan.model");
@@ -96,19 +95,6 @@ exports.findPenjualan = async (req, res, next) => {
         const result = await Penjualan.find({periode: id})
         res.json({
             data: result,
-            message: 'Ok'
-        })
-    } catch (error) {
-        next(error)
-    }
-}
-
-exports.findIot = async (req, res, next) => {
-    const id = req.params.id
-    try {
-        const results = await Iot.find({periode: id})
-        res.json({
-            data: results,
             message: 'Ok'
         })
     } catch (error) {

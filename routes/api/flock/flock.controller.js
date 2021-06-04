@@ -1,6 +1,7 @@
 const {parseQuery} = require('../../helpers');
 const Model = require('./flock.model');
 const selectPublic = '-createdAt -updatedAt';
+const Iot = require('../iot-flock/iot-flock.model')
 
 const _find = async(req, isPublic = false) => {
     const {where, limit, offset, sort} = parseQuery(req.query);
@@ -50,6 +51,19 @@ exports.findById = async (req, res, next) => {
         })
     } catch (error) {
         next(error);
+    }
+}
+
+exports.findIot = async (req, res, next) => {
+    const id = req.params.id
+    try {
+        const results = await Iot.find({flock: id})
+        res.json({
+            data: results,
+            message: 'Ok'
+        })
+    } catch (error) {
+        next(error)
     }
 }
 
