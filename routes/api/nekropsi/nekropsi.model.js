@@ -186,6 +186,10 @@ const scheme = new Schema({
         select: true,
         autopopulate: {maxDepth: 1}
     }],
+    periode: {
+        type: Schema.Types.ObjectId,
+        ref: 'Periode', autopopulate: {maxDepth: 1}
+    },
     kepala: [kepalaSchema],
     hidung: [hidungSchema],
     kotoran: [kotoranSchema],

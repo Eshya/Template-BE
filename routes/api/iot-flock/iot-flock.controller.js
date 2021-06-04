@@ -18,20 +18,25 @@ const _find = async(req, isPublic = false) => {
 exports.findAll = async (req, res, next) => {
     try {
         let merged = [];
+        let finish = [];
         let token = req.headers['authorization'];
         const getIot = await axios.get('http://localhost:3002/api/perangkat', {headers: {"Authorization" : token}})
         const results = await _find(req, false);
         const arr1 = getIot.data.result.data
-
         for(let i = 0; i<arr1.length; i++){
             merged.push({
                 ...arr1[i],
-                ...(results.data.find((itmInner) => itmInner.iot === arr1[i].id)._doc)
+                ...(results.data.filter(itmInner => itmInner.iot === arr1[i].id))
             })
         }
-        console.log(merged)
+        for (let i = 0; i < merged.length; i++) {
+            if(merged[i][0] != null){
+                finish.push(merged[i])
+            }
+        }
+        
         res.json({
-            data: merged,
+            data: finish,
             message: 'Ok'
         });
     } catch (error) {

@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 const {parseQuery} = require('../../helpers');
 const Model = require('./kandang.model');
+const Flock = require('../flock/flock.model');
+const Periode = require('../periode/periode.model');
 const selectPublic = '-createdAt -updatedAt';
 
 
@@ -77,6 +79,32 @@ exports.findActive = async (req, res, next) => {
         const count = Model.countDocuments(where)
         const results = await Promise.all([count, data])
         res.json({length: results[0], data: results[1]});
+    } catch (error) {
+        next(error)
+    }
+}
+
+exports.findFlock = async (req, res, next) => {
+    const id = req.params.id
+    try {
+        const results = await Flock.find({kandang: id})
+        res.json({
+            data: results,
+            message: 'Ok'
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
+exports.findPeriode = async (req, res, next) => {
+    const id = req.params.id
+    try {
+        const results = await Periode.find({kandang: id})
+        res.json({
+            data: results,
+            message: 'Ok'
+        })
     } catch (error) {
         next(error)
     }
