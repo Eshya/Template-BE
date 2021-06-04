@@ -15,19 +15,19 @@ const scheme = new Schema({
         ref: 'TipeKandang', select: true,
         autopopulate: {maxDepth: 1}
     },
-    periode: [
-        {
-            type: Schema.Types.ObjectId,
-            ref: 'Periode', 
-            default: null,
-            autopopulate: {maxDepth: 1},
-        }
-    ],
-    flock: [{
-        type: Schema.Types.ObjectId,
-        ref: 'Flock',
-        autopopulate: {maxDepth: 1}
-    }],
+    // periode: [
+    //     {
+    //         type: Schema.Types.ObjectId,
+    //         ref: 'Periode', 
+    //         default: null,
+    //         autopopulate: {maxDepth: 1},
+    //     }
+    // ],
+    // flock: [{
+    //     type: Schema.Types.ObjectId,
+    //     ref: 'Flock',
+    //     autopopulate: {maxDepth: 1}
+    // }],
     isActive: {
         type: Boolean,
         default: false

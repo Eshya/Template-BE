@@ -5,6 +5,7 @@ const KegiatanHarian = require('../kegiatan-harian/kegiatan-harian.model')
 const moment = require("moment");
 const Nekropsi = require("../nekropsi/nekropsi.model");
 const Penjualan = require("../penjualan/penjualan.model");
+const Sapronak = require("../sapronak/sapronak.model");
 const selectPublic = '-createdAt -updatedAt'
 
 const _find = async (req, isPublic = false) => {
@@ -95,6 +96,19 @@ exports.findPenjualan = async (req, res, next) => {
         const result = await Penjualan.find({periode: id})
         res.json({
             data: result,
+            message: 'Ok'
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
+exports.findSapronak = async (req, res, next) => {
+    const id = req.params.id
+    try {
+        const results = await Sapronak.find({periode: id})
+        res.json({
+            data: results,
             message: 'Ok'
         })
     } catch (error) {

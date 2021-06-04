@@ -12,6 +12,7 @@ router.get('/end/:id', auth, paramCek, c.endPeriode);
 router.get('/kegiatan/:id', auth, paramCek, c.findKegiatan);
 router.get('/nekropsi/:id', auth, paramCek, c.findNekropsi);
 router.get('/penjualan/:id', auth, paramCek, c.findPenjualan);
+router.get('/sapronak/:id', auth, paramCek, c.findSapronak);
 router.get('/:id', auth, paramCek, c.findById);
 router.post('/', auth, schemaCek(schema), after, c.insert);
 router.put('/:id', auth, paramCek, c.updateById);

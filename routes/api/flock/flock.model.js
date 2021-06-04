@@ -17,7 +17,7 @@ const scheme = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'Kandang',
         default: null,
-        autopopulate: {maxDepth: 1}
+        autopopulate: {maxDepth: 2}
     }
 }, {versionKey: false, timestamps: true});
 scheme.plugin(require('mongoose-autopopulate'));
