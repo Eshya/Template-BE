@@ -3,6 +3,7 @@ const Role = require('../roles/roles.model');
 const Model = require('./users.model');
 const selectPublic = '-createdAt -updatedAt -password';
 const passwordHash = require('password-hash');
+const Kandang = require('../kandang/kandang.model');
 
 
 const _find = async (req, isPublic = false) => {
@@ -64,6 +65,19 @@ exports.findById = async (req, res, next) => {
         })
     } catch (error) {
         next(error);
+    }
+}
+
+exports.findKandang = async (req, res, next) => {
+    const id = req.params.id
+    try {
+        const results = await Kandang.find({createdBy: id})
+        res.json({
+            data: results,
+            message: 'Ok'
+        })   
+    } catch (error) {
+        next(error)
     }
 }
 
