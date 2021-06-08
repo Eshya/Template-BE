@@ -48,44 +48,44 @@ exports.createProduk = async (produk) => {
     }
 }
 
-exports.createRoles = async (role) => {
-    const defaultRole = await Roles.findOneAndUpdate({name: role.name}, role, {upsert: true, new: true}).exec()
-    console.log(`${defaultRole.name} role created`)
-    return defaultRole
-}
-exports.createUser = async (user) => {
-    if(user.role) {
-        const role = await Roles.findOne({name: user.role})
-        console.log(role)
-        user.role = role._id
-    }
-    const isUserExist = await Users.findOne({username: user.username}).select('_id password name email role');
-    if(!isUserExist){
-        if(user.password){
-            const hash = passwordHash.generate(user.password, {saltLength: 10})
-            user.password = hash
-        }
-        const newUser = await Users.create(user, {new: true})
-        return newUser
-    }
-}
-const addRoles = rolesData.map((role) => this.createRoles(role))
-Promise.all(addRoles).then((role) => {
-  userData.forEach((user) => {
-      this.createUser(user)
-  })
-})
+// exports.createRoles = async (role) => {
+//     const defaultRole = await Roles.findOneAndUpdate({name: role.name}, role, {upsert: true, new: true}).exec()
+//     console.log(`${defaultRole.name} role created`)
+//     return defaultRole
+// }
+// exports.createUser = async (user) => {
+//     if(user.role) {
+//         const role = await Roles.findOne({name: user.role})
+//         console.log(role)
+//         user.role = role._id
+//     }
+//     const isUserExist = await Users.findOne({username: user.username}).select('_id password name email role');
+//     if(!isUserExist){
+//         if(user.password){
+//             const hash = passwordHash.generate(user.password, {saltLength: 10})
+//             user.password = hash
+//         }
+//         const newUser = await Users.create(user, {new: true})
+//         return newUser
+//     }
+// }
+// const addRoles = rolesData.map((role) => this.createRoles(role))
+// Promise.all(addRoles).then((role) => {
+//   userData.forEach((user) => {
+//       this.createUser(user)
+//   })
+// })
 
-const addTipeKandang = tipeKandangData.map((tipeKandang) => this.createTipeKandang(tipeKandang))
-const addJenisDOC = jenisDOCData.map((jenisDOC) => this.createJenisDOC(jenisDOC));
+// const addTipeKandang = tipeKandangData.map((tipeKandang) => this.createTipeKandang(tipeKandang))
+// const addJenisDOC = jenisDOCData.map((jenisDOC) => this.createJenisDOC(jenisDOC));
 const addProduk = produkData.map((produk) => this.createProduk(produk));
-Promise.all(addTipeKandang).then((results) => {
-    console.log(results);
-})
+// Promise.all(addTipeKandang).then((results) => {
+//     console.log(results);
+// })
 
-Promise.all(addJenisDOC).then((results) => {
-    console.log(results);
-})
+// Promise.all(addJenisDOC).then((results) => {
+//     console.log(results);
+// })
 
 Promise.all(addProduk).then((results) => {
     console.log(results);

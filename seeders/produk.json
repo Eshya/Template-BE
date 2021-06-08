@@ -1,3 +1,2734 @@
 [
-    {"jenis": "Pakan", "merk": "pokphan"}
-]
+        {
+            "jenis": "PAKAN",
+            "merk": "510"
+        },
+        {
+            "jenis": "PAKAN",
+            "merk": "710 Premium"
+        },
+        {
+            "jenis": "PAKAN",
+            "merk": "B11-A"
+        },
+        {
+            "jenis": "PAKAN",
+            "merk": "BR 1 SP"
+        },
+        {
+            "jenis": "PAKAN",
+            "merk": "C11"
+        },
+        {
+            "jenis": "PAKAN",
+            "merk": "C11-P"
+        },
+        {
+            "jenis": "PAKAN",
+            "merk": "GF 511"
+        },
+        {
+            "jenis": "PAKAN",
+            "merk": "GF 511 FC"
+        },
+        {
+            "jenis": "PAKAN",
+            "merk": "GF 512"
+        },
+        {
+            "jenis": "PAKAN",
+            "merk": "H11=B"
+        },
+        {
+            "jenis": "PAKAN",
+            "merk": "H11-S"
+        },
+        {
+            "jenis": "PAKAN",
+            "merk": "SB Pro 8118"
+        },
+        {
+            "jenis": "PAKAN",
+            "merk": "H10-S"
+        },
+        {
+            "jenis": "PAKAN",
+            "merk": "SB 8108"
+        },
+        {
+            "jenis": "PAKAN",
+            "merk": "JP 511 BPS"
+        },
+        {
+            "jenis": "PAKAN",
+            "merk": "C10"
+        },
+        {
+            "jenis": "PAKAN",
+            "merk": "BR1-A88"
+        },
+        {
+            "jenis": "PAKAN",
+            "merk": "8202 SE"
+        },
+        {
+            "jenis": "PAKAN",
+            "merk": "PELET AYAM DARI JAGUNG"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "OCTACIN EN 10% ORAL SOLUTION"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "PHARMASIN 100% WSG"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "COMOXY 500 WSP"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "TIAMULIN"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "BIOAMOXI"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "AMILYTE"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "COSUMIX PLUS 750"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VITOL-140"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ESB 3"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "TOLTRARIL 2.5%"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "OCTASAL 10-%"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ADEK 126"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "AMPROL 20%"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ANASOL"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "NUTRI C"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "PERFEXSOL H"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MEDICOS SOLUTION"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MISTRAL"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "PANHELMIN"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "UCARSAN 4128"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "BAYCOS 2.5%"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "BENZAKLIN"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "BIOGREEN"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "BUOMAS HERBAL 10 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "BIOMAS HERBAL 10 KG (250 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "BIOZINK"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "BKC 50% (1 KG)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "BLOOM & GROW 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "BROMOQUAD-50 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "BROMOQUAD10 (1 L)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "BUTOX 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CAPRI-CHICK 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CAPRIBRO 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CAPRIBRO 500 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CAPRICOLI 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CAPRICOXI 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CAPRIDES 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CAPRIMOX 100 GR 1"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CAPRIMOX 50 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CAPRIMUN E 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CAPRINIL 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CAPRINIL 5 KG (500 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CAPRITROVIT 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CAPRIVAC IBD PLUS 1000 DS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CAPRIVAC NB-R 1000 DS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CAPRIVAC ND K 1000 DS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CAPRIVAC ND K 500 DS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CAPRIVAC ND R 1000 DS 1"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CAPRIVAC NGA-K 1000 DS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CAPRIVIT 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CAPZURIL 100 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CARMAVIT 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CARMAVIT-OS 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CARNYVIT 15 KG(100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CEVAC IBD L 1000 DS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CEVAC IBD L 1000 DS 1"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CEVAC IBD L 25000 DS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CEVAC NEW L 1000 DS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CEVAC NEW L 2500 DS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CEVAC VITABRON L 1000 DS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CEVAC VITABRON L 2000 DS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CEVAMUNE 1 TABLET"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CHLORINE TAB 1 KG (200 GR) 1"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CID 2000 (1 KG)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CID 2000 (5 KG)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CIPROCAP 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CIPROLON"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CIPROMAS 10 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CIPROMAS 250 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "COCCIVIT"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "COCCIKIL-25 (100ML)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "COLIMAS 10 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "COLIMAS 10 KG (250 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "COLIMAS 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "COLIQUIN 250 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "COLISMOX 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "COLISTAN 10 KG (250 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "COLISTAN 10 KG (250 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "COLISTAN 25 KG (250 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "COLMYC - E 100 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CORYCLEAN 1 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "COTRIMAZINE 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "COTRIMAZINE 25 KG (250 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "COTRIMAZINE 5 KG (250 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "COXY 1 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "COXY 250 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "COXY 50 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "COXYMAS 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "COXYMAS 100 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CRESOVEX 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CUATS 20 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CUPRI SULVAT 1 KG"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CYPROSIN SP 1 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CYPROTYLOGRIN 10 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CYPROTYLOGRIN 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CYPROTYLOGRIN 20 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CYROMYCIN 10% 1 KG"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DAIMETON 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DELATRIN 100 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DESGRIN 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DESIFUNG 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DESIMAL 10 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DESIN 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DESINSEP 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DESTACAP 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DIACOXIN 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DIACOXIN WS 100 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DICLACOXY 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DICLACOXY 100 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DIMETRIN 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DIMOXAN WS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DOXERIN 10 KG(100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DOXERIN 10 KG (250 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DOXERIN 250 GR (OVK 234)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DOXERIN PLUS 10 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DOXERIN PLUS 10 KG (250 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DOXERIN PLUS 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DOXY 500 WS 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DOXY-10 (100GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DOXY-500 WS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DOXYSOL C 1 KG"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DOXYSOL C 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DOXYTIN 1 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DOXYTIN 250 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DURACOL D 10 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DURACOL D 20 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DURACOX HC 10 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DURACOX HC 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DYNE O MIGHT 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "EGGBRO FORMULA 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ELEKTRO PLUS 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "EM4 TERNAK 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ENFLOK 500 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ENFLOX OS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ENRO FORTE 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ENRO PLUS 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ENROCIN ORAL 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ENFORTE 100 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ENROMAS 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ENROMAS 100 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ENROMAS 100 ML 1"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ENROTEN 10 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ENROTEN"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ERI-PLUS 10 KG (100 GR) 1"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ERI-PLUS 10 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ERU-PLUS 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ERITROCAP 100 GR 1"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ERITROGRIN HC 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ERYDOXCY 250 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ERYSUPRIM 5 KG (250 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ERYTROGRIN HC 10 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "FITHERA 250 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "FLOXA M2P 100 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "FLUQUINE 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "FLUQUINE 100 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "FLY OFF 100 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "FLYTOX 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "FORCENT FUMIGANT"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "FORMADES 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "FORMADES 5 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "FORMALIN 37% 10 KG 1"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "FORMALIN 37% 20 KG"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "FORMALIN 5 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "FORMALIN IMA 38% 5 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "FORMALIN IMA 5 KG"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "FORTEVIT 1KG (100GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "FORTICOAT NL 1 KG"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "FORTICOAT NL 5 KG"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "FORTICOAT NL 5 KG (1 KG)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "FOSBAC 1 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "FOSBAC 160 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "FOSTYL 10 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "FOSVET-T-100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "FREETOX 1 KG"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "GENTA-100"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "GENTA 100 ML 1"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "GENTA JECT 10%"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "GENTAMIN 1 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "GENTAMIN 100 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "GENTAMIN 1200 ML (100 ML)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "GENTAMIN 20 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "GERAMICIDE 500 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "GINGERTOL 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "GLUTACAP 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "GLUTAMAS 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "GQ PLUS 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "GROW MORE PLUS 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "GROWVIT-OS 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "GROWVIT-OS 100 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "GUMBONAL 100 GR 1"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "HEPATOREN 100 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "HEPROFIT 250 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "HEXAMAS 10 KG (100GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "HEXAMAS 250 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "HITOPVIT 10 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "HITOPVIT 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "IMUNOVIT 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "IMUSTIM 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "IMUSTIM 250 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "INJ VIT B KOMPLEKS 100 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "INJ VIT B KOMPLEKS 1200 ML (100 ML)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "INJ VIT B KOMPLEKS 500 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "INJ VIT B KOMPLEKS 500 ML (100 ML)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "INTERCIDE"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "INTERFLOK 1 L 1"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "INTERFLOK 100 ML 1"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "INTERFLOK ORAL 100 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "INTERSPECTIN-L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "INTERTRIM LA"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "INTERTRIM-500 ORAL"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "INTRACOX ORAL"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "INTRACOX ORAL 1 L (100 ML)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "INTRACOX ORAL 100 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "INTRAMOX-150"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "INTROVIT 4+ WS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "INTROVIT AD3E WS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "INTROVIT-E-SELEN WS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "INTROVIT-B-COMPLEX"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "INTROVIT ORAL"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "INTROVIT-E-SELEN WS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "IODOSEPT 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "KAPORIT EKASAPTA 200 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "KAPORIT IMA 1 KG"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "KAPORIT IMA 50 KG (1 KG)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "KLORIN GARD 1 TABLET 1"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "KLORIT 1 KG"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "KUMAVIT 250 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "LARVATOX 1 KG"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "LEUCO STOP 10 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "LEUCO STOP 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "LEUCOMAS 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "LEUCOMAS 100 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "LEUCOVET 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "LEVOCAP 50 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "LIMOXIN-200 LA"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "LIPTOBAC 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "LIPTODRY 25 KG"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "LIPTOSAFE-L 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "LONGLIFE 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MAI 100 DS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MAI 500 DS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MALADEX 1 L 1"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MASABRO 10 KG (250 GR) 1"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MASABRO 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MASACHICKS 10 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MASACHICKS 10 KG (250 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MASAMIX BRO 10 KG (1 KG)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MASAMIX BRO 25 KG (1 KG)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MASAMIX BRO 25 KG (1 KG) 1"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MB GUMBORO 1000 DS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MED AI 100 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MED AI 100 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MED AI 300 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MED AI 500 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MED CORYZA B 250 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MED CORYZA B 500 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MED CORYZA E 500 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MED ND G7B EMULSION 250 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MED ND G7B EMULSION 500 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MED NDG7B-AI T 100 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MED NDG7B-AI T 500 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MED NDG7B-IBEMUL 500 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MEDIMILK 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MEDIMILK 5 KG (500 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MEDISEP 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MEDISTRESS PLUS 250 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MEDIVAC AI 250 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MEDIVAC AI-T 500 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MEDOXY LA 100 M"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MGA 1000 DS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MGA 2000 DS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MGA 500 DS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MINERAL AYAM 1 KG"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MINERAL PREMIX 2 KG"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MINOVIT-OS1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MINOVIT-OS 100 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MIRAVIT 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MITACHICKS 10 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MIX PLUS BAP3A 25 KG (1 KG)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MIX PLUS BAP3A 10 KG (1 KG)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MONOXAN 10 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MONOXAN 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MOXACOL 10 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MOXACOL 10 KG (250GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MOXACOL PLUS 10 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MOXACOL PLUS 10 KG (250 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MOXACOL PLUS 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MOXACOL PLUS 250 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MOXACOL PLUS 60 KG (250 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MOXYCOLGRIN HC 10 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MOXYCOLGRIN HC 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MOXYCOLGRIN HC 20 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MULTIDES 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MULTIQUIN 10 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MULTIVIT CH"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MYCOSTATIN 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "NA NEW FORMULA 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ND 1-20 SAMPEL"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ND AI 100 DS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ND AI 250 DS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ND AI 300 DS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ND AI 300 DS (150 DS)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ND AI 500 DS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ND AI K 1000 DS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ND AI K 1000 DS (500 DS)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ND AI K 500DS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ND CLONE 1000 DS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ND CLONE 2000 DS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ND CLONE 500 DS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ND EMULSION 100 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ND EMULSION 250 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ND EMULSION 500 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ND GUMBORO 500 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ND IB 1000 DS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ND IB 2000 DS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ND IB 500 DS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ND IB SPRAY 1000 DS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ND IB SPRAY 500 DS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ND LASOTA 1000 DS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ND LASOTA 500 DS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "NEO ANTISEP 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "NEO MEDITRIL 100 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "NEO MEDITRIL-I 100 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "NEOBRO 1 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "NEOBRO 250 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "NEOVIT SUPER AMINO EXTRA 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "NEOXIN 10 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "NEOXIN 10 KG (250 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "NETRABIL 250 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "NOBILIS MA5+CLONE 30 (1000 DS)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "NOBILIS ND CLONE 30 (2500 DS)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "NOPS VITAMIN 1 KG"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "NOPS VITAMIN 10 KG (1 KG)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "NOPS VITAMIN 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "NOPS VITAMIN 150 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "NOPS WITH ELECTROLYTES 10 KG (1 KG)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "NOPS WITH ELECTROLYTES 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "NOPSTRESS TF"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "NORAN-150"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "NORAN-200 ORAL"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "NORFLOX-33 40 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "NS POULTRY 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "NUVAQ 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "NUVET 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "OGC SOLUBLE"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "OGC SOLUBLE 500 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "OPTICIDE 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ORGACIDS 25 KG (1 KG)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "OVAMIX 1 KG"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "OXALDIN 500 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "OXOLIN 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "OXYPRO 10 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "OXYPRO 10 KG (250 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "PARAGIN 10 KG (100 GR)1"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "PARAGIN"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "PARAGIN 25 KG (250 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "PARAGIN 5 KG (250 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "PARAMED 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "PENSTREP-400"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "PER-OXYDE 10 KG (1 KG)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "PHYCURMA 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "PHYCURMA 100 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "PIRETAMAS 10 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "PIRETAMAS 10 KG (250 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "PROTEXIN 1 KG"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "QUICK BAYT SPRAY 250 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "QUINCURE 100 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "QUINOXAN 250 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "RENAVIT 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "REX VITAL PLUS 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "SAFETY COLD 10 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "SAFETY COLD 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "SANAVAC CLONE/H120 1000 DS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "SANAVAC GUMBORO PLUS 1000 DS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "SANAVAC LS/HS120 1000 DS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "SANAVAC ND-AI PLUS 500 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "SEPTOCID 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "SIRNASET-10"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "SKIM MILK 10 KG(100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "SKIM MILK 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "SOLVIT 300 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "SORBITOL 1 KG"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "SORBITOL LIQUID 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "SORBITOL STAR 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "SPECTARAL"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "SPECTARAL-25 1 L 1"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "SPECTRON 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "STRESGRIN 10 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "STRESSGRIN 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "STRESSVIT 15 KG (250 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "STRONG N FIT 1400 ML (120 ML)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "STRONG N FIT 300 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "STRONGPLUS 10 KG (250 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "SULFADIM 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "SUPER ELEKTROLIT 1 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "SUPRALIT 10 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "SUPRALIT 10 KG (250 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "SUPRALIT 60 KG (250 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "SUPRALIT PLUS 10 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "SUPRALIT PLUS 10 KG (250 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "SUPRALIT PLUS 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "SUPRALIT PLUS 50 KG (250 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "SUSU SKIM 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "SUSU SKIM 100 GR (10 KG)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "TCCA 200 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "TEK-TROL 1 GL"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "THERA M2P 1 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "THERAPY 1 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "THERAPY 250 GR 1"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "TIAMUCAP 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "TM-VITA"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "TM-VITA 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "TM-VITA 25 KG (250 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "TM-VITA 50 KG (250 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "TM-VITA HC 10 KG (250 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "TOLTADREK 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "TOLTRACOX 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "TOLTRACOX 100 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "TOLTRADEK 100 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "TOP MIX 10 KG"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "TOXISORB PREMIUM 25 KG (1 KG)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "TRI FLOXINE 10 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "TRIMETH MMP 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "TRIMETHOGRIN 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "TRIMETOGRIN 10 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "TRIMEZYN-K 100 KPL"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "TRIMEZYN-S 1 KG"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "TRIMIXIN 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "TRIMIXIN WS 1 KG"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "TRYMEZYN-S 250 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "TYLOCIP 10 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "TYLOFLOK 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "TYLOFLOK 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "TYLOMAS 10 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "TYLOMAS 250 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "TYLOQUIN"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VAK TETES 1-7 HR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VAKSIMUNE IBD M"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VAKSIMUNE ND CLONE"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VAKSIMUNE NDLS IB"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VAKSINATOR 1-7 HR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VAKSINATOR >7 HR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VAKSINATOR MEDION"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VAKSINATOR UMR 21"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VET STREP 1 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VET STREM 125 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VH VACCINE (ND-VH) 1000 DS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VH+H120 (1000 DS)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VIROCID 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VIROCID 5 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VIROCID 5 L (1 L)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VIT C 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VIT ECO 10 KG (250 GR) 1"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VIT ECO 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VIT ECO 25 KG (250 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VITA CHICKS 1 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VITA CHICKS 5 KG (250 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VITA GROW EXTRA 10 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VITA STRESS 250 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VITA STRESS 1 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VITAGROW EXTRA 10 KG (250 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VITAKUR 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VITAKUR 15 KG (250 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VITAMAS 10 KG (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VITAMAS 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VITAMINO"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VITAMIN C PURE 100 GR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "WIDECILLIN FINE GRANULE 10% (100 GR)"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "WIDECILLIN FINE GRANULE 20% 1 KG"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "YODORVEX 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ZAGROSOL AMINOGEN 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ZAGROSOL AMINOGEN 100 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ZAGROSOL B-LYTE 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ZAGROSOL ES 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ZAGROSOL ES 100 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ZALDES 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ZETAMOL 1 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ZETAMOL 100 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DOXYVET 100 GRAM"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "FORTEVIT 100 GRAM"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "COLLIMEZYN"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MEDIVAC GUMBORO A"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MEDIVAC GUMBORO B"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CEVAC BROILER ND K"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CEVAC NB L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CEVAC NEW L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CEVAC BRON H120 L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CEVAC IBIRD"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CEVAC TRANSMUNE IBD"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CEVAC GUMBO L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CEVAC IBDL"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CEVAC CORYMUNE 4 K"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CEVAC CORYMUNE 7 K"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CEVAC CORYZA ABC GEL"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CEVAC FP L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CEVAC LT L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CEVAC NDIBD K"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CEVAC NDIBEDS K"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CEVAC NEW K"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CEVAC VITABRON L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CEVAC VITAPEST L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "LAYERMUNE 2"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "LAYERMUNE ND"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MULTIMUNE K5"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "REPROMUNE 4"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VETRIMOXIN WS 50"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "AMCOL"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "AMOXY - 50"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "AVIPROB"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "BAYTRIL 10%"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CTC SOLUBLE"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DAIMETON INJEKSI 20%"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DAIMETON SODIUM"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DONGBU CEFKING INJ"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DOXY 10 WSP"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DOXYCYCLINE-50"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DOXYSOL-C"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "FLOXIDIN 10% ORAL SUSP"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "FOSBAC"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "OXALDIN 500 ML"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "BIRD CLOSE 5.1 PLUS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CORYZA BIVALENT"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "NOBILIS CORYZA"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "NOBILIS GUMBORO 228E"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "NOBILIS GUMBORO D78"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "NOBILIS IB 4/91"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "NOBILIS IB MULTI + G + ND"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "NOBILIS IB MULTI + ND"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "NOBILIS MA5 + CLONE 30"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VAKSIMUNE IBD M"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VAKSIMUNE IBD D"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VAKSIMUNE IBD L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VAKSIMUNE ILT"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VAKSIMUNE ND B1"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VAKSIMUNE NDB1 IB"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VAKSIMUNE ND CLONE IB"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VAKSIMUNE ND HV"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VAKSIMUNE NDHV IB"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VAKSIMUNE POX"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VAKSIMUNE AI"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VAKSIMUNE AI B"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VAKSIMUNE AIPLUS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VAKSIMUNE CORYZA L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VAKSIMUNE CORYZA LE"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VAKSIMUNE ND INAKTIF"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VAKSIMUNE ND INAKTIF 0.1"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VAKSIMUNE ND AI"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VAKSIMUNE EDS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VAKSIMUNE ND EDS IB"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VAKSIMUNE ND IB INAKTIF"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VAKSIMUNE ND L-IBPLUS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VAKSIMUNE ND-IBPLUS-EDS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VAKSIMUNE ND L INAKTIF"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VAKSIMUNE ND L INAKTIF 0.1"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VAKSIMUNE ND L-IBPLUS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VAKSIMUNE NDL-IBPLUS-EDS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VITAKUR"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VITAKUR L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "AMINOSILIN KAPSUL"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "AMPIVET"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ANTI SNOT KAPSUL"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "BIOCILIN KAPSUL"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "BIOCILIN POWDER"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "BROVIT"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "TRIPLE KAPSUL"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CETA ASCARI"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CETA LV PLUS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CETA BENDAZOL 125"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ANTIBIOTIK CETA DOXI"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ALAMYCIN LA"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "BETAMOX LA"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "BIOVIT E/SE/ZN"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CAL D PHOS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CATOSAL"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CHEIL BIO MYCOSTATIN - 50 WS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "COLIMEIJI POWDER 20%"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DIGESTSEA STILL"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "LEVASOL"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "LEVAVERM 10%"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "LIQUIPHOS STRONG"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "NOPSTRESS VIT"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "OXYKEL 20 LA"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ACIDAL NC"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ASCOGEN"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DIAMIX MINERAL PREMIX"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DK SARSAPONIN 30"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ELANCOBAN 200"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ELITOX"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "FEEDOX DRY"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "HOSTAZYM P"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "LUPROSIL ADSORBATE"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "LUPROSIL NC"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MAXIBAN 72"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MICRO AID FEED GRADE"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MOLDSTOP MYCOPLUS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MONOPROP"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MONTEBAN 45"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "NATUPHOS-5000 COMBI L"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "BIOZYME BROILER"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "AMOXYCILLIN + COLISTIN DS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "AVICILINA PLUS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "AVICILINA PLUS DS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "COLIMIX"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "COLMYC - E"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "CYPROSIN"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "SULFAIDM"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "TRIMAZINE"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "GROW MORE"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "HEPATOREN"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "HIDRO REX VITAL AMINOACIDOS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ANTHELMIN ORAL"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "COCCIREX"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "COCCIKIL-25"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "FARM SAFE"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "OPTICIDE"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VIROSAFE"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "YODORVEX"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "OXYJECT 200 LA"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "GENTAMYCIN 10% INJEKSI"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MEDIVAC AE-POX"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MEDIVAC AI SUBTIPE H5N1 2.3"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MEDIVAC CORYZA B"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MEDIVAC CORYZA T"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MEDIVAC CORYZA T SUSPENSION"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MEDIVAC GUMBORO EMULSION"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MEDIVAC IB H-120"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MEDIVAC IB-H52"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MEDIVAC ILT"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MEDIVAC ND-IB GUMBORO EMULSION"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MEDIVAC ND-IB"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MEDIVAC ND-EDS IB EMULSION"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MEDIVAC ND-EDS EMULSION"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MEDIVAC ND CLONE-45"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ALBEN-125"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ALBENDAZOLE 16% PASTA"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ALBENDAZOLE 4% PASTA"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ALBENDAZOLE 16% PASTA"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ANTI-HEATSTRESS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "COTRIMAZINE"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DAVAINOL"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "DICLACOXY"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ERI-PLUS-75"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "ERI-PLUS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "FLY-OFF"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "KLORIN-GARD"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "LEUCO-STOP"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "LEVANIC"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "LEVANIUM"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "MONOXAN"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "OVAMIX"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "SIRNASET"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "SPECTARAL -25"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "TM-PERAZINE"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "VIT-ECO"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "AMPROLIN-300 WS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "BUTASAL-100"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "INTERFLOX-100"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "INTERFLOX ORAL"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "INTERSPECTIN-L WS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "INTRAMOX-200 WS"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "LEVA-200 ORAL"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "LIMOXIN-25 SPRAY"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "LIMOXIN-50"
+        },
+        {
+            "jenis": "OVK",
+            "merk": "NORAN-200 WS"
+        }
+    ]

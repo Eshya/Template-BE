@@ -34,13 +34,18 @@ const scheme = new Schema({
     image: {
         type: Schema.Types.ObjectId,
         ref: 'UserImage', select: true,
-        autopopulate: {maxDepth: 1}
+        autopopulate: {maxDepth: 1},
+        default: null
     },
     noKTP: {
         type: String,
         default: null
     },
     asalKemitraan: {
+        type: String,
+        default: null
+    },
+    token: {
         type: String,
         default: null
     }
