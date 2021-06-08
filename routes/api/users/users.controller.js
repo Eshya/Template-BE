@@ -167,16 +167,16 @@ exports.login = (username, password) => {
 }
 
 exports.register = async (req, res, next) => {
-    let {fullname, username, email, phoneNumber, password, noKTP, asalKemitraan, image} = _beforeSave(req.body);
+    let {fullname, username, email, phoneNumber, password, noKTP, asalKemitraan, idFirebase} = _beforeSave(req.body);
     let result = []
     try {
         if(req.body.noKTP == null  && req.body.asalKemitraan == null){
             let role = await Role.findOne({name: 'peternak'}, {_id: true})
-            const resultUser = await createUser({fullname, username, email, phoneNumber, password, image, role})
+            const resultUser = await createUser({fullname, username, email, phoneNumber, password, role, idFirebase})
             result.push(resultUser)
         } else {
             let role = await Role.findOne({name: 'ppl'}, {_id: true})
-            const resultUser = await createUser({fullname, username, email, phoneNumber, password, noKTP, asalKemitraan, image, role})
+            const resultUser = await createUser({fullname, username, email, phoneNumber, password, noKTP, asalKemitraan, role, idFirebase})
             result.push(resultUser)
         }
         
