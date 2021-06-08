@@ -45,7 +45,11 @@ const scheme = new Schema({
         type: String,
         default: null
     },
-    token: {
+    tokenFcm: {
+        type: String,
+        default: null
+    },
+    tokenOtp: {
         type: String,
         default: null
     }
