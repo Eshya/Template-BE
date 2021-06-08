@@ -49,7 +49,7 @@ const scheme = new Schema({
         type: String,
         default: null
     },
-    tokenOtp: {
+    idFirebase: {
         type: String,
         default: null
     }
