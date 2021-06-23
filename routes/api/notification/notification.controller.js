@@ -19,11 +19,3 @@ exports.example = async (req, res, next) => {
     }
 }
 
-// exports.getNotificationSuhu = async (req, res, next) => {
-    
-//     try {
-        
-//     } catch (error) {
-//         next(error)
-//     }
-// }

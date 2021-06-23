@@ -7,6 +7,7 @@ const Nekropsi = require("../nekropsi/nekropsi.model");
 const Penjualan = require("../penjualan/penjualan.model");
 const Sapronak = require("../sapronak/sapronak.model");
 const selectPublic = '-createdAt -updatedAt'
+const mongoose = require('mongoose')
 
 const _find = async (req, isPublic = false) => {
     const {where, limit, offset, sort} = parseQuery(req.query);
@@ -190,6 +191,61 @@ exports.removeById = async (req, res, next) => {
     try {
         const data = await Model.findByIdAndRemove(req.params.id)
         res.json({data})
+    } catch (error) {
+        next(error)
+    }
+}
+
+exports.getBudidaya = async (req, res, next) => {
+    const id = req.params.id
+    const reducer = (acc, value) => acc + value
+    try {
+        let harian = []
+        let kematian = []
+        let pembelianPakan = 0
+        let pembelianOVK = 0
+        const doc = await Model.findById(id);
+        const pembelianDoc = doc.populasi * doc.hargaSatuan
+        const getSapronak = await Sapronak.find({periode: id});
+        // const penjualanAyamBesar = await 
+        for (let i = 0; i < getSapronak.length; i++) {
+            if (getSapronak[i].produk.jenis === 'PAKAN') {
+                const compliment = getSapronak[i].kuantitas * getSapronak[i].hargaSatuan
+                pembelianPakan += compliment
+            } else {
+                const compliment = getSapronak[i].kuantitas * getSapronak[i].hargaSatuan
+                pembelianOVK += compliment
+            }
+        }
+        const getKegiatan = await KegiatanHarian.find({periode: id})
+        getKegiatan.forEach(x => {
+            kematian.push(x.deplesi + x.pemusnahan)
+        });
+        const totalKematian = kematian.reduce(reducer);
+        const populasiAkhir = doc.populasi - totalKematian
+        const getPenjualan = await Penjualan.find({periode: id})
+        getPenjualan.forEach(x => {
+            harian.push(x.beratBadan * x.harga * x.qty)
+        })
+        const penjualanAyamBesar = harian.reduce(reducer);
+        const dn = 0
+        const pendapatanPeternak = penjualanAyamBesar - dn -pembelianDoc - pembelianOVK - pembelianPakan
+        const pendapatanPerEkor = pendapatanPeternak / populasiAkhir
+        const pengeluaranDimuka = 0
+        const peneriamaanAkhir = pendapatanPeternak - pengeluaranDimuka
+
+        res.json({
+            'penjualanAyamBesar': penjualanAyamBesar,
+            'DNPenjualan': dn,
+            'pembelianPakan': pembelianPakan,
+            'pembelianOVK': pembelianOVK,
+            'pembelianDOC': pembelianDoc,
+            'pendapatanPeternak': pendapatanPeternak,
+            'pendapatanPerEkor': pendapatanPerEkor,
+            'pengeluaranDimuka': pengeluaranDimuka,
+            'peneriamaanAkhir': peneriamaanAkhir,
+            message: 'Ok'
+        })
     } catch (error) {
         next(error)
     }
