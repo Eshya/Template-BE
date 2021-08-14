@@ -136,7 +136,10 @@ exports.insert = async (req, res, next) => {
         const isActive =  Kandang.findByIdAndUpdate(data.kandang, {isActive: true, createdBy: user}, {new: true, upsert: false, multi: false})
         const dataPeriode = Model.create(data)
         const results = await Promise.all([isActive, dataPeriode])
-        res.json({results})
+        res.json({
+            data: results[1],
+            message: 'Ok'
+        })
     } catch (error) {
         next(error)
     }
@@ -149,7 +152,10 @@ exports.endPeriode = async (req, res, next) => {
         const kandangActive = Kandang.findByIdAndUpdate(findKandang.kandang, {isActive: false}, {new: true, upsert: false, multi: false})
         const periodeEnd = Model.findByIdAndUpdate(req.params.id, {isEnd: true, tanggalAkhir: moment().toDate()}, {new: true, upsert: false, multi: false})
         const results = await Promise.all([kandangActive, periodeEnd])
-        res.json({results})
+        res.json({
+            data: results,
+            message: 'Ok'
+        })
         // res.json(findKandang.kandang)
     } catch (error) {
         next(error);
@@ -161,7 +167,7 @@ exports.updateById = async (req, res, next) => {
     const where = req.body
     try {
         const data = await Model.findByIdAndUpdate(id, where, {new: true}).exec();
-        res.json(data)
+        res.json({data: data, message: 'Ok'})
     } catch (error) {
         next(error);
     }
@@ -246,6 +252,128 @@ exports.getBudidaya = async (req, res, next) => {
             'peneriamaanAkhir': peneriamaanAkhir,
             message: 'Ok'
         })
+    } catch (error) {
+        next(error)
+    }
+}
+
+exports.ringkasan = async (req, res, next) => {
+    const id = req.params.id
+    try {
+        const getPeriode = await Model.findById(id)
+        const penjualan = await Penjualan.aggregate([
+            {$match: {periode: mongoose.Types.ObjectId(getPeriode.id)}},
+            {$group: {_id: '$_id', terjual: {$sum: '$qty'}}}
+        ])
+        // const getDeplesi = KegiatanHarian.find({periode: id})
+        const data = await KegiatanHarian.aggregate([
+            {$match: {periode: mongoose.Types.ObjectId(getPeriode.id)}},
+            {$unwind: '$pakanPakai'},
+            {$unwind: '$berat'},
+            {$group: {_id: '$_id', avgBerat: {$avg: '$berat.beratTimbang'}, tonase: {$sum: {$multiply: ['$berat.beratTimbang', '$berat.populasi']}}, totalPakan: {$sum: '$pakanPakai.beratPakan'}, totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
+        ])
+        // console.log(data)
+        const oneDay = 24 * 60 * 60 * 1000;
+        const now = new Date(Date.now());
+        const start = new Date(getPeriode.tanggalMulai);
+        const result = Math.round(Math.abs((now - start) / oneDay))
+
+        const allTonase = data.reduce((a, {tonase}) => a + tonase, 0)
+        const allDeplesi = data.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
+        const allKematian = data.reduce((a, {totalKematian}) => a + totalKematian, 0);
+        const allPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
+        const allPakan = data.reduce((a, {totalPakan})=>a + totalPakan, 0);
+        const avg = data.reduce((a, {avgBerat}) => a + avgBerat, 0) / (data.length - 1);
+        const atas = (100 - (((getPeriode.populasi - (allDeplesi + allKematian)) / getPeriode.populasi) * 100)) * avg
+        const bawah = (allPakan/allTonase) * result
+        res.json({
+            populasiAkhir: getPeriode.populasi - (allDeplesi + allKematian + allPenjualan),
+            populasiAwal: getPeriode.populasi,
+            panen: allPenjualan,
+            jenisDoc: getPeriode.jenisDOC.name,
+            IP: (atas / bawah) * 100,
+            deplesi: ((getPeriode.populasi - (allDeplesi + allKematian)) / getPeriode.populasi) * 100,
+            beratAktual: avg,
+            feedIntake: allPakan / (getPeriode.populasi - (allDeplesi + allKematian + allPenjualan)),
+            ADG: 0,
+            fcrAktual: allPakan / allTonase,
+            diffFcr: 0
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
+exports.sendNotif = async (req, res, next) => {
+    const token = req.user.tokenFcm
+    try {
+        
+    } catch (error) {
+        next(error)
+    }
+}
+
+exports.performa = async (req, res, next) => {
+    const firstPeriode = req.query.first
+    const secondPeriode = req.query.second
+    const reducer = (acc, value) => acc + value
+    // const {first, second} = parseQuery(req.query)
+    try {
+        let pakan = []
+        let tonase = []
+        const findStart = await Model.findById(firstPeriode, {tanggalMulai: true})
+        const findFinish = await Model.findById(secondPeriode, {tanggalMulai: true})
+        const start = new Date(findStart.tanggalMulai)
+        const finish = new Date(findFinish.tanggalMulai)
+        //get total tonase
+        const result = await Model.find({kandang: findStart.kandang, tanggalMulai: {$gte: start, $lte: finish}})
+    
+        for (const x of result) {
+            const data = await KegiatanHarian.aggregate([
+                {$match: {periode: mongoose.Types.ObjectId(x.id)}},
+                {$unwind: '$berat'},
+                {$unwind: '$pakanPakai'},
+                // {$unwind: '$periode'},
+                // {$project: {periode: '$periode._id'}},
+                {$group: {_id: '$_id', avgBerat: {$avg: '$berat.beratTimbang'}, tonase: {$sum: {$multiply: ['$berat.beratTimbang', '$berat.populasi']}}, pakan: {$sum: '$pakanPakai.beratPakan'}, totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
+            ])
+            const oneDay = 24 * 60 * 60 * 1000;
+            const now = new Date(x.tanggalAkhir);
+            const start = new Date(x.tanggalMulai);
+            const result = Math.round(Math.abs((now - start) / oneDay))
+            if (data.length) {
+                tonase.push(data)
+                data.push({
+                    tonase: 0,
+                    pakan: 0,
+                    totalDeplesi: 0,
+                    avgBerat: 0,
+                    totalKematian: 0,
+                    populasi: x.populasi,
+                    umur: result
+                })
+            }
+        }
+        for (let i = 0; i < tonase.length; i++) {
+            const allTonase = tonase[i].reduce((a, {tonase}) => a + tonase, 0)
+            const allPakan = tonase[i].reduce((a, {pakan}) => a + pakan, 0)
+            const allDeplesi = tonase[i].reduce((a, {totalDeplesi}) => a + totalDeplesi, 0)
+            const allKematian = tonase[i].reduce((a, {totalKematian}) => a + totalKematian, 0)
+            const findPopulasi = tonase[i].filter(x => x.populasi).map(x => x.populasi)
+            const findUmur = tonase[i].filter(x => x.umur).map(x => x.umur)
+            const avg = tonase[i].reduce((a, {avgBerat}) => a + avgBerat, 0) / (tonase[i].length - 1)
+            // console.log(sum);
+            const kematian = allDeplesi + allKematian
+            const atas = (100 - (((findPopulasi[0] - kematian) / findPopulasi[0]) * 100)) * avg
+            const bawah = (allPakan/allTonase) * findUmur 
+            console.log(avg);
+            res.json({                
+                FCR: allPakan/allTonase,
+                Deplesi: ((findPopulasi[0] - kematian) / findPopulasi[0]) * 100,
+                IP : (atas / bawah) * 100
+            })
+        }
+        // console.log(tonase);
     } catch (error) {
         next(error)
     }

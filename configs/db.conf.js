@@ -8,6 +8,15 @@ const pass = 'IniN4manyaP4ssw0rd';
 const mongoString = `mongodb+srv://${user}:${pass}@${host}/${dbName}?retryWrites=true&w=majority`;
 const db = mongoose.connection
 
+const mysql = require('mysql2/promise');
+const config = require('./mysql.conf');
+
+async function query(sql, params){
+    const connection = await mysql.createConnection(config.db);
+    const [result] = await connection.execute(sql, params)
+    return result;
+}
+
 const options = {
     useFindAndModify: false,
     useNewUrlParser: true,
@@ -49,3 +58,4 @@ exports.connect = () => {
 }
 
 exports.connection = db;
+exports.query = query

@@ -4,7 +4,8 @@ const Model = require('./users.model');
 const selectPublic = '-createdAt -updatedAt -password';
 const passwordHash = require('password-hash');
 const Kandang = require('../kandang/kandang.model');
-
+const md5 = require('md5');
+const db = require('../../../configs/db.conf')
 
 const _find = async (req, isPublic = false) => {
     const {where, limit, offset, sort} = parseQuery(req.query);
@@ -169,19 +170,25 @@ exports.login = (username, password) => {
 exports.register = async (req, res, next) => {
     let {fullname, username, email, phoneNumber, password, noKTP, asalKemitraan, idFirebase} = _beforeSave(req.body);
     let result = []
+    let mysql = []
     try {
         if(req.body.noKTP == null  && req.body.asalKemitraan == null){
             let role = await Role.findOne({name: 'peternak'}, {_id: true})
             const resultUser = await createUser({fullname, username, email, phoneNumber, password, role, idFirebase})
+            const resultMysql = await createNew(req.body)
             result.push(resultUser)
+            mysql.push(resultMysql)
         } else {
             let role = await Role.findOne({name: 'ppl'}, {_id: true})
             const resultUser = await createUser({fullname, username, email, phoneNumber, password, noKTP, asalKemitraan, role, idFirebase})
+            const resultMysql = await createNew(req.body)
             result.push(resultUser)
+            mysql.push(resultMysql)
         }
         
         res.json({
             data: result,
+            dataMysql: mysql,
             message: 'Ok'
         })
     } catch(err){
@@ -202,4 +209,13 @@ const createUser = (data) => {
         .then(results => resolve(results))
         .catch(err=>reject(err))
     })
+}
+
+const createNew = async (data) => {
+    const query = await db.query(`INSERT INTO users (name, email, password) VALUES (?,?,?)`, [
+        data.username, data.email, md5(data.password)
+    ])
+    let message = 'Error in creating data';
+    if(!query.affectedRows) return message;
+    return query;
 }

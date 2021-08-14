@@ -1,7 +1,11 @@
 const { Schema, model } = require("mongoose");
 
 const pakanPakaiSchema = new Schema({
-    jenisPakan: {type: String, required: true}, 
+    jenisPakan: {
+        type: Schema.Types.ObjectId,
+        ref: 'Produk',
+        autopopulate: {maxDepth: 1}
+    }, 
     beratPakan: {type: Number, required: true}
 })
 

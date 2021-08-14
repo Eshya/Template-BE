@@ -7,7 +7,9 @@ const {auth, queryCek, schemaCek, paramCek, after} = require('../../helpers');
 router.get('/', auth, queryCek, c.findAll);
 router.get('/public', queryCek, c.findPublic);
 router.get('/age/:id', paramCek, c.umurAyam);
+router.get('/performa', auth, queryCek, c.performa)
 router.get('/count', queryCek, c.count);
+router.get('/ringkasan/:id', auth, paramCek, c.ringkasan)
 router.get('/end/:id', auth, paramCek, c.endPeriode);
 router.get('/kegiatan/:id', auth, paramCek, c.findKegiatan);
 router.get('/nekropsi/:id', auth, paramCek, c.findNekropsi);

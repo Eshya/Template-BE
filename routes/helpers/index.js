@@ -16,4 +16,15 @@ exports.isDevMode = process.env.NODE_ENV === 'development';
 exports.fname = (fname) => {
     const splited = fname.split('/');
     return splited[splited.length-1];
-} 
+}
+exports.getOffset = (currentPage = 1, listPerPage) => {
+    return (currentPage - 1) * [listPerPage];
+  }
+  
+exports.emptyOrRows = (rows) => {
+    if(!rows) {
+      return []
+    } else {
+      return rows
+    }
+}

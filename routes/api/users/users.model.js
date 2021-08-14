@@ -1,4 +1,5 @@
 const {Schema, model} = require('mongoose');
+
 const scheme = new Schema({
     fullname: {
         type: String,
@@ -56,3 +57,4 @@ const scheme = new Schema({
 }, {timestamps: true, versionKey: false});
 scheme.plugin(require('mongoose-autopopulate'));
 module.exports = model('Users', scheme, 'users');
+

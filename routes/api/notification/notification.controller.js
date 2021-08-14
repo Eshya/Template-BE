@@ -1,4 +1,6 @@
 const admin = require('./notification.config');
+const Nekropsi = require('../nekropsi/nekropsi.model');
+const Periode = require('../periode/periode.model');
 
 const options = {
     priority: "high",
