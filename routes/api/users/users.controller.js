@@ -4,7 +4,8 @@ const Model = require('./users.model');
 const selectPublic = '-createdAt -updatedAt -password';
 const passwordHash = require('password-hash');
 const Kandang = require('../kandang/kandang.model');
-const md5 = require('md5');
+// const md5 = require('md5');
+const bcrypt = require('bcrypt');
 const db = require('../../../configs/db.conf')
 
 const _find = async (req, isPublic = false) => {
@@ -212,8 +213,10 @@ const createUser = (data) => {
 }
 
 const createNew = async (data) => {
+    var salt = bcrypt.genSaltSync(10);
     const query = await db.query(`INSERT INTO users (name, email, password) VALUES (?,?,?)`, [
-        data.username, data.email, md5(data.password)
+        // data.username, data.email, md5(data.password)
+        data.username, data.email, bcrypt.hashSync(data.password, salt)
     ])
     let message = 'Error in creating data';
     if(!query.affectedRows) return message;

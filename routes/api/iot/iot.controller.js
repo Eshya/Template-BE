@@ -23,6 +23,26 @@ exports.findById = async (req, res, next) => {
     }
 }
 
+exports.findByFlock = async (req, res, next) => {
+    try {
+        
+    } catch (error) {
+        next(error)
+    }
+}
+
+exports.findUser = async (req, res, next) => {
+    try {
+        const data = await Model.getUser('name', req.user.username)
+        res.json({
+            result: data,
+            message: 'Ok'
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
 exports.update = async (req, res, next) => {
     try {
         const result = await Model.update('id', req.params.id, req.body);

@@ -15,6 +15,13 @@ exports.getWhereId = async (fields, params) => {
     return data;
 }
 
+exports.getUser = async (fields, params) => {
+    const rows = await db.query(`SELECT * FROM users WHERE `+fields+`= ?`,[params])
+    const data = helper.emptyOrRows(rows);
+
+    return data;
+}
+
 exports.update = async (fields, params, data) => {
     const rows = await db.query(`SELECT * FROM perangkat WHERE `+fields+` = ?`, [params]);
     const query = await db.query(`UPDATE perangkat SET user_id = ?, id_device = ?, nama = ?, mode = ?, status = ?, suhu_aktual = ?, suhu_batas_nyala = ?, suhu_batas_mati = ?, kelembapan_aktual = ?, kelembapan_batas_nyala = ?, kelembapan_batas_mati = ?, jam_mati = ?, menit_mati = ?, detik_mati = ? WHERE `+fields+ ` = ? `, [
