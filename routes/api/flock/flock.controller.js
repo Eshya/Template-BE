@@ -1,7 +1,7 @@
 const {parseQuery} = require('../../helpers');
 const Model = require('./flock.model');
 const selectPublic = '-createdAt -updatedAt';
-const Iot = require('../iot-flock/iot-flock.model')
+// const Iot = require('../iot-flock/iot-flock.model')
 
 const _find = async(req, isPublic = false) => {
     const {where, limit, offset, sort} = parseQuery(req.query);

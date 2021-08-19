@@ -213,10 +213,11 @@ const createUser = (data) => {
 }
 
 const createNew = async (data) => {
-    var salt = bcrypt.genSaltSync(10);
+    // var salt = bcrypt.genSalt(12);
+    var pass = await bcrypt.hash(data.password, 12);
     const query = await db.query(`INSERT INTO users (name, email, password) VALUES (?,?,?)`, [
         // data.username, data.email, md5(data.password)
-        data.username, data.email, bcrypt.hashSync(data.password, salt)
+        data.username, data.email, pass
     ])
     let message = 'Error in creating data';
     if(!query.affectedRows) return message;

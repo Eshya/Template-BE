@@ -25,7 +25,11 @@ exports.findById = async (req, res, next) => {
 
 exports.findByFlock = async (req, res, next) => {
     try {
-        
+        const data = await Model.getFlock(req.params.id)
+        res.json({
+            result: data,
+            message: 'Ok'
+        })
     } catch (error) {
         next(error)
     }

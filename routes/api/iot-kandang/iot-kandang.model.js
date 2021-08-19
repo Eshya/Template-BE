@@ -1,14 +1,16 @@
 const { Schema, model } = require("mongoose");
+
 const scheme = new Schema({
     iot: {
         type: Number,
-        required: true
+        required: true,
+        unique: true
     },
-    flock: {
+    kandang: {
         type: Schema.Types.ObjectId,
-        ref: 'Flock',
+        ref: 'Kandang',
         select: true, autopopulate: {maxDepth: 1}
     }
 }, {versionKey: false, timestamps: true})
 scheme.plugin(require('mongoose-autopopulate'));
-module.exports = model('IotFlock', scheme, 'iot-flock');
+module.exports = model('IotKandang', scheme, 'iot-kandang');
