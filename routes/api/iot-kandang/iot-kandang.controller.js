@@ -19,16 +19,12 @@ const getPerangkat = async (params) => {
 
 exports.findByKandang = async (req, res, next) => {
     try {
-        const findKandang = await Kandang.findOne({createdBy: req.user._id, isActive: true}, {_id: true})
-        const find = await Model.find({kandang: findKandang})
-        console.log(find);
+        // const findKandang = await Kandang.findOne({_id: req.params.id, createdBy: req.user._id}, {_id: true})
+        const find = await Model.find({kandang: req.params.id})
         var asyncMap = await Promise.all(find.map(async(x) => {
             return getPerangkat(x.iot)
             // return x.iot
         })) 
-        // find.map(x => {
-        //     console.log(x)
-        // })
         res.json({
             data: asyncMap,
             message: 'Ok'
@@ -43,8 +39,9 @@ exports.insert = async (req, res, next) => {
     try {
         const findId = await getLast()
         // console.log(idDevice[0].id);
-        const findKandang = await Kandang.findOne({createdBy: req.user._id, isActive: true}, {_id: true})
-        const result = await Model.create({iot: findId[0].id + 1, kandang: findKandang._id})
+        const idPeriode = req.body.kandang
+        // const findKandang = await Kandang.findOne({createdBy: req.user._id, isActive: true}, {_id: true})
+        const result = await Model.create({iot: findId[0].id + 1, kandang: idPeriode})
         res.json({
             data: result,
             message: 'Ok'

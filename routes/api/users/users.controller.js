@@ -223,3 +223,26 @@ const createNew = async (data) => {
     if(!query.affectedRows) return message;
     return query;
 }
+
+exports.kelolaPeriode = async (req, res, next) => {
+    const id = req.user._id
+    const data = req.body.periode
+    try {
+        const result = await Model.findByIdAndUpdate(id, {$push: {kelola: data}}, {new: true}).exec();
+        res.json({
+            data: result,
+            message: 'Ok'
+        })
+        // console.log(id);
+    } catch (error) {
+        next(error)
+    }
+}
+
+exports.findPeriode = async (req, res, next) => {
+    try {
+        
+    } catch (error) {
+        next(error)
+    }
+}

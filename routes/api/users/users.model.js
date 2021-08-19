@@ -53,7 +53,15 @@ const scheme = new Schema({
     idFirebase: {
         type: String,
         default: null
-    }
+    },
+    kelola: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: 'Periode',
+            default: null,
+            autopopulate: {maxDepth: 1}
+        }
+    ],
 }, {timestamps: true, versionKey: false});
 scheme.plugin(require('mongoose-autopopulate'));
 module.exports = model('Users', scheme, 'users');

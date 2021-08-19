@@ -4,7 +4,7 @@ exports.findCategories = async (req, res, next) => {
     try {
         const getCategories = await axios.get('https://chickin.id/blog/wp-json/wp/v2/categories')
         res.json({
-            data: getCategories
+            data: getCategories.data
         })
     } catch (error) {
         next(error);

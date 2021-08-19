@@ -15,6 +15,7 @@ const scheme = new Schema({
         ref: 'TipeKandang', select: true,
         autopopulate: {maxDepth: 1}
     },
+
     // periode: [
     //     {
     //         type: Schema.Types.ObjectId,
