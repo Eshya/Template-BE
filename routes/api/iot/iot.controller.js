@@ -16,7 +16,7 @@ exports.findById = async (req, res, next) => {
         const data = await Model.getWhereId('id', req.params.id);
         res.json({
             result: data,
-            messasge: 'Ok'
+            message: 'Ok'
         })
     } catch (error) {
         next(error)

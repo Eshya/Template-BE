@@ -6,9 +6,9 @@ const scheme = new Schema({
         required: true,
         unique: true
     },
-    kandang: {
+    Periode: {
         type: Schema.Types.ObjectId,
-        ref: 'Kandang',
+        ref: 'Periode',
         select: true, autopopulate: {maxDepth: 1}
     }
 }, {versionKey: false, timestamps: true})

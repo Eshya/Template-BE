@@ -4,6 +4,7 @@ const Model = require('./users.model');
 const selectPublic = '-createdAt -updatedAt -password';
 const passwordHash = require('password-hash');
 const Kandang = require('../kandang/kandang.model');
+const Periode = require('../periode/periode.model')
 // const md5 = require('md5');
 const bcrypt = require('bcrypt');
 const db = require('../../../configs/db.conf')
@@ -240,9 +241,20 @@ exports.kelolaPeriode = async (req, res, next) => {
 }
 
 exports.findPeriode = async (req, res, next) => {
-    const id = req.params.id
     try {
-        
+        const findPeriode = await Model.findById(req.user._id, {kelola: true});
+        const kelola = findPeriode.kelola
+        // findPeriode.map()
+        var asyncMap = await Promise.all(kelola.map(async(x) => {
+            var periode = await Periode.findById(x);
+            // console.log(x);
+            return periode;
+        }))
+        // console.log(asyncMap);
+        res.json({
+            data: asyncMap,
+            message: 'Ok'
+        })
     } catch (error) {
         next(error)
     }
