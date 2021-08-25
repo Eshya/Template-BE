@@ -109,7 +109,7 @@ exports.remove = async (req, res, next) => {
 
 exports.removeById = async (req, res, next) => {
     try {
-        const results = await (await Model.findByIdAndRemove(req.paramsid)).exec();
+        const results = await Model.findByIdAndRemove(req.paramsid).exec();
         res.json({
             data: results,
             message: 'Ok'

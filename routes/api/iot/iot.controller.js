@@ -1,3 +1,4 @@
+const { createError } = require('../../helpers')
 const Model = require('./iot.model')
 exports.findByUser = async (req, res, next) => {
     try {
@@ -37,7 +38,10 @@ exports.findByFlock = async (req, res, next) => {
 
 exports.findUser = async (req, res, next) => {
     try {
-        const data = await Model.getUser('name', req.user.username)
+        // if(!req.user.username) next(createError(404, 'username not found'));
+        const name = req.params.username
+        // console.log(name);
+        const data = await Model.getUser('name', name)
         res.json({
             result: data,
             message: 'Ok'

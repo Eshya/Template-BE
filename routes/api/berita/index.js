@@ -6,6 +6,7 @@ const c = require('./berita.controller')
 router.get('/categories', queryCek, c.findCategories);
 router.get('/', queryCek, c.findPosts);
 router.get('/byCategories', queryCek, c.postBycategories);
+router.get('/banner', c.findBanner);
 router.get('/:id', paramCek, c.postById);
 
 module.exports = router;

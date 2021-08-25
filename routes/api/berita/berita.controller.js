@@ -45,3 +45,26 @@ exports.postById = async (req, res, next) => {
         next(error)
     }
 }
+
+exports.findBanner = async (req, res, next) => {
+    try {
+        const get = await axios.get(`https://chickin.id/blog/wp-json/wp/v2/posts/2701`)
+        const getImage = await axios.get(`https://chickin.id/blog/wp-json/wp/v2/media/`+ get.data.featured_media);
+        // const featuredMedia = 'wp:featuredmedia'
+        // const mergeArray = get.data._embedded.featuredMedia
+        // const getImage = get.map()
+        // console.log({
+            
+        // });
+        res.json({
+            id: get.data.id,
+            data: get.data.modified,
+            title: get.data.title.rendered,
+            content: get.data.content.rendered,
+            embed: getImage.data.media_details.sizes.medium,
+            message: 'Ok'
+        })
+    } catch (error) {
+        next(error)
+    }
+}

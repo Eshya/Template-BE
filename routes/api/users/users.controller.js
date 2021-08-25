@@ -7,7 +7,9 @@ const Kandang = require('../kandang/kandang.model');
 const Periode = require('../periode/periode.model')
 // const md5 = require('md5');
 const bcrypt = require('bcrypt');
-const db = require('../../../configs/db.conf')
+const db = require('../../../configs/db.conf');
+const { create } = require('../roles/roles.model');
+const crypto = require('crypto');
 
 const _find = async (req, isPublic = false) => {
     const {where, limit, offset, sort} = parseQuery(req.query);
@@ -217,8 +219,8 @@ const createNew = async (data) => {
     // var salt = bcrypt.genSalt(12);
     var pass = await bcrypt.hash(data.password, 12);
     const query = await db.query(`INSERT INTO users (name, email, password) VALUES (?,?,?)`, [
-        // data.username, data.email, md5(data.password)
-        data.username, data.email, pass
+        data.username, data.email, md5(data.password)
+        // data.username, data.email, pass
     ])
     let message = 'Error in creating data';
     if(!query.affectedRows) return message;
@@ -255,6 +257,41 @@ exports.findPeriode = async (req, res, next) => {
             data: asyncMap,
             message: 'Ok'
         })
+    } catch (error) {
+        next(error)
+    }
+}
+
+exports.forgetPassword = async (req, res, next) => {
+    try {
+        const user = await Model.findOne({email: req.body.email})
+        if (!user) return next(createError(404, 'Email not found'))
+        const randomText = await crypto.randomBytes(20);
+        const token = randomText.toString('hex');
+        await Model.findByIdAndUpdate(user._id, {resetPasswordToken: token, resetPasswordExpires: Date.now() + 3600000})
+        const host = isDevMode ? `` : ``
+        const url = [host, restUrl, token].join('/')
+    } catch (error) {
+        next(error)
+    }
+}
+
+exports.getToken = async (req, res, next) => {
+    try {
+        const result = await Model.findOne({resetPasswordToken: req.params.token, resetPasswordExpires: {$gt: Date.now()}}).select('resetPasswordToken resetPasswordExpires')
+        res.json({
+            data: result,
+            message: 'Ok'
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
+exports.resetPassword = async (req, res, next) => {
+    try {
+        const isInvalid = await Model.findOne({resetPasswordToken: req.params.token,  resetPasswordExpires: { $gt: Date.now()}});
+        if (!isInvalid) return next(createError(403, 'Token tidak valid atau kadaluarsa'))
     } catch (error) {
         next(error)
     }
