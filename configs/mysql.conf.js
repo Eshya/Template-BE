@@ -16,9 +16,9 @@
 const config = {
     db: {
         host: process.env.DB_HOST || 'app.chickin.id',
-        user: process.env.DB_USER || 'u945859660_chickin_app',
-        password: process.env.DB_PASSWORD || 'Chickin_App_123',
-        database: process.env.DB_NAME || 'u945859660_chickin_app',
+        user: process.env.DB_USER || 'u3793941_chickin_iot',
+        password: process.env.DB_PASSWORD || 'Chickin123',
+        database: process.env.DB_NAME || 'u3793941_chickin_iot',
         // port: 3306,
         waitForConnections: true,
         connectionLimit: process.env.DB_CONN_LIMIT || 2,
