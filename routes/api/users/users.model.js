@@ -62,6 +62,16 @@ const scheme = new Schema({
             autopopulate: {maxDepth: 1}
         }
     ],
+    resetPasswordToken: {
+      type: String,
+      default: null,
+      select: false
+    },
+    resetPasswordExpires: {
+      type: Date,
+      default: null,
+      select: false
+    }
 }, {timestamps: true, versionKey: false});
 scheme.plugin(require('mongoose-autopopulate'));
 module.exports = model('Users', scheme, 'users');

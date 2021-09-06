@@ -10,6 +10,19 @@ const bcrypt = require('bcrypt');
 const db = require('../../../configs/db.conf');
 const { create } = require('../roles/roles.model');
 const crypto = require('crypto');
+const nodemailer = require('nodemailer');
+
+const mailOptions = {
+    from: 'reset@chickin.com',
+}
+
+const smtpTransport = nodemailer.createTransport({
+    service: 'Gmail',
+    auth: {
+      user: 'pisprofileimagestudio@gmail.com',
+      pass: 'prof1l31qaz',
+    }
+})
 
 const _find = async (req, isPublic = false) => {
     const {where, limit, offset, sort} = parseQuery(req.query);
@@ -204,10 +217,13 @@ const createUser = (data) => {
     return new Promise((resolve, reject) => {
         const findUname = Model.findOne({username: data.username})
         const findEmail = Model.findOne({email: data.email})
-        let actions = [findUname, findEmail]
+        const findNumber = Model.findOne({phoneNumber: data.phoneNumber})
+        let actions = [findUname, findEmail, findNumber]
         Promise.all(actions).then(cb => {
-            if(cb[0]) throw createError(400, 'username already registered')
-            if(cb[1]) throw createError(400, 'email already registered')
+            // if(cb[0]) throw new Error("username already registered!")
+            if(cb[0]) throw createError(400, 'username already registered');
+            if(cb[1]) throw createError(400, 'email already registered');
+            if(cb[2]) throw createError(400, 'phone number already registered');
             return Model.create(data)
         })
         .then(results => resolve(results))
@@ -269,8 +285,20 @@ exports.forgetPassword = async (req, res, next) => {
         const randomText = await crypto.randomBytes(20);
         const token = randomText.toString('hex');
         await Model.findByIdAndUpdate(user._id, {resetPasswordToken: token, resetPasswordExpires: Date.now() + 3600000})
-        const host = isDevMode ? `` : ``
+        const host = isDevMode ? `http://${req.hosname}:4200` : `https://${req.hostname}`
+        const resetUrl = 'reset-password'
         const url = [host, restUrl, token].join('/')
+        mailOptions.to = user.email
+        mailOptions.subject = '[No-Reply] RESET PASSOWRD CHICKIN'
+        mailOptions.html = `<p>You are receiving this because you (or someone else) have requested the reset of the password for your account.</p>
+        Please click on the following link, or paste this into your browser to complete the process <p><a href="${url}" target="_blank">${url}</a></p>
+        <p>If you did not request this, please ignore this email and your password will remain unchanged.</p>`
+
+        const isSent = await smtpTransport.sendMail(mailOptions)
+        if(!isSent) return next(createError(500, 'Gagal mengirimkan email reset password'))
+        res.json({
+            message: `Permintaan reset [${user.email}] berhasil`
+        })
     } catch (error) {
         next(error)
     }
@@ -292,6 +320,19 @@ exports.resetPassword = async (req, res, next) => {
     try {
         const isInvalid = await Model.findOne({resetPasswordToken: req.params.token,  resetPasswordExpires: { $gt: Date.now()}});
         if (!isInvalid) return next(createError(403, 'Token tidak valid atau kadaluarsa'))
+        const newPassword = passwordHash.generate(req.body.password, {saltLength: 10});
+        const user = await Model.findByIdAndUpdate(isTokenValid._id, {password: newPassword})
+        
+        mailOptions.to = user.email
+        mailOptions.subject = `[No-Reply] Password Anda telah diubah`
+        mailOptions.message = `Hi ${user.fullname}.\n\n
+        Berikut ini adalah email pemberitahuan bahwa password akun ${user.email} telah diubah.\n`
+
+        const isSent = await smtpTransport.sendMail(mailOptions)
+        if (!isSent) return next(createError(500, 'Gagal mengirimkan notifikasi perubahan password'))
+        res.json({
+            message: `Notifikasi perubahan password [${user.email}] terkirim`
+        })
     } catch (error) {
         next(error)
     }
