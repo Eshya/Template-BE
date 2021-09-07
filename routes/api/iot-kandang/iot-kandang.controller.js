@@ -51,3 +51,16 @@ exports.insert = async (req, res, next) => {
         next(error)
     }
 }
+
+exports.removeById = async (req, res, next) => {
+    const id = req.params.id
+    try {
+        const results = await Model.findByIdAndRemove(id).exec();
+        res.json({
+            data: results,
+            message: 'Ok'
+        })
+    } catch (error) {
+        next(error)
+    }
+}
