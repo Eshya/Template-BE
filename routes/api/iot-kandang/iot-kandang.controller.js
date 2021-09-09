@@ -55,7 +55,7 @@ exports.insert = async (req, res, next) => {
 exports.removeById = async (req, res, next) => {
     const id = req.params.id
     try {
-        const results = await Model.findByIdAndRemove(id).exec();
+        const results = await Model.findOneAndRemove({iot: id}).exec();
         res.json({
             data: results,
             message: 'Ok'
