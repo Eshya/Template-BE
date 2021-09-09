@@ -191,13 +191,13 @@ exports.register = async (req, res, next) => {
     try {
         if(req.body.noKTP == null  && req.body.asalKemitraan == null){
             let role = await Role.findOne({name: 'peternak'}, {_id: true})
-            const resultUser = await createUser({fullname, username, email, phoneNumber, password, role, idFirebase})
+            const resultUser = await createUser({fullname, username, email, phoneNumber, password, role, idFirebase}, res)
             const resultMysql = await createNew(req.body)
             result.push(resultUser)
             mysql.push(resultMysql)
         } else {
             let role = await Role.findOne({name: 'ppl'}, {_id: true})
-            const resultUser = await createUser({fullname, username, email, phoneNumber, password, noKTP, asalKemitraan, role, idFirebase})
+            const resultUser = await createUser({fullname, username, email, phoneNumber, password, noKTP, asalKemitraan, role, idFirebase}, res)
             const resultMysql = await createNew(req.body)
             result.push(resultUser)
             mysql.push(resultMysql)
@@ -213,7 +213,7 @@ exports.register = async (req, res, next) => {
     }
 }
 
-const createUser = (data) => {
+const createUser = (data, res) => {
     return new Promise((resolve, reject) => {
         const findUname = Model.findOne({username: data.username})
         const findEmail = Model.findOne({email: data.email})
@@ -221,9 +221,9 @@ const createUser = (data) => {
         let actions = [findUname, findEmail, findNumber]
         Promise.all(actions).then(cb => {
             // if(cb[0]) throw new Error("username already registered!")
-            if(cb[0]) throw createError(400, 'username already registered');
-            if(cb[1]) throw createError(400, 'email already registered');
-            if(cb[2]) throw createError(400, 'phone number already registered');
+            if(cb[0]) throw res.json({error: 400, message: 'username already registered!'});
+            if(cb[1]) throw res.json({error: 400, message: 'email already registered'});
+            if(cb[2]) throw res.json({error: 400, message: 'phone number already registered'});
             return Model.create(data)
         })
         .then(results => resolve(results))
