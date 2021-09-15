@@ -7,6 +7,7 @@ router.get('/categories', queryCek, c.findCategories);
 router.get('/', queryCek, c.findPosts);
 router.get('/smartfarm', queryCek, c.postBycategories);
 router.get('/rekomendasi', queryCek, c.findRekomendasi);
+router.get('/produk', queryCek, c.getProduk);
 router.get('/banner', c.findBanner);
 router.get('/:id', paramCek, c.postById);
 

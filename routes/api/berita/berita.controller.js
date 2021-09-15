@@ -106,3 +106,26 @@ exports.findRekomendasi = async (req, res, next) => {
         next(error)
     }
 }
+
+exports.getProduk = async (req, res, next) => {
+    try {
+        const get = await axios.get(`https://chickin.id/blog/wp-json/wp/v2/posts?categories=32`);
+        var asyncMap = await Promise.all(get.data.map(async(x) => {
+            const getImage = await axios.get(`https://chickin.id/blog/index.php/wp-json/wp/v2/media/`+ x.featured_media)
+            const obj = {
+                id: x.id,
+                date: x.modified,
+                title: x.title.rendered,
+                content: x.content.rendered,
+                embed: getImage.data.media_details.sizes.medium, 
+           } 
+           return obj
+        }))
+        res.json({
+            data: asyncMap,
+            message: 'Ok'
+        })
+    } catch (error) {
+        next(error)
+    }
+}
