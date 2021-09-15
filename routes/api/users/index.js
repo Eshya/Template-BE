@@ -17,5 +17,8 @@ router.put('/:id', auth, paramCek, c.updateById);
 router.put('/', auth, c.updateWhere);
 router.delete('/:id', auth, paramCek, c.removeById);
 router.delete('/', auth, c.remove);
+router.post('/forgot', c.forgetPassword)
+router.get('/reset/:token', c.getToken)
+router.post('/reset/:token', c.resetPassword)
 
 module.exports = router;
