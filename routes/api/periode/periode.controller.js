@@ -261,6 +261,12 @@ exports.ringkasan = async (req, res, next) => {
     const id = req.params.id
     try {
         const getPeriode = await Model.findById(id)
+        const sapronak = await Sapronak.aggregate([
+            {$match: {periode: mongoose.Types.ObjectId(getPeriode.id)}},
+            {$group: {_id: '$_id', pakan_masuk: {$sum: '$kuantitas'}}}
+        ])
+        // console.log(sapronak);
+
         const penjualan = await Penjualan.aggregate([
             {$match: {periode: mongoose.Types.ObjectId(getPeriode.id)}},
             {$group: {_id: '$_id', terjual: {$sum: '$qty'}}}
@@ -286,6 +292,8 @@ exports.ringkasan = async (req, res, next) => {
         const avg = data.reduce((a, {avgBerat}) => a + avgBerat, 0) / (data.length - 1);
         const atas = (100 - (((getPeriode.populasi - (allDeplesi + allKematian)) / getPeriode.populasi) * 100)) * avg
         const bawah = (allPakan/allTonase) * result
+        const pakanMasuk = sapronak.reduce((a, {pakan_masuk}) => a + pakan_masuk, 0);
+
         res.json({
             populasiAkhir: getPeriode.populasi - (allDeplesi + allKematian + allPenjualan),
             populasiAwal: getPeriode.populasi,
@@ -297,7 +305,10 @@ exports.ringkasan = async (req, res, next) => {
             feedIntake: allPakan / (getPeriode.populasi - (allDeplesi + allKematian + allPenjualan)),
             ADG: 0,
             fcrAktual: allPakan / allTonase,
-            diffFcr: 0
+            diffFcr: 0,
+            pakanMasuk: pakanMasuk,
+            pakanPakai: allPakan,
+            pakan: pakanMasuk - allPakan
         })
     } catch (error) {
         next(error)
