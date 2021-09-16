@@ -87,7 +87,7 @@ exports.insert = async (req, res, next) => {
         const foundSapronak = await Sapronak.findOne({periode: data.periode})
         if(!foundSapronak) return next(createError(404, 'Sapronak not found'))
         const jenisProduk = foundSapronak.produk.jenis
-        console.log(jenisProduk);
+        // console.log(jenisProduk);
         if(jenisProduk == "PAKAN"){
             const results = await Model.create(data);
             res.json({
