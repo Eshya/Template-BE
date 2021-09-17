@@ -287,7 +287,7 @@ exports.forgetPassword = async (req, res, next) => {
         await Model.findByIdAndUpdate(user._id, {resetPasswordToken: token, resetPasswordExpires: Date.now() + 3600000})
         const host = isDevMode ? `http://${req.hostname}:4200` : `https://${req.hostname}`
         const resetUrl = 'reset-password'
-        const url = [host, resetUrl].join('/') + "token=?" + token
+        const url = [host, resetUrl].join('/') + "/token=?" + token
         mailOptions.to = user.email
         mailOptions.subject = '[No-Reply] RESET PASSOWRD CHICKIN'
         mailOptions.html = `<p>You are receiving this because you (or someone else) have requested the reset of the password for your account.</p>
