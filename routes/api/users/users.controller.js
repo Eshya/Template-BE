@@ -19,8 +19,8 @@ const mailOptions = {
 const smtpTransport = nodemailer.createTransport({
     service: 'Gmail',
     auth: {
-      user: 'wahono.gusty12@gmail.com',
-      pass: '250499hap',
+      user: 'techinchickin@gmail.com',
+      pass: 'Chickin@gmail123',
     }
 })
 
