@@ -285,7 +285,7 @@ exports.forgetPassword = async (req, res, next) => {
         const randomText = await crypto.randomBytes(20);
         const token = randomText.toString('hex');
         await Model.findByIdAndUpdate(user._id, {resetPasswordToken: token, resetPasswordExpires: Date.now() + 3600000})
-        const host = isDevMode ? `http://${req.hostname}:4200` : `https://${req.hostname}`
+        const host = isDevMode ? `http://${req.hostname}:3000` : `https://${req.hostname}`
         const resetUrl = 'reset-password'
         const url = [host, resetUrl].join('/') + "?token=" + token
         mailOptions.to = user.email
@@ -318,15 +318,24 @@ exports.getToken = async (req, res, next) => {
 
 exports.resetPassword = async (req, res, next) => {
     try {
+        console.log(req.query.token);
         const isInvalid = await Model.findOne({resetPasswordToken: req.params.token,  resetPasswordExpires: { $gt: Date.now()}});
         if (!isInvalid) return next(createError(403, 'Token tidak valid atau kadaluarsa'))
         const newPassword = passwordHash.generate(req.body.password, {saltLength: 10});
-        const user = await Model.findByIdAndUpdate(isInvalid._id, {password: newPassword})
+        const user = await Model.findByIdAndUpdate(isInvalid._id, {password: newPassword, resetPasswordToken: null, resetPasswordExpires: null})
         
         mailOptions.to = user.email
         mailOptions.subject = `[No-Reply] Password Anda telah diubah`
-        mailOptions.message = `Hi ${user.fullname}.\n\n
-        Berikut ini adalah email pemberitahuan bahwa password akun ${user.email} telah diubah.\n`
+        mailOptions.html = `Hi ${user.fullname}.\n\n Berikut ini adalah email pemberitahuan bahwa password akun ${user.email} telah diubah.\n`
+        mailOptions.html = `<p>Your Chickin password has been reset</p>
+        <p> Dear ${user.fullname}, </p>
+        <p>The password for your Chickin, ${user.email}, has been successfully reset.</p>
+        <br>
+        <p>If you need additional help, please contact Chickin.</p>
+        <p>Sincerely,</p>
+        <br>
+        <p>Chickin</p>
+        `
 
         const isSent = await smtpTransport.sendMail(mailOptions)
         if (!isSent) return next(createError(500, 'Gagal mengirimkan notifikasi perubahan password'))
