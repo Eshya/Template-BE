@@ -12,7 +12,7 @@ const mongoose = require('mongoose')
 const _find = async (req, isPublic = false) => {
     const {where, limit, offset, sort} = parseQuery(req.query);
     const count = Model.countDocuments(where);
-    const data = Model.find(where).limit(limit).skip(offset).sort(sort)
+    const data = Model.find(where).limit(limit).skip(offset).sort('createdAt')
     if(isPublic){
         data.select(selectPublic);
     }
@@ -68,7 +68,7 @@ exports.count = async (req, res, next) => {
 exports.findKegiatan = async (req, res, next) => {
     const id = req.params.id
     try {
-        const results = await KegiatanHarian.find({periode: id})
+        const results = await KegiatanHarian.find({periode: id}).sort('updatedAt')
         res.json({
             data: results,
             message: 'Ok'
@@ -81,7 +81,7 @@ exports.findKegiatan = async (req, res, next) => {
 exports.findNekropsi = async (req, res, next) => {
     const id = req.params.id
     try {
-        const results = await Nekropsi.find({periode: id})
+        const results = await Nekropsi.find({periode: id}).sort('updatedAt')
         res.json({
             data: results,
             message: 'Ok'

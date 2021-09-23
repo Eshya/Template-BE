@@ -5,7 +5,7 @@ exports.findAll = async (req, res, next) => {
     const {where, limit, offset, sort} = parseQuery(req.query);
     try {
         const count = Model.countDocuments(where);
-        const data = Model.find(where).limit(limit).skip(offset).sort(sort);
+        const data = Model.find(where).limit(limit).skip(offset).sort('updatedAt');
         const results = await Promise.all([count, data]);
         res.json({
             message: 'Ok',

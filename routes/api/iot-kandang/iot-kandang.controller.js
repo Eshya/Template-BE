@@ -20,7 +20,7 @@ const getPerangkat = async (params) => {
 exports.findByKandang = async (req, res, next) => {
     try {
         // const findKandang = await Kandang.findOne({_id: req.params.id, createdBy: req.user._id}, {_id: true})
-        const find = await Model.find({kandang: req.params.id})
+        const find = await Model.find({kandang: req.params.id}).sort('createdAt')
         var asyncMap = await Promise.all(find.map(async(x) => {
             return getPerangkat(x.iot)
             // return x.iot
