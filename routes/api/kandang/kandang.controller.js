@@ -9,7 +9,7 @@ const selectPublic = '-createdAt -updatedAt';
 const _find = async (req, isPublic = false) => {
     const {where, limit, offset, sort} = parseQuery(req.query);
     const count = Model.countDocuments(where);
-    const data = Model.find(where).limit(limit).skip(offset).sort(sort)
+    const data = Model.find(where).limit(limit).skip(offset).sort('createdAt')
     if(isPublic){
         data.select(selectPublic);
     }
@@ -75,7 +75,7 @@ exports.findActive = async (req, res, next) => {
     const where = {}
     try {
         where['isActive'] = true
-        const data = Model.find(where)
+        const data = Model.find(where).sort('updateAt')
         const count = Model.countDocuments(where)
         const results = await Promise.all([count, data])
         res.json({length: results[0], data: results[1]});
@@ -100,7 +100,7 @@ exports.findFlock = async (req, res, next) => {
 exports.findPeriode = async (req, res, next) => {
     const id = req.params.id
     try {
-        const results = await Periode.find({kandang: id})
+        const results = await Periode.find({kandang: id}).sort('updatedAt')
         const oneDay = 24 * 60 * 60 * 1000;
         const now = new Date(Date.now());
         const start = new Date(results[results.length - 1].tanggalMulai);
