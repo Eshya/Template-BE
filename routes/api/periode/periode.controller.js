@@ -68,7 +68,7 @@ exports.count = async (req, res, next) => {
 exports.findKegiatan = async (req, res, next) => {
     const id = req.params.id
     try {
-        const results = await KegiatanHarian.find({periode: id}).sort('tanggal')
+        const results = await KegiatanHarian.find({periode: id}).sort({'tanggal': -1})
         res.json({
             data: results,
             message: 'Ok'
@@ -81,7 +81,7 @@ exports.findKegiatan = async (req, res, next) => {
 exports.findNekropsi = async (req, res, next) => {
     const id = req.params.id
     try {
-        const results = await Nekropsi.find({periode: id}).sort('tanggal')
+        const results = await Nekropsi.find({periode: id}).sort({'tanggal': -1})
         res.json({
             data: results,
             message: 'Ok'
@@ -94,7 +94,7 @@ exports.findNekropsi = async (req, res, next) => {
 exports.findPenjualan = async (req, res, next) => {
     const id = req.params.id
     try {
-        const result = await Penjualan.find({periode: id}).sort('tanggal')
+        const result = await Penjualan.find({periode: id}).sort({'tanggal': -1})
         res.json({
             data: result,
             message: 'Ok'
@@ -107,7 +107,7 @@ exports.findPenjualan = async (req, res, next) => {
 exports.findSapronak = async (req, res, next) => {
     const id = req.params.id
     try {
-        const results = await Sapronak.find({periode: id}).sort('tanggal')
+        const results = await Sapronak.find({periode: id}).sort({'tanggal': -1})
         res.json({
             data: results,
             message: 'Ok'
