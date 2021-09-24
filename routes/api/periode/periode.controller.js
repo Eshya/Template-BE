@@ -94,7 +94,7 @@ exports.findNekropsi = async (req, res, next) => {
 exports.findPenjualan = async (req, res, next) => {
     const id = req.params.id
     try {
-        const result = await Penjualan.find({periode: id})
+        const result = await Penjualan.find({periode: id}).sort('createdAt')
         res.json({
             data: result,
             message: 'Ok'
@@ -107,7 +107,7 @@ exports.findPenjualan = async (req, res, next) => {
 exports.findSapronak = async (req, res, next) => {
     const id = req.params.id
     try {
-        const results = await Sapronak.find({periode: id})
+        const results = await Sapronak.find({periode: id}).sort('updatedAt')
         res.json({
             data: results,
             message: 'Ok'
