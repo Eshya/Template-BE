@@ -9,6 +9,7 @@ router.get('/smartfarm', queryCek, c.postBycategories);
 router.get('/rekomendasi', queryCek, c.findRekomendasi);
 router.get('/produk', queryCek, c.getProduk);
 router.get('/banner', c.findBanner);
+router.get('/harga', c.getHarga);
 router.get('/:id', paramCek, c.postById);
 
 module.exports = router;
