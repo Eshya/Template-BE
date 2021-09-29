@@ -430,3 +430,25 @@ exports.performa = async (req, res, next) => {
         next(error)
     }
 }
+
+// exports.performa = async (req, res, next) => {
+//     const firstPeriode = req.query.first
+//     const secondPeriode = req.query.second
+//     try {
+//         const findStart = await Model.findById(firstPeriode, {tanggalMulai: true})
+//         const findFinish = await Model.findById(secondPeriode, {tanggalMulai: true})
+//         const start = new Date(findStart.tanggalMulai)
+//         const finish = new Date(findFinish.tanggalMulai)
+//         const result = await Model.find({kandang: findStart.kandang, tanggalMulai: {$gte: start, $lte: finish}}, {_id: true}).select('-kandang -jenisDOC')
+//         // console.log(result)
+//         const asyncKegiatan = await Promise.all(result.map(async(x) => {
+//            const data = await KegiatanHarian.aggregate([
+//                 {$match: {periode: mongoose.Types.ObjectId(x.id)}}
+//             ])
+//             return data
+//         }))
+//         console.log(asyncKegiatan);
+//     } catch (error) {
+//         next(error)
+//     }
+// }
