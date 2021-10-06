@@ -346,3 +346,17 @@ exports.resetPassword = async (req, res, next) => {
         next(error)
     }
 }
+
+exports.validationSignup = async (req, res, next) => {
+    try {
+        const findUname = Model.findOne({username: req.body.username})
+        const findEmail = Model.findOne({email: req.body.email})
+        const findNumber = Model.findOne({phoneNumber: req.body.phoneNumber})
+        const result = await Promise.all([findUname, findEmail, findNumber])
+        if(result[0]) return res.json({error: 400, message: 'username already registered!'})
+        if(result[1]) return res.json({error: 400, message: 'email already registered!'})
+        if(result[2]) return res.json({error: 404, message: 'phone number already registered!'})
+    } catch (error) {
+        next(error)
+    }
+}
