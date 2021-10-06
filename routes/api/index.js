@@ -34,6 +34,7 @@ router.post('/verifyRecaptcha', (req, res, next)=>{
 });
 
 const EventEmitter = require('events');
+const kandang = require('./kandang/kandang.model');
 
 class MyEmitter extends EventEmitter {}
 
@@ -49,5 +50,22 @@ router.post('/webhook', (req, res, next)=> {
   res.json(req.body);
 });
 
+
+// myEmitter.on('notification', async (data) => {
+//     const where = {}
+//     where['isActive'] = true;
+//     const findWhere = kandang.find(where)
+//     data.json({
+
+//     })
+// })
+
+// router.get('/sendNotif', async (req, res, next) => {
+//   try {
+//     myEmitter.emit('notification', res);
+//   } catch (error) {
+//     next(error)
+//   }
+// })
 
 module.exports = router;
