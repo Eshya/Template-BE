@@ -1,5 +1,18 @@
 const Model = require('./call-us.model');
 const { parseQuery } = require('../../helpers');
+const nodemailer = require('nodemailer');
+
+const mailOptions = {
+    from: 'reset@chickin.com',
+}
+
+const smtpTransport = nodemailer.createTransport({
+    service: "Gmail",
+    auth: {
+      user: 'techinchickin@gmail.com',
+      pass: 'gkljjxtuyvduhgsk',
+    }
+})
 
 exports.findAll = async (req, res, next) => {
     const {where, limit, offset, sort} = parseQuery(req.query);
@@ -32,10 +45,18 @@ exports.findById = async (req, res, next) => {
 exports.insert = async (req, res, next) => {
     const data = req.body
     try {
-        const result = await Model.create(data);
+
+        mailOptions.to = 'contactchickin@gmail.com'
+        mailOptions.subject = 'KELUHAN USERS'
+        mailOptions.html = req.body.message
+
+        const isSent = smtpTransport.sendMail(mailOptions);
+        const create = Model.create(data);
+        const results = await Promise.all([isSent, create])
+        if(!results[0]) return next(createError(500, 'Gagal mengirimkan pesan'))
         res.json({
-            data: results,
-            message: 'Ok'
+            data: results[1],
+            message: `Permintaan reset [${req.body.email}]`
         })
     } catch (error) {
         next(error)
