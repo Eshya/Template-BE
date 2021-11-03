@@ -50,22 +50,19 @@ router.post('/webhook', (req, res, next)=> {
   res.json(req.body);
 });
 
+// myEmitter.emit("update");
+// let currentTime = 0;
+// setInterval(() => {
+//   currentTime++;
+//   myEmitter.emit("update", currentTime);
+// }, 1000);
 
-// myEmitter.on('notification', async (data) => {
-//     const where = {}
-//     where['isActive'] = true;
-//     const findWhere = kandang.find(where)
-//     data.json({
-
-//     })
+// myEmitter.on('update', (time) => {
+//   console.log('updated');
+//   console.log(`${time}`);
 // })
 
-// router.get('/sendNotif', async (req, res, next) => {
-//   try {
-//     myEmitter.emit('notification', res);
-//   } catch (error) {
-//     next(error)
-//   }
-// })
+const firebase = require('firebase-admin')
+const request = require('request')
 
 module.exports = router;
