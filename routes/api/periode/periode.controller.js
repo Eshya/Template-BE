@@ -6,8 +6,11 @@ const moment = require("moment");
 const Nekropsi = require("../nekropsi/nekropsi.model");
 const Penjualan = require("../penjualan/penjualan.model");
 const Sapronak = require("../sapronak/sapronak.model");
+const Data = require('../data/data.model');
 const selectPublic = '-createdAt -updatedAt'
 const mongoose = require('mongoose')
+
+const ONE_DAY = 24 * 60 * 60 * 1000; 
 
 const _find = async (req, isPublic = false) => {
     const {where, limit, offset, sort} = parseQuery(req.query);
@@ -23,10 +26,9 @@ const _find = async (req, isPublic = false) => {
 exports.umurAyam = async (req, res, next) => {
     try {
         const data = await Model.findById(req.params.id);
-        const oneDay = 24 * 60 * 60 * 1000;
         const now = new Date(Date.now());
         const start = new Date(data.tanggalMulai);
-        const result = Math.round(Math.abs((now - start) / oneDay))
+        const result = Math.round(Math.abs((now - start) / ONE_DAY))
         console.log(start, now)
         res.json({
             data: result,
@@ -68,7 +70,14 @@ exports.count = async (req, res, next) => {
 exports.findKegiatan = async (req, res, next) => {
     const id = req.params.id
     try {
-        const results = await KegiatanHarian.find({periode: id}).sort({'tanggal': -1})
+        const periode = await Model.findById(id)
+        const now = new Date(Date.now());
+        const start = new Date(periode.tanggalMulai);
+        const umur = Math.round(Math.abs((now - start) / ONE_DAY))
+        // console.log(umur);
+        const findData = Data.find({day: umur})
+        const data = KegiatanHarian.find({periode: id}).sort({'tanggal': -1})
+        const results = await Promise.all([findData, data])
         res.json({
             data: results,
             message: 'Ok'
@@ -293,14 +302,14 @@ exports.ringkasan = async (req, res, next) => {
         const atas = (100 - (((getPeriode.populasi - (allDeplesi + allKematian)) / getPeriode.populasi) * 100)) * avg
         const bawah = (allPakan/allTonase) * result
         const pakanMasuk = sapronak.reduce((a, {pakan_masuk}) => a + pakan_masuk, 0);
-
+        // console.log(alldeplesi);
         res.json({
             populasiAkhir: getPeriode.populasi - (allDeplesi + allKematian + allPenjualan),
             populasiAwal: getPeriode.populasi,
             panen: allPenjualan,
             jenisDoc: getPeriode.jenisDOC.name,
             IP: (atas / bawah) * 100,
-            deplesi: ((getPeriode.populasi - (allDeplesi + allKematian)) / getPeriode.populasi) * 100,
+            deplesi: ((allDeplesi + allKematian) / getPeriode.populasi) * 100,
             beratAktual: avg,
             feedIntake: allPakan / (getPeriode.populasi - (allDeplesi + allKematian + allPenjualan)),
             ADG: 0,

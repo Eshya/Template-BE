@@ -190,6 +190,10 @@ const scheme = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'Periode', autopopulate: {maxDepth: 1}
     },
+    catatan: {
+        type: String,
+        default: null
+    },
     kepala: [kepalaSchema],
     hidung: [hidungSchema],
     kotoran: [kotoranSchema],
