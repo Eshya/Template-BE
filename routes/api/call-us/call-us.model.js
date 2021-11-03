@@ -1,9 +1,8 @@
 const {Schema, model} = require('mongoose');
 const shceme = new Schema({
-    sendBy: {
-        type: Schema.Types.ObjectId,
-        ref: 'Users', select: true,
-        autopopulate: {maxDepth: 1}
+    email: {
+        type: String,
+        required: true
     },
     message: {
         type: String,

@@ -7,6 +7,12 @@ const scheme = new Schema({
     jawaban: {
         type: String,
         required: true
+    },
+    image: {
+        type: Schema.Types.ObjectId,
+        ref: 'FaqImage', select: true,
+        autopopulate: {maxDepth: 1},
+        default: null
     }
 }, {versionKey: false, timestamps: true});
 module.exports = model('Faq', scheme, 'faq')
