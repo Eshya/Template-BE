@@ -1,7 +1,7 @@
 const {parseQuery} = require('../../helpers')
-const Image = require('./user-image.model')
+const Image = require('./faq-image.model')
 const {IncomingForm} = require('formidable');
-const UPLOAD_DIR = './uploads/images/user'
+const UPLOAD_DIR = './uploads/images/faq'
 const fs = require('fs')
 
 exports.findAll = (req, res, next) => {
