@@ -1,8 +1,8 @@
 const express = require('express')
 const { auth, after, queryCek, paramCek, schemaCek, permition } = require("../../helpers");
 const router = express.Router()
-const c = require('./user-image.controller')
-const {schema} = require('./user-image.validation')
+const c = require('./faq-image.controller')
+const {schema} = require('./faq-image.validation')
 
 router.get('/', auth, queryCek, c.findAll)
 router.get('/:id', auth, paramCek, c.findById)
