@@ -36,6 +36,8 @@
     "passport-http": "^0.3.0",
     "passport-jwt": "^4.0.0",
     "password-hash": "^1.2.2",
+    "request": "^2.88.2",
+    "socket.io": "^4.2.0",
     "swagger-jsdoc": "5.0.1",
     "swagger-ui-express": "^4.1.6"
   },

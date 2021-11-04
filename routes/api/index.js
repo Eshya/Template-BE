@@ -34,6 +34,7 @@ router.post('/verifyRecaptcha', (req, res, next)=>{
 });
 
 const EventEmitter = require('events');
+const kandang = require('./kandang/kandang.model');
 
 class MyEmitter extends EventEmitter {}
 
@@ -49,5 +50,19 @@ router.post('/webhook', (req, res, next)=> {
   res.json(req.body);
 });
 
+// myEmitter.emit("update");
+// let currentTime = 0;
+// setInterval(() => {
+//   currentTime++;
+//   myEmitter.emit("update", currentTime);
+// }, 1000);
+
+// myEmitter.on('update', (time) => {
+//   console.log('updated');
+//   console.log(`${time}`);
+// })
+
+const firebase = require('firebase-admin')
+const request = require('request')
 
 module.exports = router;

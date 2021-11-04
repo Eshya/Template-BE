@@ -1,4 +1,4 @@
-const Model = require('./data.model');
+const Model = require('./faq.model');
 const {parseQuery} = require('../../helpers')
 
 exports.findAll = async (req, res, next) => {
@@ -12,6 +12,16 @@ exports.findAll = async (req, res, next) => {
             length: results[0],
             data: results[1]
         })
+    } catch (error) {
+        next(error)
+    }
+}
+
+exports.count = async (req, res, next) => {
+    const {where} = parseQuery(req.query);
+    try {
+        const result = await Model.countDocuments(where);
+        res.json({length: result})
     } catch (error) {
         next(error)
     }

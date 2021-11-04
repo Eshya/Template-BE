@@ -1,5 +1,18 @@
-const Model = require('./data.model');
-const {parseQuery} = require('../../helpers')
+const Model = require('./call-us.model');
+const { parseQuery } = require('../../helpers');
+const nodemailer = require('nodemailer');
+
+const mailOptions = {
+    from: 'reset@chickin.com',
+}
+
+const smtpTransport = nodemailer.createTransport({
+    service: "Gmail",
+    auth: {
+      user: 'techinchickin@gmail.com',
+      pass: 'gkljjxtuyvduhgsk',
+    }
+})
 
 exports.findAll = async (req, res, next) => {
     const {where, limit, offset, sort} = parseQuery(req.query);
@@ -30,9 +43,31 @@ exports.findById = async (req, res, next) => {
 }
 
 exports.insert = async (req, res, next) => {
-    const data = req.body;
+    const data = req.body
     try {
-        const results = await Model.create(data);
+
+        mailOptions.to = 'contactchickin@gmail.com'
+        mailOptions.subject = 'KELUHAN USERS'
+        mailOptions.html = req.body.message
+
+        const isSent = smtpTransport.sendMail(mailOptions);
+        const create = Model.create(data);
+        const results = await Promise.all([isSent, create])
+        if(!results[0]) return next(createError(500, 'Gagal mengirimkan pesan'))
+        res.json({
+            data: results[1],
+            message: `Permintaan reset [${req.body.email}]`
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
+exports.updateById = async (req, res, next) => {
+    const id = req.params.id;
+    const data = req.body
+    try {
+        const results = await Model.findByIdAndUpdate(id, data, {new: true}).exec();
         res.json({
             data: results,
             message: 'Ok'
@@ -42,55 +77,27 @@ exports.insert = async (req, res, next) => {
     }
 }
 
-exports.updateById = async (req, res, next) => {
-    const id = req.params.id;
-    const data = req.body;
-    try {
-        const results = await Model.findByIdAndUpdate(id, data, {new: true}).exec();
-        res.json({
-            data: results,
-            message: 'Ok'
-        })
-    } catch (error) {
-        next(error);
-    }
-}
-
-exports.updateWhere = async (req, res, next) => {
-    const {where} = parseQuery(req.query);
-    const data = req.body;
-    try {
-        const results = await Model.updateMany(where, data, {new: true, upsert: false, multiple: false}).exec();
-        res.json({
-            data: results,
-            message: 'Ok'
-        })
-    } catch (error) {
-        next(error);
-    }
-}
-
 exports.remove = async (req, res, next) => {
-    const {where} = parseQuery(req.query);
+    const {where} = parseQuery(req.query)
     try {
-        const results = await Model.deleteMany(where).exec();
+        const results = await Model.deleteMany(where).exec()
         res.json({
             data: results,
-            message: 'OK'
+            message: 'Ok'
         })
     } catch (error) {
-        next(error);
+        next(error)
     }
 }
 
 exports.removeById = async (req, res, next) => {
     try {
-        const results = await Model.findByIdAndRemove(req.params.id).exec();
+        const results = await (await Model.findByIdAndRemove(req.params.id)).exec();
         res.json({
             data: results,
             message: 'Ok'
         })
     } catch (error) {
-        next(error);
+        next(error)
     }
 }

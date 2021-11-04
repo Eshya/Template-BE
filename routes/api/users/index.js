@@ -12,6 +12,7 @@ router.get('/:id', auth, paramCek, c.findById);
 router.get('/kandang/:id', auth, paramCek, c.findKandang);
 router.post('/', auth, schemaCek(schema), after, c.insert);
 router.post('/signup', schemaCek(schema), after, c.register);
+router.post('/validation', schemaCek(schema), after, c.validationSignup);
 router.put('/kelola', auth, c.kelolaPeriode);
 router.put('/:id', auth, paramCek, c.updateById);
 router.put('/', auth, c.updateWhere);

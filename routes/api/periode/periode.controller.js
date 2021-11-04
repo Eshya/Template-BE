@@ -6,8 +6,11 @@ const moment = require("moment");
 const Nekropsi = require("../nekropsi/nekropsi.model");
 const Penjualan = require("../penjualan/penjualan.model");
 const Sapronak = require("../sapronak/sapronak.model");
+const Data = require('../data/data.model');
 const selectPublic = '-createdAt -updatedAt'
 const mongoose = require('mongoose')
+
+const ONE_DAY = 24 * 60 * 60 * 1000; 
 
 const _find = async (req, isPublic = false) => {
     const {where, limit, offset, sort} = parseQuery(req.query);
@@ -23,10 +26,9 @@ const _find = async (req, isPublic = false) => {
 exports.umurAyam = async (req, res, next) => {
     try {
         const data = await Model.findById(req.params.id);
-        const oneDay = 24 * 60 * 60 * 1000;
         const now = new Date(Date.now());
         const start = new Date(data.tanggalMulai);
-        const result = Math.round(Math.abs((now - start) / oneDay))
+        const result = Math.round(Math.abs((now - start) / ONE_DAY))
         console.log(start, now)
         res.json({
             data: result,
@@ -68,7 +70,14 @@ exports.count = async (req, res, next) => {
 exports.findKegiatan = async (req, res, next) => {
     const id = req.params.id
     try {
-        const results = await KegiatanHarian.find({periode: id}).sort({'tanggal': -1})
+        const periode = await Model.findById(id)
+        const now = new Date(Date.now());
+        const start = new Date(periode.tanggalMulai);
+        const umur = Math.round(Math.abs((now - start) / ONE_DAY))
+        // console.log(umur);
+        const findData = Data.find({day: umur})
+        const data = KegiatanHarian.find({periode: id}).sort({'tanggal': -1})
+        const results = await Promise.all([findData, data])
         res.json({
             data: results,
             message: 'Ok'
@@ -293,14 +302,14 @@ exports.ringkasan = async (req, res, next) => {
         const atas = (100 - (((getPeriode.populasi - (allDeplesi + allKematian)) / getPeriode.populasi) * 100)) * avg
         const bawah = (allPakan/allTonase) * result
         const pakanMasuk = sapronak.reduce((a, {pakan_masuk}) => a + pakan_masuk, 0);
-
+        // console.log(alldeplesi);
         res.json({
             populasiAkhir: getPeriode.populasi - (allDeplesi + allKematian + allPenjualan),
             populasiAwal: getPeriode.populasi,
             panen: allPenjualan,
             jenisDoc: getPeriode.jenisDOC.name,
             IP: (atas / bawah) * 100,
-            deplesi: ((getPeriode.populasi - (allDeplesi + allKematian)) / getPeriode.populasi) * 100,
+            deplesi: ((allDeplesi + allKematian) / getPeriode.populasi) * 100,
             beratAktual: avg,
             feedIntake: allPakan / (getPeriode.populasi - (allDeplesi + allKematian + allPenjualan)),
             ADG: 0,
@@ -338,7 +347,6 @@ exports.performa = async (req, res, next) => {
         const finish = new Date(findFinish.tanggalMulai)
         //get total tonase
         const result = await Model.find({kandang: findStart.kandang, tanggalMulai: {$gte: start, $lte: finish}})
-    
         for (const x of result) {
             const data = await KegiatanHarian.aggregate([
                 {$match: {periode: mongoose.Types.ObjectId(x.id)}},
@@ -348,10 +356,12 @@ exports.performa = async (req, res, next) => {
                 // {$project: {periode: '$periode._id'}},
                 {$group: {_id: '$_id', avgBerat: {$avg: '$berat.beratTimbang'}, tonase: {$sum: {$multiply: ['$berat.beratTimbang', '$berat.populasi']}}, pakan: {$sum: '$pakanPakai.beratPakan'}, totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
             ])
+            console.log(data);
             const oneDay = 24 * 60 * 60 * 1000;
             const now = new Date(x.tanggalAkhir);
             const start = new Date(x.tanggalMulai);
             const result = Math.round(Math.abs((now - start) / oneDay))
+            // console.log(data.length);
             if (data.length) {
                 tonase.push(data)
                 data.push({
@@ -365,6 +375,7 @@ exports.performa = async (req, res, next) => {
                 })
             }
         }
+        // console.log(tonase[0]);
         for (let i = 0; i < tonase.length; i++) {
             const allTonase = tonase[i].reduce((a, {tonase}) => a + tonase, 0)
             const allPakan = tonase[i].reduce((a, {pakan}) => a + pakan, 0)
@@ -377,7 +388,7 @@ exports.performa = async (req, res, next) => {
             const kematian = allDeplesi + allKematian
             const atas = (100 - (((findPopulasi[0] - kematian) / findPopulasi[0]) * 100)) * avg
             const bawah = (allPakan/allTonase) * findUmur 
-            console.log(avg);
+            // console.log(avg);
             res.json({                
                 FCR: allPakan/allTonase,
                 Deplesi: ((findPopulasi[0] - kematian) / findPopulasi[0]) * 100,
@@ -389,3 +400,25 @@ exports.performa = async (req, res, next) => {
         next(error)
     }
 }
+
+// exports.performa = async (req, res, next) => {
+//     const firstPeriode = req.query.first
+//     const secondPeriode = req.query.second
+//     try {
+//         const findStart = await Model.findById(firstPeriode, {tanggalMulai: true})
+//         const findFinish = await Model.findById(secondPeriode, {tanggalMulai: true})
+//         const start = new Date(findStart.tanggalMulai)
+//         const finish = new Date(findFinish.tanggalMulai)
+//         const result = await Model.find({kandang: findStart.kandang, tanggalMulai: {$gte: start, $lte: finish}}, {_id: true}).select('-kandang -jenisDOC')
+//         // console.log(result)
+//         const asyncKegiatan = await Promise.all(result.map(async(x) => {
+//            const data = await KegiatanHarian.aggregate([
+//                 {$match: {periode: mongoose.Types.ObjectId(x.id)}}
+//             ])
+//             return data
+//         }))
+//         console.log(asyncKegiatan);
+//     } catch (error) {
+//         next(error)
+//     }
+// }
