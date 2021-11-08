@@ -272,7 +272,14 @@ exports.ringkasan = async (req, res, next) => {
         const getPeriode = await Model.findById(id)
         const sapronak = await Sapronak.aggregate([
             {$match: {periode: mongoose.Types.ObjectId(getPeriode.id)}},
-            {$group: {_id: '$_id', pakan_masuk: {$sum: '$kuantitas'}}}
+            {$lookup:  {
+                "from": "produk",
+                "localField": "produk",
+                "foreignField": "_id",
+                "as": "produk_info"
+            }},
+            {$unwind: '$produk_info'},
+            {$group: {_id: '$produk_info.jenis', pakan_masuk: {$sum: '$kuantitas'}}}
         ])
         // console.log(sapronak);
 
@@ -301,7 +308,10 @@ exports.ringkasan = async (req, res, next) => {
         const avg = data.reduce((a, {avgBerat}) => a + avgBerat, 0) / (data.length - 1);
         const atas = (100 - (((getPeriode.populasi - (allDeplesi + allKematian)) / getPeriode.populasi) * 100)) * avg
         const bawah = (allPakan/allTonase) * result
-        const pakanMasuk = sapronak.reduce((a, {pakan_masuk}) => a + pakan_masuk, 0);
+        // const pakanMasuk = sapronak.reduce((a, {pakan_masuk}) => a + pakan_masuk, 0);
+        const filter_sapronak = sapronak.filter(x => x._id == "PAKAN")
+        const pakanMasuk = filter_sapronak.reduce((a, {pakan_masuk}) => a + pakan_masuk, 0);
+        console.log(pakanMasuk);
         // console.log(alldeplesi);
         res.json({
             populasiAkhir: getPeriode.populasi - (allDeplesi + allKematian + allPenjualan),

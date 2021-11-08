@@ -77,16 +77,16 @@ exports.createProduk = async (produk) => {
 // })
 
 // const addTipeKandang = tipeKandangData.map((tipeKandang) => this.createTipeKandang(tipeKandang))
-// const addJenisDOC = jenisDOCData.map((jenisDOC) => this.createJenisDOC(jenisDOC));
-const addProduk = produkData.map((produk) => this.createProduk(produk));
+const addJenisDOC = jenisDOCData.map((jenisDOC) => this.createJenisDOC(jenisDOC));
+// const addProduk = produkData.map((produk) => this.createProduk(produk));
 // Promise.all(addTipeKandang).then((results) => {
 //     console.log(results);
 // })
 
-// Promise.all(addJenisDOC).then((results) => {
-//     console.log(results);
-// })
-
-Promise.all(addProduk).then((results) => {
+Promise.all(addJenisDOC).then((results) => {
     console.log(results);
 })
+
+// Promise.all(addProduk).then((results) => {
+//     console.log(results);
+// })
