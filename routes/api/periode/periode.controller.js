@@ -75,11 +75,11 @@ exports.findKegiatan = async (req, res, next) => {
         const start = new Date(periode.tanggalMulai);
         const umur = Math.round(Math.abs((now - start) / ONE_DAY))
         // console.log(umur);
-        const findData = Data.find({day: umur})
-        const data = KegiatanHarian.find({periode: id}).sort({'tanggal': -1})
-        const results = await Promise.all([findData, data])
+        // const findData = Data.find({day: umur})
+        const data = await KegiatanHarian.find({periode: id}).sort({'tanggal': -1})
+        // const results = await Promise.all([findData, data])
         res.json({
-            data: results,
+            data: data,
             message: 'Ok'
         })
     } catch (error) {
