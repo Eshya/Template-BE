@@ -239,13 +239,13 @@ exports.getBudidaya = async (req, res, next) => {
         getKegiatan.forEach(x => {
             kematian.push(x.deplesi + x.pemusnahan)
         });
-        const totalKematian = kematian.reduce(reducer);
+        const totalKematian = kematian.reduce(reducer, 0);
         const populasiAkhir = doc.populasi - totalKematian
         const getPenjualan = await Penjualan.find({periode: id})
         getPenjualan.forEach(x => {
             harian.push(x.beratBadan * x.harga * x.qty)
         })
-        const penjualanAyamBesar = harian.reduce(reducer);
+        const penjualanAyamBesar = harian.reduce(reducer, 0);
         const pendapatanPeternak = penjualanAyamBesar -pembelianDoc - pembelianOVK - pembelianPakan
         const pendapatanPerEkor = pendapatanPeternak / populasiAkhir
 
