@@ -9,18 +9,22 @@ const usersPath = path.join(__dirname, '..', 'seeders', 'users.json')
 const tipeKandangPath = path.join(__dirname, '..', 'seeders', 'tipe-kandang.json')
 const jenisDOCPath = path.join(__dirname, '..', 'seeders', 'jenis-DOC.json')
 const produkPath = path.join(__dirname, '..', 'seeders', 'produk.json')
+const dataPath = path.join(__dirname, '..', 'seeders', 'data.json')
+
 
 const rolesData = JSON.parse(fs.readFileSync(rolesPath, 'utf-8'))
 const userData = JSON.parse(fs.readFileSync(usersPath, 'utf-8'))
 const tipeKandangData = JSON.parse(fs.readFileSync(tipeKandangPath, 'utf-8'))
 const jenisDOCData = JSON.parse(fs.readFileSync(jenisDOCPath, 'utf-8'))
 const produkData = JSON.parse(fs.readFileSync(produkPath, 'utf-8'))
+const dataData = JSON.parse(fs.readFileSync(dataPath, 'utf-8'))
 
 const Roles = require('../routes/api/roles/roles.model')
 const Users = require('../routes/api/users/users.model')
 const TipeKandang = require('../routes/api/tipe-kandang/tipe-kandang.model')
 const JenisDOC = require('../routes/api/jenis-DOC/jenis-DOC.model')
 const Produk = require('../routes/api/produk/produk.model');
+const Data = require('../routes/api/data/data.model')
 
 const passwordHash = require('password-hash')
 
@@ -45,6 +49,14 @@ exports.createProduk = async (produk) => {
     if(!isProdukExist){
         const defaultProduk = await Produk.create(produk);
         return defaultProduk;
+    }
+}
+
+exports.createData = async (data) => {
+    const isDataExist = await Data.findOne({day: data.day})
+    if(!isDataExist){
+        const defaultData = await Data.create(data);
+        return defaultData;
     }
 }
 
@@ -77,13 +89,18 @@ exports.createProduk = async (produk) => {
 // })
 
 // const addTipeKandang = tipeKandangData.map((tipeKandang) => this.createTipeKandang(tipeKandang))
-const addJenisDOC = jenisDOCData.map((jenisDOC) => this.createJenisDOC(jenisDOC));
+// const addJenisDOC = jenisDOCData.map((jenisDOC) => this.createJenisDOC(jenisDOC));
 // const addProduk = produkData.map((produk) => this.createProduk(produk));
+const addData = dataData.map((data) => this.createData(data))
 // Promise.all(addTipeKandang).then((results) => {
 //     console.log(results);
 // })
 
-Promise.all(addJenisDOC).then((results) => {
+// Promise.all(addJenisDOC).then((results) => {
+//     console.log(results);
+// })
+
+Promise.all(addData).then((results) => {
     console.log(results);
 })
 

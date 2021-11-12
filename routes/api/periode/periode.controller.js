@@ -138,12 +138,15 @@ exports.findById = async (req, res, next) => {
     }
 }
 
+
+
 exports.insert = async (req, res, next) => {
     const data = req.body
     const user = req.user.id
     try {
         const isActive =  Kandang.findByIdAndUpdate(data.kandang, {isActive: true, createdBy: user}, {new: true, upsert: false, multi: false})
         const dataPeriode = Model.create(data)
+
         const results = await Promise.all([isActive, dataPeriode])
         res.json({
             data: results[1],
@@ -243,22 +246,16 @@ exports.getBudidaya = async (req, res, next) => {
             harian.push(x.beratBadan * x.harga * x.qty)
         })
         const penjualanAyamBesar = harian.reduce(reducer);
-        const dn = 0
-        const pendapatanPeternak = penjualanAyamBesar - dn -pembelianDoc - pembelianOVK - pembelianPakan
+        const pendapatanPeternak = penjualanAyamBesar -pembelianDoc - pembelianOVK - pembelianPakan
         const pendapatanPerEkor = pendapatanPeternak / populasiAkhir
-        const pengeluaranDimuka = 0
-        const peneriamaanAkhir = pendapatanPeternak - pengeluaranDimuka
 
         res.json({
             'penjualanAyamBesar': penjualanAyamBesar,
-            'DNPenjualan': dn,
             'pembelianPakan': pembelianPakan,
             'pembelianOVK': pembelianOVK,
             'pembelianDOC': pembelianDoc,
             'pendapatanPeternak': pendapatanPeternak,
             'pendapatanPerEkor': pendapatanPerEkor,
-            'pengeluaranDimuka': pengeluaranDimuka,
-            'peneriamaanAkhir': peneriamaanAkhir,
             message: 'Ok'
         })
     } catch (error) {

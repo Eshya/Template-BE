@@ -23,6 +23,14 @@ const scheme = new Schema({
     cumIntake: {
         type: Number,
         required: true
+    },
+    fcr: {
+        type: Number,
+        required: true
+    },
+    ip: {
+        type: Number,
+        required: true
     }
 }, {versionKey: false, timestamps: true})
 module.exports = model('Data', scheme, 'data')
