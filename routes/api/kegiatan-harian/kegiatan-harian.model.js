@@ -26,12 +26,10 @@ const scheme = new Schema({
     },
     pakanPakai: [pakanPakaiSchema],
     pemusnahan: {
-        type: Number,
-        required: true
+        type: Number
     },
     deplesi: {
-        type: Number,
-        required: true
+        type: Number
     },
     berat: [beratSchema]
 }, {versionKey: false, timestamps: true})
