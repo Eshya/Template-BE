@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const {projectName} = require('../helpers');
+const {projectName, createError} = require('../helpers');
 const debug = require('debug')(`${projectName}:api`);
 
 const fs = require('fs');
@@ -32,37 +32,5 @@ router.post('/verifyRecaptcha', (req, res, next)=>{
     res.json(body);
   });
 });
-
-const EventEmitter = require('events');
-const kandang = require('./kandang/kandang.model');
-
-class MyEmitter extends EventEmitter {}
-
-const myEmitter = new MyEmitter();
-
-myEmitter.on('notifyme', (data) => {
-  console.log('a notification occurred!');
-  console.log(data);
-});
-
-router.post('/webhook', (req, res, next)=> {
-  myEmitter.emit('notifyme', req.body);
-  res.json(req.body);
-});
-
-// myEmitter.emit("update");
-// let currentTime = 0;
-// setInterval(() => {
-//   currentTime++;
-//   myEmitter.emit("update", currentTime);
-// }, 1000);
-
-// myEmitter.on('update', (time) => {
-//   console.log('updated');
-//   console.log(`${time}`);
-// })
-
-const firebase = require('firebase-admin')
-const request = require('request')
 
 module.exports = router;

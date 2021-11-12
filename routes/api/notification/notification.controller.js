@@ -21,3 +21,17 @@ exports.example = async (req, res, next) => {
     }
 }
 
+const isValidRequest = (req, res) => {
+  if(!req.body || !req.body.endpoint){
+    res.status(400)
+    res.setHeader('Content-Type', 'application/json')
+    res.send(JSON.stringify({
+      error: {
+        id: 'no-endpoint',
+        message: 'Subscription must have an endpoint'
+      }
+    }))
+    return false
+  }
+  return true
+}

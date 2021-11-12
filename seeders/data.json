@@ -1,0 +1,512 @@
+[
+    {
+        "day": 0,
+        "bodyWeight": 42,
+        "dailyGain": 0,
+        "adg": 0,
+        "dailyIntake": 6,
+        "cumIntake": 6,
+        "fcr": 0,
+        "ip": 0
+    },
+    {
+        "day": 1,
+        "bodyWeight": 57,
+        "dailyGain": 15,
+        "adg": 0,
+        "dailyIntake": 10,
+        "cumIntake": 16,
+        "fcr": 0,
+        "ip": 0
+    },
+    {
+        "day": 2,
+        "bodyWeight": 72,
+        "dailyGain": 15,
+        "adg": 0,
+        "dailyIntake": 14,
+        "cumIntake": 30,
+        "fcr": 0.316,
+        "ip": 1381
+    },
+    {
+        "day": 3,
+        "bodyWeight": 89,
+        "dailyGain": 17,
+        "adg": 0,
+        "dailyIntake": 18,
+        "cumIntake": 48,
+        "fcr": 0.484,
+        "ip": 681
+    },
+    {
+        "day": 4,
+        "bodyWeight": 109,
+        "dailyGain": 20,
+        "adg": 0,
+        "dailyIntake": 22,
+        "cumIntake": 70,
+        "fcr": 0.6,
+        "ip": 492
+    },
+    {
+        "day": 5,
+        "bodyWeight": 131,
+        "dailyGain": 22,
+        "adg": 0,
+        "dailyIntake": 26,
+        "cumIntake": 96,
+        "fcr": 0.682,
+        "ip": 413
+    },
+    {
+        "day": 6,
+        "bodyWeight": 155,
+        "dailyGain": 24,
+        "adg": 0,
+        "dailyIntake": 30,
+        "cumIntake": 126,
+        "fcr": 0.748,
+        "ip": 368
+    },
+    {
+        "day": 7,
+        "bodyWeight": 182,
+        "dailyGain": 27,
+        "adg": 20,
+        "dailyIntake": 34,
+        "cumIntake": 160,
+        "fcr": 0.825,
+        "ip": 331
+    },
+    {
+        "day": 8,
+        "bodyWeight": 212,
+        "dailyGain": 30,
+        "adg": 0,
+        "dailyIntake": 38,
+        "cumIntake": 198,
+        "fcr": 0.88,
+        "ip": 314
+    },
+    {
+        "day": 9,
+        "bodyWeight": 246,
+        "dailyGain": 34,
+        "adg": 0,
+        "dailyIntake": 42,
+        "cumIntake": 240,
+        "fcr": 0.939,
+        "ip": 300
+    },
+    {
+        "day": 10,
+        "bodyWeight": 281,
+        "dailyGain": 35,
+        "adg": 0,
+        "dailyIntake": 47,
+        "cumIntake": 287,
+        "fcr": 0.975,
+        "ip": 295
+    },
+    {
+        "day": 11,
+        "bodyWeight": 320,
+        "dailyGain": 39,
+        "adg": 0,
+        "dailyIntake": 51,
+        "cumIntake": 338,
+        "fcr": 1.012,
+        "ip": 293
+    },
+    {
+        "day": 12,
+        "bodyWeight": 362,
+        "dailyGain": 42,
+        "adg": 0,
+        "dailyIntake": 57,
+        "cumIntake": 395,
+        "fcr": 1.042,
+        "ip": 294
+    },
+    {
+        "day": 13,
+        "bodyWeight": 407,
+        "dailyGain": 45,
+        "adg": 0,
+        "dailyIntake": 61,
+        "cumIntake": 456,
+        "fcr": 1.072,
+        "ip": 296
+    },
+    {
+        "day": 14,
+        "bodyWeight": 455,
+        "dailyGain": 48,
+        "adg": 39,
+        "dailyIntake": 66,
+        "cumIntake": 522,
+        "fcr": 1.093,
+        "ip": 298
+    },
+    {
+        "day": 15,
+        "bodyWeight": 506,
+        "dailyGain": 51,
+        "adg": 0,
+        "dailyIntake": 73,
+        "cumIntake": 595,
+        "fcr": 1.124,
+        "ip": 302
+    },
+    {
+        "day": 16,
+        "bodyWeight": 561,
+        "dailyGain": 55,
+        "adg": 0,
+        "dailyIntake": 78,
+        "cumIntake": 673,
+        "fcr": 1.146,
+        "ip": 305
+    },
+    {
+        "day": 17,
+        "bodyWeight": 618,
+        "dailyGain": 57,
+        "adg": 0,
+        "dailyIntake": 83,
+        "cumIntake": 845,
+        "fcr": 1.169,
+        "ip": 309
+    },
+    {
+        "day": 18,
+        "bodyWeight": 678,
+        "dailyGain": 60,
+        "adg": 0,
+        "dailyIntake": 89,
+        "cumIntake": 845,
+        "fcr": 1.19,
+        "ip": 314
+    },
+    {
+        "day": 19,
+        "bodyWeight": 741,
+        "dailyGain": 63,
+        "adg": 0,
+        "dailyIntake": 95,
+        "cumIntake": 940,
+        "fcr": 1.209,
+        "ip": 318
+    },
+    {
+        "day": 20,
+        "bodyWeight": 806,
+        "dailyGain": 65,
+        "adg": 0,
+        "dailyIntake": 101,
+        "cumIntake": 1041,
+        "fcr": 1.231,
+        "ip": 323
+    },
+    {
+        "day": 21,
+        "bodyWeight": 874,
+        "dailyGain": 68,
+        "adg": 60,
+        "dailyIntake": 107,
+        "cumIntake": 1148,
+        "fcr": 1.249,
+        "ip": 327
+    },
+    {
+        "day": 22,
+        "bodyWeight": 944,
+        "dailyGain": 70,
+        "adg": 0,
+        "dailyIntake": 114,
+        "cumIntake": 1262,
+        "fcr": 1.268,
+        "ip": 331
+    },
+    {
+        "day": 23,
+        "bodyWeight": 1017,
+        "dailyGain": 73,
+        "adg": 0,
+        "dailyIntake": 119,
+        "cumIntake": 1381,
+        "fcr": 1.291,
+        "ip": 335
+    },
+    {
+        "day": 24,
+        "bodyWeight": 1093,
+        "dailyGain": 76,
+        "adg": 0,
+        "dailyIntake": 125,
+        "cumIntake": 1506,
+        "fcr": 1.31,
+        "ip": 338
+    },
+    {
+        "day": 25,
+        "bodyWeight": 1170,
+        "dailyGain": 77,
+        "adg": 0,
+        "dailyIntake": 131,
+        "cumIntake": 1673,
+        "fcr": 1.33,
+        "ip": 342
+    },
+    {
+        "day": 26,
+        "bodyWeight": 1249,
+        "dailyGain": 79,
+        "adg": 0,
+        "dailyIntake": 136,
+        "cumIntake": 1773,
+        "fcr": 1.349,
+        "ip": 346
+    },
+    {
+        "day": 27,
+        "bodyWeight": 1329,
+        "dailyGain": 80,
+        "adg": 0,
+        "dailyIntake": 143,
+        "cumIntake": 1916,
+        "fcr": 1.368,
+        "ip": 348
+    },
+    {
+        "day": 28,
+        "bodyWeight": 1412,
+        "dailyGain": 83,
+        "adg": 77,
+        "dailyIntake": 148,
+        "cumIntake": 2064,
+        "fcr": 1.387,
+        "ip": 351
+    },
+    {
+        "day": 29,
+        "bodyWeight": 1496,
+        "dailyGain": 84,
+        "adg": 0,
+        "dailyIntake": 154,
+        "cumIntake": 2218,
+        "fcr": 1.408,
+        "ip": 353
+    },
+    {
+        "day": 30,
+        "bodyWeight": 1581,
+        "dailyGain": 85,
+        "adg": 0,
+        "dailyIntake": 155,
+        "cumIntake": 2386,
+        "fcr": 1.427,
+        "ip": 355
+    },
+    {
+        "day": 31,
+        "bodyWeight": 1667,
+        "dailyGain": 86,
+        "adg": 0,
+        "dailyIntake": 168,
+        "cumIntake": 2541,
+        "fcr": 1.447,
+        "ip": 357
+    },
+    {
+        "day": 32,
+        "bodyWeight": 1754,
+        "dailyGain": 87,
+        "adg": 0,
+        "dailyIntake": 170,
+        "cumIntake": 2711,
+        "fcr": 1.465,
+        "ip": 359
+    },
+    {
+        "day": 33,
+        "bodyWeight": 1843,
+        "dailyGain": 89,
+        "adg": 0,
+        "dailyIntake": 174,
+        "cumIntake": 2885,
+        "fcr": 1.485,
+        "ip": 360
+    },
+    {
+        "day": 34,
+        "bodyWeight": 1932,
+        "dailyGain": 89,
+        "adg": 0,
+        "dailyIntake": 179,
+        "cumIntake": 3064,
+        "fcr": 1.504,
+        "ip": 361
+    },
+    {
+        "day": 35,
+        "bodyWeight": 2021,
+        "dailyGain": 89,
+        "adg": 87,
+        "dailyIntake": 183,
+        "cumIntake": 3247,
+        "fcr": 1.542,
+        "ip": 362
+    },
+    {
+        "day": 36,
+        "bodyWeight": 2120,
+        "dailyGain": 90,
+        "adg": 0,
+        "dailyIntake": 0,
+        "cumIntake": 0,
+        "fcr": 1.546,
+        "ip": 362
+    },
+    {
+        "day": 37,
+        "bodyWeight": 2210,
+        "dailyGain": 90,
+        "adg": 0,
+        "dailyIntake": 0,
+        "cumIntake": 0,
+        "fcr": 1.565,
+        "ip": 363
+    },
+    {
+        "day": 38,
+        "bodyWeight": 2300,
+        "dailyGain": 90,
+        "adg": 0,
+        "dailyIntake": 0,
+        "cumIntake": 0,
+        "fcr": 1.585,
+        "ip": 363
+    },
+    {
+        "day": 39,
+        "bodyWeight": 2390,
+        "dailyGain": 90,
+        "adg": 0,
+        "dailyIntake": 0,
+        "cumIntake": 0,
+        "fcr": 1.604,
+        "ip": 362
+    },
+    {
+        "day": 40,
+        "bodyWeight": 2480,
+        "dailyGain": 90,
+        "adg": 0,
+        "dailyIntake": 0,
+        "cumIntake": 0,
+        "fcr": 1.642,
+        "ip": 362
+    },
+    {
+        "day": 41,
+        "bodyWeight": 2570,
+        "dailyGain": 90,
+        "adg": 0,
+        "dailyIntake": 0,
+        "cumIntake": 0,
+        "fcr": 1.646,
+        "ip": 361
+    },
+    {
+        "day": 42,
+        "bodyWeight": 2660,
+        "dailyGain": 90,
+        "adg": 0,
+        "dailyIntake": 0,
+        "cumIntake": 0,
+        "fcr": 1.665,
+        "ip": 360
+    },
+    {
+        "day": 43,
+        "bodyWeight": 2750,
+        "dailyGain": 90,
+        "adg": 0,
+        "dailyIntake": 0,
+        "cumIntake": 0,
+        "fcr": 1.684,
+        "ip": 359
+    },
+    {
+        "day": 44,
+        "bodyWeight": 2840,
+        "dailyGain": 90,
+        "adg": 0,
+        "dailyIntake": 0,
+        "cumIntake": 0,
+        "fcr": 1.704,
+        "ip": 358
+    },
+    {
+        "day": 45,
+        "bodyWeight": 2930,
+        "dailyGain": 90,
+        "adg": 0,
+        "dailyIntake": 0,
+        "cumIntake": 0,
+        "fcr": 1.723,
+        "ip": 356
+    },
+    {
+        "day": 46,
+        "bodyWeight": 3020,
+        "dailyGain": 90,
+        "adg": 0,
+        "dailyIntake": 0,
+        "cumIntake": 0,
+        "fcr": 1.743,
+        "ip": 355
+    },
+    {
+        "day": 47,
+        "bodyWeight": 3110,
+        "dailyGain": 90,
+        "adg": 0,
+        "dailyIntake": 0,
+        "cumIntake": 0,
+        "fcr": 1.762,
+        "ip": 353
+    },
+    {
+        "day": 48,
+        "bodyWeight": 3200,
+        "dailyGain": 90,
+        "adg": 0,
+        "dailyIntake": 0,
+        "cumIntake": 0,
+        "fcr": 1.783,
+        "ip": 351
+    },
+    {
+        "day": 49,
+        "bodyWeight": 3290,
+        "dailyGain": 90,
+        "adg": 0,
+        "dailyIntake": 0,
+        "cumIntake": 0,
+        "fcr": 1.802,
+        "ip": 349
+    },
+    {
+        "day": 50,
+        "bodyWeight": 3380,
+        "dailyGain": 90,
+        "adg": 0,
+        "dailyIntake": 0,
+        "cumIntake": 0,
+        "fcr": 1.822,
+        "ip": 347
+    }
+]
