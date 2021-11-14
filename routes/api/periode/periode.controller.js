@@ -71,18 +71,21 @@ exports.findKegiatan = async (req, res, next) => {
     const id = req.params.id
     try {
         const periode = await Model.findById(id)
-        const now = new Date(Date.now());
         const start = new Date(periode.tanggalMulai);
-        var umur = Math.round(Math.abs((now - start) / ONE_DAY))
-        // console.log(umur > 30);
-        // if(umur > 50){return umur = 50}
-        // console.log(umur >=  30)
-        console.log(umur)
-        // const findData = Data.find({day: umur})
-        const data = await KegiatanHarian.find({periode: id}).sort({'tanggal': -1})
-        // const results = await Promise.all([findData, data])
+        const data = await KegiatanHarian.find({periode: id}, {tanggal: true}).select('-periode')
+        console.log(data);
+
+        const asyncResults = await Promise.all(data.map(async(x) => {
+            var findData = []
+            const tanggal = new Date(x.tanggal)
+            var umur = Math.round(Math.abs((tanggal - start) / ONE_DAY))
+            if(umur >= 50){umur = 50}
+            findData = await Data.find({day: umur})
+            findData.push(x)
+            return findData
+        }))
         res.json({
-            data: data,
+            data: asyncResults,
             message: 'Ok'
         })
     } catch (error) {
@@ -251,6 +254,7 @@ exports.getBudidaya = async (req, res, next) => {
         const penjualanAyamBesar = harian.reduce(reducer, 0);
         const pendapatanPeternak = penjualanAyamBesar -pembelianDoc - pembelianOVK - pembelianPakan
         const pendapatanPerEkor = pendapatanPeternak / populasiAkhir
+        const totalPembelianSapronak = pembelianPakan + pembelianOVK + pembelianDoc
 
         res.json({
             'penjualanAyamBesar': penjualanAyamBesar,
@@ -259,6 +263,7 @@ exports.getBudidaya = async (req, res, next) => {
             'pembelianDOC': pembelianDoc,
             'pendapatanPeternak': pendapatanPeternak,
             'pendapatanPerEkor': pendapatanPerEkor,
+            'totalPembelianSapronak': totalPembelianSapronak,
             message: 'Ok'
         })
     } catch (error) {
