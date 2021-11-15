@@ -4,7 +4,7 @@ const scheme = new Schema({
         type: String,
         required: true,
         trim: true,
-        unique: true
+        // unique: true
     },
     alamat: {
         type: String,

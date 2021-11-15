@@ -104,7 +104,8 @@ exports.findPeriode = async (req, res, next) => {
         const oneDay = 24 * 60 * 60 * 1000;
         const now = new Date(Date.now());
         const start = new Date(results[results.length - 1].tanggalMulai);
-        const umurAyam = Math.round(Math.abs((now - start) / oneDay))
+        console.log(start);
+        const umurAyam = Math.round(Math.abs((now - start) / oneDay) - 1)
         console.log(umurAyam);
         res.json({
             age: umurAyam,
