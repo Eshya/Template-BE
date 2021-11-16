@@ -31,6 +31,10 @@ const scheme = new Schema({
     ip: {
         type: Number,
         required: true
+    },
+    deplesi: {
+        type: Number,
+        required: true
     }
 }, {versionKey: false, timestamps: true})
 module.exports = model('Data', scheme, 'data')
