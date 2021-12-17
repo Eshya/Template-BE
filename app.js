@@ -4,9 +4,6 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 const fs = require('fs')
 
-const swaggerJsDoc = require('swagger-jsdoc');
-const swaggerUi = require('swagger-ui-express');
-
 const cors = require('cors');
 const db = require('./configs/db.conf');
 
@@ -23,38 +20,7 @@ const MongoStore = require('connect-mongo')(session);
 const staticFile = 'public';
 const passport = require('passport');
 
-const cron = require('node-cron')
-
 var app = express();
-
-const options = {
-    definition: {
-        openapi: "3.0.0",
-        info: {
-            title: "",
-            version: "0.0.1",
-            description: "",
-            license: {
-                name: "MIT",
-                url: "https://spdx.org/licenses/MIT.html",
-            },
-            contact: {
-                name: "",
-                url: "",
-                email: ""
-            }
-        },
-        servers: [
-            {
-                url: "http://localhost:3000/api"
-            }
-        ],
-    },
-    apis: ["./routes/documentation/*.js"]
-}
-
-const specs = swaggerJsDoc(options);
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
 
 app.use(logger('dev'));
 app.use(express.json({limit: '100mb'}));
@@ -73,13 +39,6 @@ app.use(passport.session());
 app.use(cors());
 app.use(require('./routes'));
 app.use(express.static(path.join(__dirname, staticFile)));
-
-const Faq = require('./routes/api/faq/faq.model')
-const FaqImage = require('./routes/api/faq-image')
-const Nekropsi = require('./routes/api/nekropsi')
-const NekropsiImage = require('./routes/api/nekropsi-image/nekropsi-image.model')
-const User = require('./routes/api/users/users.model')
-const UserImage = require('./routes/api/user-image/user-image.model')
 
 app.use('/uploads', (req, res, next) => {
     const regex = /((\w+\/)+)(\w+.[a-z]{3,4}$)/gm
@@ -104,47 +63,4 @@ app.use((err, req, res) => {
         res.status(500).send({message: 'Internal Server Error'});
     }
 })
-
-// delete image scheduler
-
-const removeFile = (url) => {
-    return new Promise((resolve, reject) => {
-        fs.unlink(url, err => {
-            if(err) reject();
-            resolve();
-        })
-    })
-}
-
-function finding(model, image) {
-    return new Promise((resolve, reject) => {
-        var tempt = []
-        model.find().then((results) => {
-            for(let i = 0; i < results.length; i++){
-                if(results[i].image == null) return delete results[i]
-                const element = results[i].image.path
-                tempt.push(element);
-            }
-        })
-        setTimeout(() => {
-            image.find({path: {$nin: tempt}})
-            .then((imageFind) => {
-                if(!imageFind.length) return reject(createError(400, 'all image has been deleted!'))
-                for (const element of imageFind){
-                    const rmFile = removeFile(element.path)
-                    const rmData = image.findByIdAndRemove(element._id).exec();
-                    resolve([rmFile, rmData])
-                }
-            })
-        }, 2000)
-    })
-}
-
-cron.schedule('* * 14 * *', () => {
-    finding(User, UserImage);
-    finding(Faq, FaqImage);
-    finding(Nekropsi, NekropsiImage);
-})
-
-
 module.exports = app;
