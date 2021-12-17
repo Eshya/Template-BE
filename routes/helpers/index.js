@@ -3,8 +3,11 @@ const {parse} = require('./query.parser');
 const {param, query, after} = require('./request.validation');
 const {checkSchema} = require('express-validator');
 const passport = require('passport');
+const {JWT_SECRET} = require('../../passport/secret')
+const jwt = require('jsonwebtoken')
 
-exports.auth = passport.authenticate('jwt', {session: false});
+
+// exports.auth = passport.authenticate('jwt', {session: false});
 exports.schemaCek = checkSchema;
 exports.after = after;
 exports.queryCek = query;
@@ -28,3 +31,17 @@ exports.emptyOrRows = (rows) => {
       return rows
     }
 }
+
+const verifyToken = async (req, res, next) => {
+  try {
+      const token = req.headers['authorization']
+      if(!token) return res.status(401).json('Unauthorize')
+      const decode = await jwt.verify(token.split(' ')[1], JWT_SECRET)
+      req.user = decode
+      next()
+  } catch (error) {
+    next(error)
+  }
+}
+
+exports.auth = verifyToken
