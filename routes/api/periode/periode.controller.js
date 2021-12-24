@@ -84,7 +84,7 @@ exports.findKegiatan = async (req, res, next) => {
             x.deplesi = (x.deplesi + x.pemusnahan) / periode.populasi
             //Object.assign(findData, x._doc, std)
             x.std = std
-            return std
+            return x
         }))
         res.json({
             data: asyncResults,
