@@ -76,14 +76,15 @@ exports.findKegiatan = async (req, res, next) => {
         const data = await KegiatanHarian.find({periode: id}).select('-periode')
 
         const asyncResults = await Promise.all(data.map(async(x) => {
-            var findData = {}
+            //var findData = {}
             const tanggal = new Date(x.tanggal)
             var umur = Math.round(Math.abs((tanggal - start) / ONE_DAY) - 1)
             if(umur >= 50){umur = 50}
             const std = await Data.find({day: umur})
             x.deplesi = (x.deplesi + x.pemusnahan) / periode.populasi
-            Object.assign(findData, x._doc, std)
-            return findData
+            //Object.assign(findData, x._doc, std)
+            x.std = std
+            return std
         }))
         res.json({
             data: asyncResults,
