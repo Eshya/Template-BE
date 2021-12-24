@@ -1,5 +1,27 @@
 const Model = require('./nekropsi.model')
 const {parseQuery} = require('../../helpers');
+const {admin} = require('../../../configs/firebase.conf')
+
+const _beforeSave = (data) => {
+    if(!data.actionPlan1) {
+        delete data.actionPlan1
+        delete data.actionPlan2
+        delete data.actionPlan3
+    }
+}
+
+const notifConfig = {
+    priority: "high",
+    timeToLive: 60 * 60 * 24
+}
+
+const notification = (message, token) => {
+    admin.messaging().sendToDevice(token, message, notifConfig)
+    .then(response => {
+        console.log(response)
+    })
+}
+
 
 exports.findAll = async (req, res, next) => {
     const {where, limit, offset, sort} = parseQuery(req.query);
@@ -32,7 +54,7 @@ exports.findById = async (req, res, next) => {
 exports.insert = async (req, res, next) => {
     const data = req.body;
     try {
-        const results = await Model.create(data);
+        const results = Model.create(data);
         res.json({
             data: results,
             message: 'Ok'
