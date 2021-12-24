@@ -75,19 +75,31 @@ exports.findKegiatan = async (req, res, next) => {
         // console.log(periode);
         const data = await KegiatanHarian.find({periode: id}).select('-periode')
 
-        const asyncResults = await Promise.all(data.map(async(x) => {
-            //var findData = {}
+        const map = await Promise.all(data.map(async (x) => {
+            var tmp = x
             const tanggal = new Date(x.tanggal)
             var umur = Math.round(Math.abs((tanggal - start) / ONE_DAY) - 1)
-            if(umur >= 50){umur = 50}
-            const std = await Data.find({day: umur})
-            x.deplesi = (x.deplesi + x.pemusnahan) / periode.populasi
-            //Object.assign(findData, x._doc, std)
-            x.std = std
-            return x
+            if (umur >= 50){ umur = 50 }
+            tmp.deplesi = (x.deplesi + x.pemusnahan) / periode.populasi
+            const std = await Data.findOne({day: umur})
+            return {...tmp.toObject(), std: std.toObject()} // Join all of them in coolest way :-* - Atha
         }))
+
+        //console.log(map)
+
+        // const asyncResults = await Promise.all(data.map(async(x) => {
+        //     var findData = {}
+        //     const tanggal = new Date(x.tanggal)
+        //     var umur = Math.round(Math.abs((tanggal - start) / ONE_DAY) - 1)
+        //     if(umur >= 50){umur = 50}
+        //     const std = await Data.find({day: umur})
+        //     x.deplesi = (x.deplesi + x.pemusnahan) / periode.populasi
+        //     Object.assign(findData, x._doc, std)
+        //     x.std = std
+        //     return findData
+        // }))
         res.json({
-            data: asyncResults,
+            data: map,
             message: 'Ok'
         })
     } catch (error) {
