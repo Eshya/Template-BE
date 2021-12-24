@@ -72,19 +72,17 @@ exports.findKegiatan = async (req, res, next) => {
     try {
         const periode = await Model.findById(id)
         const start = new Date(periode.tanggalMulai);
-        console.log(periode);
-        const data = await KegiatanHarian.find({periode: id}).select('-periode -pemusnahan')
-        // console.log(data);
+        // console.log(periode);
+        const data = await KegiatanHarian.find({periode: id}).select('-periode')
 
         const asyncResults = await Promise.all(data.map(async(x) => {
-            var findData = []
+            var findData = {}
             const tanggal = new Date(x.tanggal)
             var umur = Math.round(Math.abs((tanggal - start) / ONE_DAY) - 1)
             if(umur >= 50){umur = 50}
-            findData = await Data.find({day: umur})
+            const std = await Data.find({day: umur})
             x.deplesi = (x.deplesi + x.pemusnahan) / periode.populasi
-            console.log(x.deplesi);
-            findData.push(x)
+            Object.assign(findData, x._doc, std)
             return findData
         }))
         res.json({

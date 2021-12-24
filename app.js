@@ -7,10 +7,10 @@ const fs = require('fs')
 const cors = require('cors');
 const db = require('./configs/db.conf');
 
-const serverkey = require('./uploads/fcm-key-80953-firebase-adminsdk-zim0e-e7af1e28bb.json');
+// const serverkey = require('./uploads/fcm-key-80953-firebase-adminsdk-zim0e-e7af1e28bb.json');
 
-const FCM = require('fcm-node');
-const fcm = new FCM(serverkey);
+// const FCM = require('fcm-node');
+// const fcm = new FCM(serverkey);
 
 db.connect();
 

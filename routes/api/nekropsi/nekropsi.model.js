@@ -194,6 +194,12 @@ const scheme = new Schema({
         type: String,
         default: null
     },
+    actionPlan1: {
+        type: String,
+        default: null
+    },
+    actionPlan2: String,
+    actionPlan3: String,
     kepala: [kepalaSchema],
     hidung: [hidungSchema],
     kotoran: [kotoranSchema],
