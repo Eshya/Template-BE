@@ -80,9 +80,10 @@ exports.findKegiatan = async (req, res, next) => {
             const tanggal = new Date(x.tanggal)
             var umur = Math.round(Math.abs((tanggal - start) / ONE_DAY) - 1)
             if (umur >= 50){ umur = 50 }
+            const deplesiEkor = x.deplesi
             tmp.deplesi = (x.deplesi + x.pemusnahan) / periode.populasi
             const std = await Data.findOne({day: umur})
-            return {...tmp.toObject(), std: std.toObject()} // Join all of them in coolest way :-* - Atha
+            return {...tmp.toObject(), std: std.toObject(), deplesiEkor: deplesiEkor} // Join all of them in coolest way :-* - Atha
         }))
 
         //console.log(map)
