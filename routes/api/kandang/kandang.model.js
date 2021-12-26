@@ -10,6 +10,14 @@ const scheme = new Schema({
         type: String,
         required: true
     },
+    kota: {
+        type: String,
+        required: true
+    },
+    populasi: {
+        type: Number,
+        require: true,
+    },
     tipe: {
         type: Schema.Types.ObjectId,
         ref: 'TipeKandang', select: true,
