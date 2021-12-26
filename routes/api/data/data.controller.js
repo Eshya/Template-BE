@@ -1,6 +1,19 @@
 const Model = require('./data.model');
 const {parseQuery} = require('../../helpers')
 
+exports.findByDay = async (req, res, next) => {
+    try {
+        console.log(req.query.day)
+        const result = await Model.findOne({day: req.query.day})
+        res.json({
+            message: 'Ok',
+            data: result
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
 exports.findAll = async (req, res, next) => {
     const {where, limit, offset, sort} = parseQuery(req.query);
     try {

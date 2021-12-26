@@ -5,6 +5,7 @@ const c = require('./data.controller');
 const { schema } = require('./data.validation');
 
 router.get('/', auth, queryCek, c.findAll);
+router.get('/day', auth, paramCek, c.findByDay);
 router.get('/:id', auth, paramCek, c.findById);
 router.post('/', auth, schemaCek(schema), after, c.insert);
 router.put('/:id', auth, paramCek, c.updateById);
