@@ -100,14 +100,14 @@ exports.findPeriode = async (req, res, next) => {
                 data: results,
                 message: 'Ok'
             })
+        } else {
+            res.json({
+                age: null,
+                dataLuar: null,
+                data: results,
+                message: 'Ok'
+            })
         }
-
-        res.json({
-            age: null,
-            dataLuar: null,
-            data: results,
-            message: 'Ok'
-        })
     } catch (error) {
         next(error)
     }
