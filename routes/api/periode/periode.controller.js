@@ -83,7 +83,7 @@ exports.findKegiatan = async (req, res, next) => {
             const deplesiEkor = x.deplesi
             tmp.deplesi = (x.deplesi + x.pemusnahan) / periode.populasi
             const std = await Data.findOne({day: umur})
-            return {...tmp.toObject(), std: std.toObject(), deplesiEkor: deplesiEkor} // Join all of them in coolest way :-* - Atha
+            return {...tmp.toObject(), std: std == null ? null : std.toObject(), deplesiEkor: deplesiEkor} // Join all of them in coolest way :-* - Atha
         }))
 
         //console.log(map)
