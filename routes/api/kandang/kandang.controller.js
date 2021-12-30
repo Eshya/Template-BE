@@ -118,7 +118,8 @@ exports.findById = async (req, res, next) => {
 
 exports.insert = async (req, res, next) => {
     const {kode, alamat, tipe, isMandiri, kota} = req.body;
-    const createdBy = req.user.id
+    const createdBy = req.user._id
+    console.log(req)
     try {
         const results = await Model.create({kode, alamat, tipe, isMandiri, kota, createdBy});
         res.json({
@@ -133,6 +134,7 @@ exports.insert = async (req, res, next) => {
 exports.updateById = async (req, res, next) => {
     const id = req.params.id;
     const data = req.body;
+
     try {
         const results = await Model.findByIdAndUpdate(id, data, {new: true}).exec();
         res.json({
