@@ -1,20 +1,16 @@
 const debug = require('debug')(`${process.env.npm_package_name}:mongoose`);
 const chalk = require('chalk');
 const mongoose = require('mongoose');
-const host = '103.31.39.17'
-const dbPort = 27017
-// const dbName = 'fortesting'
-const dbName = 'chickin'
-const user = 'chickindb'
-const pass = 'IniDBch1ck1n'
-// const host = 'cluster0.ivozh.mongodb.net';
-// const dbName = 'chickin';
-// const user = 'forSale';
-// const pass = 'IniN4manyaP4ssw0rd';
-// const mongoString = `mongodb+srv://${user}:${pass}@${host}/${dbName}?retryWrites=true&w=majority`;
-const mongoString = `mongodb://${host}:${dbPort}`
-// const db = mongoose.connection
+
+const host = process.env.DB_HOST || 'localhost'
+const dbPort = process.env.DB_PORT || 27017
+const dbName = process.env.DB_NAME || 'chickin'
+const user = process.env.DB_USER || 'chickindb'
+const pass = process.env.DB_PASS || 'IniDBch1ck1n'
+const mongoString = process.env.MONGO_CONNECTIONSTRING || `mongodb://${host}:${dbPort}`
 const db = mongoose.connection
+
+debug(`${host},${dbPort},${dbName},${user},${pass},${mongoString}`)
 
 const mysql = require('mysql2/promise');
 const config = require('./mysql.conf');
@@ -24,21 +20,6 @@ async function query(sql, params){
     const [result] = await connection.execute(sql, params)
     return result;
 }
-
-// const options = {
-//     useFindAndModify: false,
-//     useNewUrlParser: true,
-//     useUnifiedTopology: true,
-//     useCreateIndex: true,
-//     auth: {
-//         authdb: 'admin'
-//     }
-// }
-
-
-
-// const user = 'pismgdefuse';
-// const pass = '@pisdefuseMG20201qaz';
 
 const options = {
     useFindAndModify: false,
@@ -59,6 +40,7 @@ const handleError = (err) => {
     if (err) {
         const {name, errorLabels} = err;
         debug(`${name} : ${errorLabels}`);
+        debug(err)
         if (initialRetry < 3) {
             initialRetry++
             debug(chalk.bgCyanBright(`${initialRetry} retry...`));

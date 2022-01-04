@@ -1,0 +1,19 @@
+version: '3.7'
+services:
+  smartfarm-prod:
+    image: ${APP_IMAGE_STG}:${APP_IMAGE_STG_TAG}
+    environment:
+      SERVER_PORT: 3002
+      DB_HOST: mongodb
+      DB_PORT: 27017
+      DB_USER: chickindb
+      DB_PASS: IniDBch1ck1n
+      DB_NAME: chckin-stagging
+    networks:
+      - chickinnetwork
+    ports:
+      "3002:3002"
+    restart: always
+networks:
+  chickinnetwork:
+    external: true
