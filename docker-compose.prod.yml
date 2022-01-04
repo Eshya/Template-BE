@@ -1,7 +1,8 @@
-version: '3.7'
+version: '3.9'
 services:
   smartfarm-prod:
     image: ${APP_IMAGE_PROD}:${APP_IMAGE_PROD_TAG}
+    container_name: smartfarm-production
     environment:
       SERVER_PORT: 3101
       DB_HOST: mongodb
