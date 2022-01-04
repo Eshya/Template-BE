@@ -10,7 +10,7 @@ services:
       DB_PASS: IniDBch1ck1n
       DB_NAME: chckin-stagging
     volumes:
-      - ./upload:/upload-stg:bind
+      - ./upload:/upload-stg
     networks:
       - chickinnetwork
     ports:
