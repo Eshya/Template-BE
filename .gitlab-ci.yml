@@ -25,7 +25,7 @@ docker-build:
 
 deploy-stagging:
   stage: deploy
-  image: apline:latest
+  image: alpine:latest
   environment:
     name: stagging
   before_script:
