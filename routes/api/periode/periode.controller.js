@@ -28,7 +28,7 @@ exports.umurAyam = async (req, res, next) => {
         const data = await Model.findById(req.params.id);
         const now = new Date(Date.now());
         const start = new Date(data.tanggalMulai);
-        const result = Math.round(Math.abs((now - start) / ONE_DAY) - 1)
+        const result = Math.round(Math.abs((now - start) / ONE_DAY))
         console.log(start, now)
         res.json({
             data: result,
@@ -78,12 +78,12 @@ exports.findKegiatan = async (req, res, next) => {
         const map = await Promise.all(data.map(async (x) => {
             var tmp = x
             const tanggal = new Date(x.tanggal)
-            var umur = Math.round(Math.abs((tanggal - start) / ONE_DAY) - 1)
+            var umur = Math.round(Math.abs((tanggal - start) / ONE_DAY))
             if (umur >= 50){ umur = 50 }
             const deplesiEkor = x.deplesi
             tmp.deplesi = (x.deplesi + x.pemusnahan) / periode.populasi
             const std = await Data.findOne({day: umur})
-            return {...tmp.toObject(), std: std == null ? null : std.toObject(), deplesiEkor: deplesiEkor} // Join all of them in coolest way :-* - Atha
+            return {...tmp.toObject(), std: std == null ? null : std.toObject(), deplesiEkor: deplesiEkor, age: umur} // Join all of them in coolest way :-* - Atha
         }))
 
         //console.log(map)

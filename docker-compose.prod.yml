@@ -1,0 +1,21 @@
+version: '3.7'
+services:
+  smartfarm-prod:
+    image: ${APP_IMAGE_PROD}:${APP_IMAGE_PROD_TAG}
+    environment:
+      SERVER_PORT: 3001
+      DB_HOST: mongodb
+      DB_PORT: 27017
+      DB_USER: chickindb
+      DB_PASS: IniDBch1ck1n
+      DB_NAME: chckin
+    volumes:
+      - ./upload:/:bind
+    networks:
+      - chickinnetwork
+    ports:
+      "3001:3001"
+    restart: always
+networks:
+  chickinnetwork:
+    external: true
