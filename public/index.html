@@ -8,10 +8,22 @@
 <body>
   <h1>Express</h1>
   <p>Welcome to Express</p>
-  <script src="/socket.io/socket.io.js"></script>
+  <!-- <script src="/socket.io/socket.io.js"></script>
     <script>
         var socket = io();
-    </script>
+    </script> -->
 </body>
 
 </html>
+
+<!-- <script>
+  var ws = new WebSocket('ws://localhost:40510')
+  ws.onopen = () => {
+    console.log('websocket is open')
+    ws.send('connected')
+  }
+
+  ws.onmessage = (ev) => {
+    console.log(ev)
+  }
+</script> -->
