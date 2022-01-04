@@ -14,7 +14,7 @@ services:
     networks:
       - chickinnetwork
     ports:
-      "3001:3001"
+      - "3001:3001"
     restart: always
 networks:
   chickinnetwork:
