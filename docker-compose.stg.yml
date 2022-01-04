@@ -12,7 +12,7 @@ services:
     networks:
       - chickinnetwork
     ports:
-      "3002:3002"
+      - "3002:3002"
     restart: always
 networks:
   chickinnetwork:
