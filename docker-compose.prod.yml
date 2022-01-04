@@ -10,7 +10,7 @@ services:
       DB_PASS: IniDBch1ck1n
       DB_NAME: chckin
     volumes:
-      - ./upload:/upload-prod:bind
+      - ./upload:/upload-prod
     networks:
       - chickinnetwork
     ports:
