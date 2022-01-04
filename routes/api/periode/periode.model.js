@@ -29,6 +29,10 @@ const scheme = new Schema({
     isEnd: {
         type: Boolean,
         default: false
+    },
+    kemitraan: {
+        type: Schema.Types.ObjectId,
+        ref: 'Kemitraan', autopopulate: {maxdepth: 1}
     }
 }, {versionKey: false, timestamps: true})
 scheme.plugin(require('mongoose-autopopulate'));

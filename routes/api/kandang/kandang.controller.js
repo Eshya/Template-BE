@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const {parseQuery} = require('../../helpers');
 const Model = require('./kandang.model');
-const Flock = require('../flock/flock.model');
+// const Flock = require('../flock/flock.model');
 const Periode = require('../periode/periode.model');
 const selectPublic = '-createdAt -updatedAt';
 
@@ -20,23 +20,9 @@ const _find = async (req, isPublic = false) => {
 exports.countPopulasi = async (req, res, next) => {
     const id = req.params.id
     try {
-        const results = await Model.aggregate([
-            {$match: {_id: mongoose.Types.ObjectId(id)}},
-            {'$unwind': '$flock'},
-            {
-                // 
-                $lookup: {
-                    from: 'flock',
-                    localField: 'flock',
-                    foreignField: '_id',
-                    as: 'flock_join'
-                }
-            },
-            {$unwind: '$flock_join'},
-            {$group: {_id: '$flock_join.name', 'total populasi': {$sum: '$flock_join.populasi'}}},
-        ]).exec()
+        const result = await Periode.findById(id, {populasi: true}).select('-kandang -jenisDOC')
         res.json({
-            data: results,
+            data: result,
             message: 'Ok'
         })
     } catch (error) {
@@ -184,7 +170,7 @@ exports.remove = async(req, res, next) => {
 
 exports.removeById = async (req, res, next) => {
     try {
-        const results = await Model.findByIdAndRemove(req.params.id).exec();
+        const results = await Model.deleteById(req.params.id).exec();
         res.json({
             data: results,
             message: 'Ok'

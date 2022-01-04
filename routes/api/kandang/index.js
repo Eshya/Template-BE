@@ -9,7 +9,7 @@ router.get('/active', auth, queryCek, c.findActive);
 router.get('/populasi/:id', auth, paramCek, c.countPopulasi);
 router.get('/public', queryCek, c.findPublic);
 router.get('/count', queryCek, c.count);
-router.get('/flock/:id', auth, paramCek, c.findFlock);
+// router.get('/flock/:id', auth, paramCek, c.findFlock);
 router.get('/periode/:id', auth, paramCek, c.findPeriode);
 router.get('/:id', auth, paramCek, c.findById);
 router.post('/', auth, schemaCek(schema), after, c.insert);
