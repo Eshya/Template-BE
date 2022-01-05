@@ -292,7 +292,6 @@ exports.ringkasan = async (req, res, next) => {
         const getPeriode = await Model.findById(id)
         const sapronak = await Sapronak.aggregate([
             {$match: {periode: mongoose.Types.ObjectId(getPeriode.id)}},
-<<<<<<< HEAD
             {$lookup:  {
                 "from": "produk",
                 "localField": "produk",
@@ -301,9 +300,6 @@ exports.ringkasan = async (req, res, next) => {
             }},
             {$unwind: '$produk_info'},
             {$group: {_id: '$produk_info.jenis', pakan_masuk: {$sum: '$kuantitas'}}}
-=======
-            {$group: {_id: '$_id', pakan_masuk: {$sum: '$kuantitas'}}}
->>>>>>> fe5cb2b... pakan pakai and pakan masuk in ringkasan
         ])
         // console.log(sapronak);
 
