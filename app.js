@@ -99,10 +99,4 @@ function finding(model, image) {
     })
 }
 
-cron.schedule('* * 14 * *', () => {
-    finding(User, UserImage);
-    finding(Faq, FaqImage);
-    finding(Nekropsi, NekropsiImage);
-})
-
 module.exports = app;
