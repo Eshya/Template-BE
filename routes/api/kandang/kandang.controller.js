@@ -87,6 +87,7 @@ exports.findPeriode = async (req, res, next) => {
     const id = req.params.id
     try {
         const results = await Periode.find({kandang: id}).sort('updatedAt')
+<<<<<<< HEAD
         if (results.length > 0){
             const oneDay = 24 * 60 * 60 * 1000;
             const now = new Date(Date.now());
@@ -108,6 +109,20 @@ exports.findPeriode = async (req, res, next) => {
                 message: 'Ok'
             })
         }
+=======
+        const oneDay = 24 * 60 * 60 * 1000;
+        const now = new Date(Date.now());
+        const start = new Date(results[results.length - 1].tanggalMulai);
+        console.log(start);
+        const umurAyam = Math.round(Math.abs((now - start) / oneDay) - 1)
+        console.log(umurAyam);
+        res.json({
+            age: umurAyam,
+            dataLuar: results[results.length - 1],
+            data: results,
+            message: 'Ok'
+        })
+>>>>>>> 1106bfa... fixing age
     } catch (error) {
         next(error)
     }
