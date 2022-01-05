@@ -72,6 +72,7 @@ exports.findKegiatan = async (req, res, next) => {
     try {
         const periode = await Model.findById(id)
         const start = new Date(periode.tanggalMulai);
+<<<<<<< HEAD
         // console.log(periode);
         const data = await KegiatanHarian.find({periode: id}).select('-periode')
 
@@ -101,6 +102,18 @@ exports.findKegiatan = async (req, res, next) => {
         // }))
         res.json({
             data: map,
+=======
+        var umur = Math.round(Math.abs((now - start) / ONE_DAY))
+        // console.log(umur > 30);
+        // if(umur > 50){return umur = 50}
+        // console.log(umur >=  30)
+        console.log(umur)
+        // const findData = Data.find({day: umur})
+        const data = await KegiatanHarian.find({periode: id}).sort({'tanggal': -1})
+        // const results = await Promise.all([findData, data])
+        res.json({
+            data: data,
+>>>>>>> 6b1df8b... rollback
             message: 'Ok'
         })
     } catch (error) {
