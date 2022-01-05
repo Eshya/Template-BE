@@ -2,6 +2,11 @@ const debug = require('debug')(`${process.env.npm_package_name}:mongoose`);
 const chalk = require('chalk');
 const mongoose = require('mongoose');
 
+/**
+ * Tolong jangan di ganti2 
+ * GUNAKAN ENVIRONMENT!!
+ */
+
 const host = process.env.DB_HOST || 'localhost'
 const dbPort = process.env.DB_PORT || 27017
 const dbName = process.env.DB_NAME || 'chickin'
