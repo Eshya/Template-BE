@@ -290,15 +290,9 @@ exports.forgetPassword = async (req, res, next) => {
         const randomText = await crypto.randomBytes(20);
         const token = randomText.toString('hex');
         await Model.findByIdAndUpdate(user._id, {resetPasswordToken: token, resetPasswordExpires: Date.now() + 3600000})
-<<<<<<< HEAD
         const host = isDevMode ? `http://${req.hostname}:3000` : `https://${req.hostname}`
         const resetUrl = 'reset-password'
         const url = [host, resetUrl].join('/') + "?token=" + token
-=======
-        const host = isDevMode ? `http://${req.hostname}:4200` : `https://${req.hostname}`
-        const resetUrl = 'reset-password'
-        const url = [host, resetUrl, token].join('/')
->>>>>>> 55717eb... reset-password
         mailOptions.to = user.email
         mailOptions.subject = '[No-Reply] RESET PASSOWRD CHICKIN'
         mailOptions.html = `<p>You are receiving this because you (or someone else) have requested the reset of the password for your account.</p>
@@ -333,11 +327,7 @@ exports.resetPassword = async (req, res, next) => {
         const isInvalid = await Model.findOne({resetPasswordToken: req.params.token,  resetPasswordExpires: { $gt: Date.now()}});
         if (!isInvalid) return next(createError(403, 'Token tidak valid atau kadaluarsa'))
         const newPassword = passwordHash.generate(req.body.password, {saltLength: 10});
-<<<<<<< HEAD
         const user = await Model.findByIdAndUpdate(isInvalid._id, {password: newPassword, resetPasswordToken: null, resetPasswordExpires: null})
-=======
-        const user = await Model.findByIdAndUpdate(isInvalid._id, {password: newPassword})
->>>>>>> 55717eb... reset-password
         
         mailOptions.to = user.email
         mailOptions.subject = `[No-Reply] Password Anda telah diubah`
