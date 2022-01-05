@@ -126,10 +126,10 @@ exports.findById = async (req, res, next) => {
 }
 
 exports.insert = async (req, res, next) => {
-    const {kode, alamat, tipe, isMandiri, kota} = req.body;
+    const {kode, alamat, tipe, isMandiri, kota, populasi} = req.body;
     const createdBy = req.user._id
     try {
-        const results = await Model.create({kode, alamat, tipe, isMandiri, kota, createdBy});
+        const results = await Model.create({kode, alamat, tipe, isMandiri, kota, createdBy, populasi});
         res.json({
             data: results,
             message: 'Ok'
