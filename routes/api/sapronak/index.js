@@ -5,7 +5,7 @@ const {schema} = require('./sapronak.validation');
 const {auth, queryCek, schemaCek, paramCek, after} = require('../../helpers')
 
 router.get('/', auth, queryCek, c.findAll);
-router.get('/public', queryCek, c.findPublic);
+// router.get('/public', queryCek, c.findPublic);
 router.get('/count', queryCek, c.count);
 router.get('/:id', auth, paramCek, c.findById);
 router.post('/', auth, schemaCek(schema), after, c.insert);

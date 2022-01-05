@@ -5,7 +5,7 @@ const {schema} = require('./kegiatan-harian.validation');
 const {auth, queryCek, schemaCek, paramCek, after} = require('../../helpers')
 
 router.get('/', auth, queryCek, c.findAll);
-router.get('/public', queryCek, c.findPublic);
+// router.get('/public', queryCek, c.findPublic);
 router.get('/count', queryCek, c.count);
 router.get('/sisaAyam/:id', auth, paramCek, c.findSisaAyam);
 router.get('/:id', auth, paramCek, c.findById);
