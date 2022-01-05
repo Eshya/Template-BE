@@ -100,6 +100,7 @@ exports.findPeriode = async (req, res, next) => {
                 data: results,
                 message: 'Ok'
             })
+<<<<<<< HEAD
         } else {
             res.json({
                 age: null,
@@ -108,6 +109,16 @@ exports.findPeriode = async (req, res, next) => {
                 message: 'Ok'
             })
         }
+=======
+        }
+
+        res.json({
+            age: null,
+            dataLuar: null,
+            data: results,
+            message: 'Ok'
+        })
+>>>>>>> 7ca90d1... Perbaikan error get periode by id kandang jika kandang belum memiliki periode
     } catch (error) {
         next(error)
     }
