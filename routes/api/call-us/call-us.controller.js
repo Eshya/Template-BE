@@ -45,6 +45,7 @@ exports.findById = async (req, res, next) => {
 exports.insert = async (req, res, next) => {
     const data = req.body
     try {
+<<<<<<< HEAD
 
         mailOptions.to = 'contactchickin@gmail.com'
         mailOptions.subject = 'KELUHAN USERS'
@@ -57,6 +58,12 @@ exports.insert = async (req, res, next) => {
         res.json({
             data: results[1],
             message: `Permintaan reset [${req.body.email}]`
+=======
+        const result = await Model.create(data);
+        res.json({
+            data: results,
+            message: 'Ok'
+>>>>>>> bdfb668... fixing bugs
         })
     } catch (error) {
         next(error)
