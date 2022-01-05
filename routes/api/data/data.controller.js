@@ -32,16 +32,21 @@ exports.findAll = async (req, res, next) => {
 
 exports.findById = async (req, res, next) => {
     try {
+<<<<<<< HEAD
         const results = await Model.findById(req.params.id);
         res.json({
             data: results,
             message: 'Ok'
         })
+=======
+        
+>>>>>>> a8b076e... get harga
     } catch (error) {
         next(error)
     }
 }
 
+<<<<<<< HEAD
 exports.insert = async (req, res, next) => {
     const data = req.body;
     try {
@@ -107,3 +112,5 @@ exports.removeById = async (req, res, next) => {
         next(error);
     }
 }
+=======
+>>>>>>> a8b076e... get harga
