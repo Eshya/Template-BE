@@ -28,7 +28,7 @@ exports.umurAyam = async (req, res, next) => {
         const data = await Model.findById(req.params.id);
         const now = new Date(Date.now());
         const start = new Date(data.tanggalMulai);
-        const result = Math.round(Math.abs((now - start) / ONE_DAY) - 1)
+        const result = Math.round(Math.abs((now - start) / ONE_DAY))
         console.log(start, now)
         res.json({
             data: result,
