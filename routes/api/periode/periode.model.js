@@ -33,7 +33,7 @@ const scheme = new Schema({
     kemitraan: {
         type: Schema.Types.ObjectId,
         ref: 'Kemitraan', 
-        transform: o => o == null ? '' : o,
+        require: false,
         autopopulate: {maxdepth: 1}
     }
 }, {versionKey: false, timestamps: true})
