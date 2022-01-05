@@ -137,11 +137,7 @@ exports.findPenjualan = async (req, res, next) => {
 exports.findSapronak = async (req, res, next) => {
     const id = req.params.id
     try {
-<<<<<<< HEAD
         const results = await Sapronak.find({periode: id}).sort({'tanggal': -1})
-=======
-        const results = await Sapronak.find({periode: id}).sort('updatedAt')
->>>>>>> 46ebbbf... sorting periode
         res.json({
             data: results,
             message: 'Ok'
