@@ -22,7 +22,7 @@ const ONE_DAY = 24 * 60 * 60 * 1000;
 const _find = async (req, isPublic = false) => {
     const {where, limit, offset, sort} = parseQuery(req.query);
     const count = Model.countDocuments(where);
-    const data = Model.find(where).limit(limit).skip(offset).sort('createdAt')
+    const data = Model.find(where).limit(limit).skip(offset).sort(sort)
     if(isPublic){
         data.select(selectPublic);
     }
