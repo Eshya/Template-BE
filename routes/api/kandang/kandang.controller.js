@@ -87,18 +87,27 @@ exports.findPeriode = async (req, res, next) => {
     const id = req.params.id
     try {
         const results = await Periode.find({kandang: id}).sort('updatedAt')
-        const oneDay = 24 * 60 * 60 * 1000;
-        const now = new Date(Date.now());
-        const start = new Date(results[results.length - 1].tanggalMulai);
-        console.log(start);
-        const umurAyam = Math.round(Math.abs((now - start) / oneDay))
-        console.log(umurAyam);
-        res.json({
-            age: umurAyam,
-            dataLuar: results[results.length - 1],
-            data: results,
-            message: 'Ok'
-        })
+        if (results.length > 0){
+            const oneDay = 24 * 60 * 60 * 1000;
+            const now = new Date(Date.now());
+            const start = new Date(results[results.length - 1].tanggalMulai);
+            console.log(start);
+            const umurAyam = Math.round(Math.abs((now - start) / oneDay))
+            console.log(umurAyam);
+            res.json({
+                age: umurAyam,
+                dataLuar: results[results.length - 1],
+                data: results,
+                message: 'Ok'
+            })
+        } else {
+            res.json({
+                age: null,
+                dataLuar: null,
+                data: results,
+                message: 'Ok'
+            })
+        }
     } catch (error) {
         next(error)
     }
@@ -118,7 +127,7 @@ exports.findById = async (req, res, next) => {
 
 exports.insert = async (req, res, next) => {
     const {kode, alamat, tipe, isMandiri, kota} = req.body;
-    const createdBy = req.user.id
+    const createdBy = req.user._id
     try {
         const results = await Model.create({kode, alamat, tipe, isMandiri, kota, createdBy});
         res.json({
@@ -133,6 +142,7 @@ exports.insert = async (req, res, next) => {
 exports.updateById = async (req, res, next) => {
     const id = req.params.id;
     const data = req.body;
+
     try {
         const results = await Model.findByIdAndUpdate(id, data, {new: true}).exec();
         res.json({
