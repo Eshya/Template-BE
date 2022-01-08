@@ -56,6 +56,7 @@ exports.findById = async (req, res, next) => {
 exports.insert = async (req, res, next) => {
     const data = req.body
     try {
+        data.stock = req.body.kuantitas
         const results = await Model.create(data);
         res.json({
             data: results,

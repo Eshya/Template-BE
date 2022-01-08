@@ -10,6 +10,7 @@ router.get('/count', queryCek, c.count);
 router.get('/sisaAyam/:id', auth, paramCek, c.findSisaAyam);
 router.get('/:id', auth, paramCek, c.findById);
 router.post('/', auth, schemaCek(schema), after, c.insert);
+// router.post('/validation', auth, after, c.cekKuantitas);
 // router.get('/ins', auth, c.insert)
 router.put('/', auth, c.updateWhere);
 router.put('/:id', auth, paramCek, c.updateById);

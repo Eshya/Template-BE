@@ -81,20 +81,36 @@ exports.findSisaAyam = async (req, res, next) => {
     }
 }
 
+
 exports.insert = async (req, res, next) => {
     const data = req.body
     try {
-        const foundSapronak = await Sapronak.findOne({periode: data.periode})
-        if(!foundSapronak) return next(createError(404, 'Sapronak not found'))
-        const jenisProduk = foundSapronak.produk.jenis
-        // console.log(jenisProduk);
-        if(jenisProduk == "PAKAN"){
-            const results = await Model.create(data);
-            res.json({
-                data: results,
-                message: 'Ok'
-            });
-        } else {return next(createError(404, 'Pakan not found'))}
+        Promise.all(data.pakanPakai.map(async(x) => {
+            const foundSapronak = await Sapronak.findById(x.jenisPakan)
+            if (foundSapronak.stock - x.beratPakan <= 0){
+                return res.json({error: 400, message: 'pakan tidak mencukupi!'})
+            }
+
+            const dec = await Sapronak.findByIdAndUpdate(x.jenisPakan, {$inc:{stock: -x.beratPakan}})
+            return dec
+        }))
+
+        const results = await Model.create(data);
+        res.json({
+            data: results,
+            message: 'Ok'
+        })
+        // const foundSapronak = await Sapronak.findOne({periode: data.periode})
+        // if(!foundSapronak) return next(createError(404, 'Sapronak not found'))
+        // const jenisProduk = foundSapronak.produk.jenis
+        // // console.log(jenisProduk);
+        // if(jenisProduk == "PAKAN"){
+        //     const results = await Model.create(data);
+        //     res.json({
+        //         data: results,
+        //         message: 'Ok'
+        //     });
+        // } else {return next(createError(404, 'Pakan not found'))}
     } catch (error) {
         next(error);
     }

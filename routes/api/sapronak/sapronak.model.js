@@ -18,6 +18,10 @@ const scheme = new Schema({
         type: Number,
         required: true
     },
+    stock: {
+        type: Number,
+        required: true
+    },
     hargaSatuan: {
         type: Number,
         required: true
