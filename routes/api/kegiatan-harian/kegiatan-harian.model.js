@@ -3,7 +3,7 @@ const { Schema, model } = require("mongoose");
 const pakanPakaiSchema = new Schema({
     jenisPakan: {
         type: Schema.Types.ObjectId,
-        ref: 'Produk',
+        ref: 'Sapronak',
         autopopulate: {maxDepth: 1}
     }, 
     beratPakan: {type: Number, required: true}
