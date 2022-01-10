@@ -50,7 +50,6 @@ exports.insert = async (req, res, next) => {
             data: results,
             message: 'Ok'
         })
-<<<<<<< HEAD
     } catch (error) {
         next(error)
     }
@@ -64,8 +63,6 @@ exports.insert = async (req, res, next) => {
             data: results,
             message: 'Ok'
         })
-=======
->>>>>>> 1fb3c2a... data endpoint
     } catch (error) {
         next(error)
     }
@@ -122,8 +119,4 @@ exports.removeById = async (req, res, next) => {
     } catch (error) {
         next(error);
     }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 1fb3c2a... data endpoint
