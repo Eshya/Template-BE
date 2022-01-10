@@ -55,6 +55,19 @@ exports.insert = async (req, res, next) => {
     }
 }
 
+exports.insert = async (req, res, next) => {
+    const data = req.body;
+    try {
+        const results = await Model.create(data);
+        res.json({
+            data: results,
+            message: 'Ok'
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
 exports.updateById = async (req, res, next) => {
     const id = req.params.id;
     const data = req.body;

@@ -45,7 +45,6 @@ exports.findById = async (req, res, next) => {
 exports.insert = async (req, res, next) => {
     const data = req.body
     try {
-
         mailOptions.to = 'contactchickin@gmail.com'
         mailOptions.subject = 'KELUHAN USERS'
         mailOptions.html = req.body.message

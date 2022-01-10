@@ -63,4 +63,40 @@ app.use((err, req, res) => {
         res.status(500).send({message: 'Internal Server Error'});
     }
 })
+
+// delete image scheduler
+
+const removeFile = (url) => {
+    return new Promise((resolve, reject) => {
+        fs.unlink(url, err => {
+            if(err) reject();
+            resolve();
+        })
+    })
+}
+
+function finding(model, image) {
+    return new Promise((resolve, reject) => {
+        var tempt = []
+        model.find().then((results) => {
+            for(let i = 0; i < results.length; i++){
+                if(results[i].image == null) return delete results[i]
+                const element = results[i].image.path
+                tempt.push(element);
+            }
+        })
+        setTimeout(() => {
+            image.find({path: {$nin: tempt}})
+            .then((imageFind) => {
+                if(!imageFind.length) return reject(createError(400, 'all image has been deleted!'))
+                for (const element of imageFind){
+                    const rmFile = removeFile(element.path)
+                    const rmData = image.findByIdAndRemove(element._id).exec();
+                    resolve([rmFile, rmData])
+                }
+            })
+        }, 2000)
+    })
+}
+
 module.exports = app;
