@@ -21,26 +21,42 @@ docker-build:
     - docker push "$CI_REGISTRY_IMAGE" --all-tags
   only:
     - master
+<<<<<<< HEAD
     - stagging
 
 deploy-stagging:
   stage: deploy
   image: alpine:latest
+=======
+
+deploy-stagging:
+  stage: deploy
+  image: apline:latest
+>>>>>>> 095ef83... Implement gitlab ci/cd
   environment:
     name: stagging
   before_script:
     - 'which ssh-agent || (apk update && apk add --no-cache openssh)'
     - mkdir -p ~/.ssh
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+<<<<<<< HEAD
     - echo $CI_REGISTRY
+=======
+>>>>>>> 095ef83... Implement gitlab ci/cd
     - chmod 700 ~/.ssh/id_rsa
     - eval "$(ssh-agent -s)"
     - ssh-add ~/.ssh/id_rsa
     - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
   script:
+<<<<<<< HEAD
     - ssh -o StrictHostKeyChecking=no ${SSH_USER}@${SSH_HOST} "export APP_IMAGE_STG=$CI_REGISTRY_IMAGE && export APP_IMAGE_STG_TAG=$TAG_IMAGE && docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY && cd /home/chickin/projects/smartfarm && git checkout stagging && git pull && docker-compose -f docker-compose.stg.yml down && docker-compose -f docker-compose.stg.yml pull && docker-compose -f docker-compose.stg.yml up -d"
   only:
     - stagging
+=======
+    - ssh -o StrictHostKeyChecking=no ${SSH_USER}@${SSH_HOST} "export APP_IMAGE_STG=$CI_REGISTRY_IMAGE && export APP_IMAGE_STG_TAG=$TAG_IMAGE && sudo su && docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY && cd /home/projects/live/smartfarm && git pull && docker-compose -f docker-compose.stg.yml down && docker-compose -f docker-compose.stg.yml pull && docker-compose -f docker-compose.stg.yml up -d"
+  only:
+    - master
+>>>>>>> 095ef83... Implement gitlab ci/cd
 
 deploy-production:
   stage: deploy
@@ -54,8 +70,15 @@ deploy-production:
     - ssh-add ~/.ssh/id_rsa
     - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
   script:
+<<<<<<< HEAD
     - ssh -o StrictHostKeyChecking=no ${SSH_USER}@${SSH_HOST} "export APP_IMAGE_PROD=$CI_REGISTRY_IMAGE && export APP_IMAGE_PROD_TAG=$TAG_IMAGE && docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY && cd /home/chickin/projects/smartfarm && git checkout master && git pull && docker-compose -f docker-compose.prod.yml down && docker-compose -f docker-compose.prod.yml pull && docker-compose -f docker-compose.prod.yml up -d"
   environment:
     name: production
+=======
+    - ssh -o StrictHostKeyChecking=no ${SSH_USER}@${SSH_HOST} "export APP_IMAGE_PROD=$CI_REGISTRY_IMAGE && export APP_IMAGE_PROD_TAG=$TAG_IMAGE && sudo su && docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY && cd /home/projects/live/smartfarm && git pull && docker-compose -f docker-compose.prod.yml down && docker-compose -f docker-compose.prod.yml pull && docker-compose -f docker-compose.prod.yml up -d"
+  environment:
+    name: production
+  when: manual
+>>>>>>> 095ef83... Implement gitlab ci/cd
   only:
     - master
