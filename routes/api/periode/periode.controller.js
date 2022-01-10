@@ -35,7 +35,7 @@ exports.umurAyam = async (req, res, next) => {
         const data = await Model.findById(req.params.id);
         const now = new Date(Date.now());
         const start = new Date(data.tanggalMulai);
-        const result = Math.round(Math.abs((now - start) / ONE_DAY) - 1)
+        const result = Math.round(Math.abs((now - start) / ONE_DAY))
         console.log(start, now)
         res.json({
             data: result,
@@ -325,7 +325,7 @@ exports.ringkasan = async (req, res, next) => {
         const oneDay = 24 * 60 * 60 * 1000;
         const now = new Date(Date.now());
         const start = new Date(getPeriode.tanggalMulai);
-        const result = Math.round(Math.abs((now - start) / oneDay) - 1)
+        const result = Math.round(Math.abs((now - start) / oneDay))
 
         const allTonase = data.reduce((a, {tonase}) => a + tonase, 0)
         const allDeplesi = data.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
