@@ -22,12 +22,16 @@ docker-build:
   only:
     - master
 <<<<<<< HEAD
+<<<<<<< HEAD
     - stagging
 
 deploy-stagging:
   stage: deploy
   image: alpine:latest
 =======
+=======
+    - stagging
+>>>>>>> 5abf1e3... listen only stagging and master branch
 
 deploy-stagging:
   stage: deploy
@@ -55,8 +59,12 @@ deploy-stagging:
 =======
     - ssh -o StrictHostKeyChecking=no ${SSH_USER}@${SSH_HOST} "export APP_IMAGE_STG=$CI_REGISTRY_IMAGE && export APP_IMAGE_STG_TAG=$TAG_IMAGE && sudo su && docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY && cd /home/projects/live/smartfarm && git pull && docker-compose -f docker-compose.stg.yml down && docker-compose -f docker-compose.stg.yml pull && docker-compose -f docker-compose.stg.yml up -d"
   only:
+<<<<<<< HEAD
     - master
 >>>>>>> 095ef83... Implement gitlab ci/cd
+=======
+    - stagging
+>>>>>>> 5abf1e3... listen only stagging and master branch
 
 deploy-production:
   stage: deploy
