@@ -20,8 +20,6 @@ const MongoStore = require('connect-mongo')(session);
 const staticFile = 'public';
 const passport = require('passport');
 
-const cron = require('node-cron')
-
 var app = express();
 
 app.use(logger('dev'));
@@ -41,13 +39,6 @@ app.use(passport.session());
 app.use(cors());
 app.use(require('./routes'));
 app.use(express.static(path.join(__dirname, staticFile)));
-
-const Faq = require('./routes/api/faq/faq.model')
-const FaqImage = require('./routes/api/faq-image')
-const Nekropsi = require('./routes/api/nekropsi')
-const NekropsiImage = require('./routes/api/nekropsi-image/nekropsi-image.model')
-const User = require('./routes/api/users/users.model')
-const UserImage = require('./routes/api/user-image/user-image.model')
 
 app.use('/uploads', (req, res, next) => {
     const regex = /((\w+\/)+)(\w+.[a-z]{3,4}$)/gm
