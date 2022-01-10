@@ -20,14 +20,6 @@ const MongoStore = require('connect-mongo')(session);
 const staticFile = 'public';
 const passport = require('passport');
 
-
-const EventEmitter = require('events');
-
-class MyEmitter extends EventEmitter {}
-const myEmitter = new MyEmitter();
-
-const socketio = require('socket.io')
-
 var app = express();
 
 app.use(logger('dev'));
