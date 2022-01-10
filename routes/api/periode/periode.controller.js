@@ -10,7 +10,6 @@ const Data = require('../data/data.model');
 const selectPublic = '-createdAt -updatedAt'
 const mongoose = require('mongoose')
 
-<<<<<<< HEAD
 const ONE_DAY = 24 * 60 * 60 * 1000;
 
 // const _beforeSave = (data) => {
@@ -19,9 +18,6 @@ const ONE_DAY = 24 * 60 * 60 * 1000;
 //     }
 //     return data
 // }
-=======
-const ONE_DAY = 24 * 60 * 60 * 1000; 
->>>>>>> bdfb668... fixing bugs
 
 const _find = async (req, isPublic = false) => {
     const {where, limit, offset, sort} = parseQuery(req.query);
@@ -339,14 +335,10 @@ exports.ringkasan = async (req, res, next) => {
         const avg = data.reduce((a, {avgBerat}) => a + avgBerat, 0) / (data.length - 1);
         const atas = (100 - (((getPeriode.populasi - (allDeplesi + allKematian)) / getPeriode.populasi) * 100)) * avg
         const bawah = (allPakan/allTonase) * result
-<<<<<<< HEAD
         // const pakanMasuk = sapronak.reduce((a, {pakan_masuk}) => a + pakan_masuk, 0);
         const filter_sapronak = sapronak.filter(x => x._id == "PAKAN")
         const pakanMasuk = filter_sapronak.reduce((a, {pakan_masuk}) => a + pakan_masuk, 0);
         console.log(pakanMasuk);
-=======
-        const pakanMasuk = sapronak.reduce((a, {pakan_masuk}) => a + pakan_masuk, 0);
->>>>>>> bdfb668... fixing bugs
         // console.log(alldeplesi);
         res.json({
             populasiAkhir: getPeriode.populasi - (allDeplesi + allKematian + allPenjualan),
