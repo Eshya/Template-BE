@@ -35,7 +35,7 @@ exports.umurAyam = async (req, res, next) => {
         const data = await Model.findById(req.params.id);
         const now = new Date(Date.now());
         const start = new Date(data.tanggalMulai);
-        const result = Math.round(Math.abs((now - start) / ONE_DAY))
+        const result = Math.round(Math.abs((now - start) / ONE_DAY) - 1)
         console.log(start, now)
         res.json({
             data: result,
@@ -325,7 +325,7 @@ exports.ringkasan = async (req, res, next) => {
         const oneDay = 24 * 60 * 60 * 1000;
         const now = new Date(Date.now());
         const start = new Date(getPeriode.tanggalMulai);
-        const result = Math.round(Math.abs((now - start) / oneDay))
+        const result = Math.round(Math.abs((now - start) / oneDay) - 1)
 
         const allTonase = data.reduce((a, {tonase}) => a + tonase, 0)
         const allDeplesi = data.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
@@ -437,25 +437,3 @@ exports.performa = async (req, res, next) => {
         next(error)
     }
 }
-
-// exports.performa = async (req, res, next) => {
-//     const firstPeriode = req.query.first
-//     const secondPeriode = req.query.second
-//     try {
-//         const findStart = await Model.findById(firstPeriode, {tanggalMulai: true})
-//         const findFinish = await Model.findById(secondPeriode, {tanggalMulai: true})
-//         const start = new Date(findStart.tanggalMulai)
-//         const finish = new Date(findFinish.tanggalMulai)
-//         const result = await Model.find({kandang: findStart.kandang, tanggalMulai: {$gte: start, $lte: finish}}, {_id: true}).select('-kandang -jenisDOC')
-//         // console.log(result)
-//         const asyncKegiatan = await Promise.all(result.map(async(x) => {
-//            const data = await KegiatanHarian.aggregate([
-//                 {$match: {periode: mongoose.Types.ObjectId(x.id)}}
-//             ])
-//             return data
-//         }))
-//         console.log(asyncKegiatan);
-//     } catch (error) {
-//         next(error)
-//     }
-// }
