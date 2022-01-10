@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 version: '3.9'
 services:
   smartfarm-prod:
@@ -6,33 +5,17 @@ services:
     container_name: smartfarm-production
     environment:
       SERVER_PORT: 3101
-=======
-version: '3.7'
-services:
-  smartfarm-prod:
-    image: ${APP_IMAGE_PROD}:${APP_IMAGE_PROD_TAG}
-    environment:
-      SERVER_PORT: 3001
->>>>>>> 095ef83... Implement gitlab ci/cd
       DB_HOST: mongodb
       DB_PORT: 27017
       DB_USER: chickindb
       DB_PASS: IniDBch1ck1n
       DB_NAME: chckin
     volumes:
-<<<<<<< HEAD
       - ./upload:/upload-prod
     networks:
       - chickinnetwork
     ports:
       - "3101:3101"
-=======
-      - ./upload:/:bind
-    networks:
-      - chickinnetwork
-    ports:
-      "3001:3001"
->>>>>>> 095ef83... Implement gitlab ci/cd
     restart: always
 networks:
   chickinnetwork:

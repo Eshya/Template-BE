@@ -1,35 +1,21 @@
 version: '3.7'
 services:
-<<<<<<< HEAD
   smartfarm-stg:
     image: ${APP_IMAGE_STG}:${APP_IMAGE_STG_TAG}
     container_name: smartfarm-stagging
     environment:
       SERVER_PORT: 3102
-=======
-  smartfarm-prod:
-    image: ${APP_IMAGE_STG}:${APP_IMAGE_STG_TAG}
-    environment:
-      SERVER_PORT: 3002
->>>>>>> 095ef83... Implement gitlab ci/cd
       DB_HOST: mongodb
       DB_PORT: 27017
       DB_USER: chickindb
       DB_PASS: IniDBch1ck1n
       DB_NAME: chckin-stagging
-<<<<<<< HEAD
     volumes:
       - ./upload:/upload-stg
     networks:
       - chickinnetwork
     ports:
       - "3102:3102"
-=======
-    networks:
-      - chickinnetwork
-    ports:
-      "3002:3002"
->>>>>>> 095ef83... Implement gitlab ci/cd
     restart: always
 networks:
   chickinnetwork:
