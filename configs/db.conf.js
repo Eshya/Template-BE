@@ -26,6 +26,21 @@ async function query(sql, params){
     return result;
 }
 
+// const options = {
+//     useFindAndModify: false,
+//     useNewUrlParser: true,
+//     useUnifiedTopology: true,
+//     useCreateIndex: true,
+//     auth: {
+//         authdb: 'admin'
+//     }
+// }
+
+
+
+// const user = 'pismgdefuse';
+// const pass = '@pisdefuseMG20201qaz';
+
 const options = {
     useFindAndModify: false,
     useNewUrlParser: true,
