@@ -38,5 +38,5 @@ const scheme = new Schema({
     }
 }, {versionKey: false, timestamps: true})
 scheme.plugin(require('mongoose-autopopulate'));
-scheme.plugin(require('mongoose-delete', {deleteAt: true}))
+scheme.plugin(require('mongoose-delete'), {deletedAt: true, overrideMethods: 'all'})
 module.exports = model('Kandang', scheme, 'kandang');
