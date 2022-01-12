@@ -80,7 +80,7 @@ exports.findKegiatan = async (req, res, next) => {
         const periode = await Model.findById(id)
         const start = new Date(periode.tanggalMulai);
         // console.log(periode);
-        const data = await KegiatanHarian.find({periode: id}).select('-periode')
+        const data = await KegiatanHarian.find({periode: id}).select('-periode').sort({'tanggal': -1})
 
         const map = await Promise.all(data.map(async (x) => {
             var tmp = x
@@ -144,7 +144,7 @@ exports.findPenjualan = async (req, res, next) => {
 exports.findSapronak = async (req, res, next) => {
     const id = req.params.id
     try {
-        const results = await Sapronak.find({periode: id}).sort({'tanggal': -1})
+        const results = await Sapronak.find({periode: id}).sort({'createdAt': -1})
         res.json({
             data: results,
             message: 'Ok'
