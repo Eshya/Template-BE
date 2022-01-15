@@ -4,7 +4,7 @@ const pakanPakaiSchema = new Schema({
     jenisPakan: {
         type: Schema.Types.ObjectId,
         ref: 'Sapronak',
-        autopopulate: {maxDepth: 1}
+        autopopulate: {maxDepth: 2}
     }, 
     beratPakan: {type: Number, required: true}
 })
