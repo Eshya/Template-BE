@@ -63,6 +63,7 @@ deploy-production:
 
 success_notification:
   stage: notification
+  image: alpine:latest
   script:
     - wget https://raw.githubusercontent.com/DiscordHooks/gitlab-ci-discord-webhook/master/send.sh
     - chmod +x ./send.sh
@@ -72,6 +73,7 @@ success_notification:
 
 failure_notification:
   stage: notification
+  image: alpine:latest
   script:
     - wget https://raw.githubusercontent.com/DiscordHooks/gitlab-ci-discord-webhook/master/send.sh
     - chmod +x ./send.sh
