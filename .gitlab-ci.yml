@@ -65,7 +65,7 @@ success_notification:
   stage: notification
   script:
     - wget https://raw.githubusercontent.com/DiscordHooks/gitlab-ci-discord-webhook/master/send.sh
-    - chmod +x send.sh
+    - chmod +x ./send.sh
     - ls -al
     - ./send.sh success $DISCORD_WEBHOOK_URL
   when: on_success
@@ -74,6 +74,6 @@ failure_notification:
   stage: notification
   script:
     - wget https://raw.githubusercontent.com/DiscordHooks/gitlab-ci-discord-webhook/master/send.sh
-    - chmod +x send.sh
+    - chmod +x ./send.sh
     - ./send.sh failure $DISCORD_WEBHOOK_URL
   when: on_failure
