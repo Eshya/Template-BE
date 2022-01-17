@@ -63,19 +63,20 @@ deploy-production:
 
 success_notification:
   stage: notification
-  image: alpine:latest
+  image: ubuntu:latest
   script:
     - wget https://raw.githubusercontent.com/DiscordHooks/gitlab-ci-discord-webhook/master/send.sh
     - chmod +x ./send.sh
-    - ls -al
+    - echo $DISCORD_WEBHOOK_URL
     - ./send.sh success $DISCORD_WEBHOOK_URL
   when: on_success
 
 failure_notification:
   stage: notification
-  image: alpine:latest
+  image: ubuntu:latest
   script:
     - wget https://raw.githubusercontent.com/DiscordHooks/gitlab-ci-discord-webhook/master/send.sh
     - chmod +x ./send.sh
+    - echo $DISCORD_WEBHOOK_URL
     - ./send.sh failure $DISCORD_WEBHOOK_URL
   when: on_failure
