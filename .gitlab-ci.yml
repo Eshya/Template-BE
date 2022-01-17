@@ -65,6 +65,7 @@ success_notification:
   stage: notification
   image: ubuntu:latest
   script:
+    - apt install wget -y
     - wget https://raw.githubusercontent.com/DiscordHooks/gitlab-ci-discord-webhook/master/send.sh
     - chmod +x ./send.sh
     - echo $DISCORD_WEBHOOK_URL
@@ -75,6 +76,7 @@ failure_notification:
   stage: notification
   image: ubuntu:latest
   script:
+    - apt install wget -y
     - wget https://raw.githubusercontent.com/DiscordHooks/gitlab-ci-discord-webhook/master/send.sh
     - chmod +x ./send.sh
     - echo $DISCORD_WEBHOOK_URL
