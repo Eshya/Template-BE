@@ -255,6 +255,7 @@ exports.getBudidaya = async (req, res, next) => {
         const getSapronak = await Sapronak.find({periode: id});
         // const penjualanAyamBesar = await 
         for (let i = 0; i < getSapronak.length; i++) {
+            console.log(getSapronak[i])
             if (getSapronak[i].produk.jenis === 'PAKAN') {
                 const compliment = getSapronak[i].kuantitas * getSapronak[i].hargaSatuan
                 pembelianPakan += compliment
@@ -344,7 +345,7 @@ exports.ringkasan = async (req, res, next) => {
             populasiAkhir: getPeriode.populasi - (allDeplesi + allKematian + allPenjualan),
             populasiAwal: getPeriode.populasi,
             panen: allPenjualan,
-            jenisDoc: getPeriode.jenisDOC ? getPeriode.JenisDOC.name : "",
+            jenisDoc: getPeriode.jenisDOC ? getPeriode.jenisDOC.name : "",
             IP: (atas / bawah) * 100,
             deplesi: ((allDeplesi + allKematian) / getPeriode.populasi) * 100,
             beratAktual: avg,
