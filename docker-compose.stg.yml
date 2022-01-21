@@ -11,7 +11,7 @@ services:
       DB_PASS: IniDBch1ck1n
       DB_NAME: chckin-stagging
     volumes:
-      - ./upload:/upload-stg
+      - /home/chickin/projects/smartfarm/upload-stg:/app/uploads
     networks:
       - chickinnetwork
     ports:

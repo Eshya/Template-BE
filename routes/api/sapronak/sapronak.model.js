@@ -8,7 +8,7 @@ const scheme = new Schema({
     produk: {
         type: Schema.Types.ObjectId,
         ref: 'Produk',
-        autopopulate: { maxDepth: 1}
+        autopopulate: { maxDepth: 2}
     },
     tanggal: {
         type: Date,

@@ -347,7 +347,7 @@ exports.ringkasan = async (req, res, next) => {
             populasiAkhir: getPeriode.populasi - (allDeplesi + allKematian + allPenjualan),
             populasiAwal: getPeriode.populasi,
             panen: allPenjualan,
-            jenisDoc: getPeriode.jenisDOC.name,
+            jenisDoc: getPeriode.jenisDOC ? getPeriode.jenisDOC.name : "",
             IP: (atas / bawah) * 100,
             deplesi: ((allDeplesi + allKematian) / getPeriode.populasi) * 100,
             beratAktual: avg,

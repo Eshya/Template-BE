@@ -11,7 +11,7 @@ services:
       DB_PASS: IniDBch1ck1n
       DB_NAME: chckin
     volumes:
-      - ./upload:/upload-prod
+      - /home/chickin/projects/smartfarm/upload-prod:/app/uploads
     networks:
       - chickinnetwork
     ports:
