@@ -79,7 +79,7 @@ exports.findKegiatan = async (req, res, next) => {
     try {
         const periode = await Model.findById(id)
         const start = new Date(periode.tanggalMulai);
-        // console.log(periode);
+        // console.log(periode.populasi);
         const data = await KegiatanHarian.find({periode: id}).select('-periode').sort({'tanggal': -1})
 
         const map = await Promise.all(data.map(async (x) => {
@@ -88,9 +88,10 @@ exports.findKegiatan = async (req, res, next) => {
             var umur = Math.round(Math.abs((tanggal - start) / ONE_DAY))
             if (umur >= 50){ umur = 50 }
             const deplesiEkor = x.deplesi
+            const populasiNow = periode.populasi - (x.deplesi + x.pemusnahan)
             tmp.deplesi = (x.deplesi + x.pemusnahan) / periode.populasi
             const std = await Data.findOne({day: umur})
-            return {...tmp.toObject(), std: std == null ? null : std.toObject(), deplesiEkor: deplesiEkor, age: umur} // Join all of them in coolest way :-* - Atha
+            return {...tmp.toObject(), std: std == null ? null : std.toObject(), deplesiEkor: deplesiEkor, age: umur, populasi: populasiNow} // Join all of them in coolest way :-* - Atha
         }))
 
         //console.log(map)
@@ -255,6 +256,7 @@ exports.getBudidaya = async (req, res, next) => {
         const getSapronak = await Sapronak.find({periode: id});
         // const penjualanAyamBesar = await 
         for (let i = 0; i < getSapronak.length; i++) {
+            console.log(getSapronak)
             if (getSapronak[i].produk.jenis === 'PAKAN') {
                 const compliment = getSapronak[i].kuantitas * getSapronak[i].hargaSatuan
                 pembelianPakan += compliment
@@ -317,9 +319,10 @@ exports.ringkasan = async (req, res, next) => {
         // const getDeplesi = KegiatanHarian.find({periode: id})
         const data = await KegiatanHarian.aggregate([
             {$match: {periode: mongoose.Types.ObjectId(getPeriode.id)}},
-            {$unwind: '$pakanPakai'},
+            {$unwind: {'path': '$pakanPakai', "preserveNullAndEmptyArrays": true}},
             {$unwind: '$berat'},
             {$group: {_id: '$_id', avgBerat: {$avg: '$berat.beratTimbang'}, tonase: {$sum: {$multiply: ['$berat.beratTimbang', '$berat.populasi']}}, totalPakan: {$sum: '$pakanPakai.beratPakan'}, totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
+            // {$group: {id: '$_id'}}
         ])
         // console.log(data)
         const oneDay = 24 * 60 * 60 * 1000;
@@ -332,13 +335,13 @@ exports.ringkasan = async (req, res, next) => {
         const allKematian = data.reduce((a, {totalKematian}) => a + totalKematian, 0);
         const allPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
         const allPakan = data.reduce((a, {totalPakan})=>a + totalPakan, 0);
-        const avg = data.reduce((a, {avgBerat}) => a + avgBerat, 0) / (data.length - 1);
+        const avg = data.reduce((a, {avgBerat}) => a + avgBerat, 0) / (data.length);
         const atas = (100 - (((getPeriode.populasi - (allDeplesi + allKematian)) / getPeriode.populasi) * 100)) * avg
         const bawah = (allPakan/allTonase) * result
         // const pakanMasuk = sapronak.reduce((a, {pakan_masuk}) => a + pakan_masuk, 0);
         const filter_sapronak = sapronak.filter(x => x._id == "PAKAN")
         const pakanMasuk = filter_sapronak.reduce((a, {pakan_masuk}) => a + pakan_masuk, 0);
-        console.log(pakanMasuk);
+        // console.log(getPeriode);
         // console.log(alldeplesi);
         res.json({
             populasiAkhir: getPeriode.populasi - (allDeplesi + allKematian + allPenjualan),

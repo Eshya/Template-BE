@@ -85,6 +85,9 @@ exports.findSisaAyam = async (req, res, next) => {
 exports.insert = async (req, res, next) => {
     const data = req.body
     try {
+        // const findDate = await Model.findOne({tanggal: {$lt: Date(), $gte: new Date(new Date().setDate(new Date().getDate()-1))}})
+        // if(findDate) return res.json({error:400, message: 'Sudah melakukan pengisian data harian untuk hari ini'})
+
         Promise.all(data.pakanPakai.map(async(x) => {
             const foundSapronak = await Sapronak.findById(x.jenisPakan)
             if (foundSapronak.stock - x.beratPakan <= 0){
@@ -94,6 +97,9 @@ exports.insert = async (req, res, next) => {
             const dec = await Sapronak.findByIdAndUpdate(x.jenisPakan, {$inc:{stock: -x.beratPakan}})
             return dec
         }))
+        
+        const findKandang = await Model.findOne({periode: data.periode })
+        console.log(findKandang)
 
         const results = await Model.create(data);
         res.json({

@@ -22,7 +22,7 @@ const scheme = new Schema({
     },
     tanggal: {
         type: Date,
-        required: true,
+        required: true
     },
     pakanPakai: [pakanPakaiSchema],
     pemusnahan: {
@@ -31,7 +31,10 @@ const scheme = new Schema({
     deplesi: {
         type: Number
     },
-    berat: [beratSchema]
+    berat: [beratSchema],
+    populasi: {
+        type: Number,
+    }
 }, {versionKey: false, timestamps: true})
 scheme.plugin(require('mongoose-autopopulate'));
 module.exports = model('KegiatanHarian', scheme, 'kegiatan-harian')

@@ -46,6 +46,7 @@ exports.createJenisDOC = async (jenisDOC) => {
 
 exports.createProduk = async (produk) => {
     const isProdukExist = await Produk.findOne({merk: produk.merk})
+    console.log("this return")
     if(!isProdukExist){
         const defaultProduk = await Produk.create(produk);
         return defaultProduk;
@@ -90,8 +91,8 @@ exports.createData = async (data) => {
 
 // const addTipeKandang = tipeKandangData.map((tipeKandang) => this.createTipeKandang(tipeKandang))
 // const addJenisDOC = jenisDOCData.map((jenisDOC) => this.createJenisDOC(jenisDOC));
-// const addProduk = produkData.map((produk) => this.createProduk(produk));
-const addData = dataData.map((data) => this.createData(data))
+const addProduk = produkData.map((produk) => this.createProduk(produk));
+// const addData = dataData.map((data) => this.createData(data))
 // Promise.all(addTipeKandang).then((results) => {
 //     console.log(results);
 // })
@@ -100,10 +101,10 @@ const addData = dataData.map((data) => this.createData(data))
 //     console.log(results);
 // })
 
-Promise.all(addData).then((results) => {
-    console.log(results);
-})
-
-// Promise.all(addProduk).then((results) => {
+// Promise.all(addData).then((results) => {
 //     console.log(results);
 // })
+
+Promise.all(addProduk).then((results) => {
+    console.log(results);
+})
