@@ -341,14 +341,13 @@ exports.ringkasan = async (req, res, next) => {
         // const pakanMasuk = sapronak.reduce((a, {pakan_masuk}) => a + pakan_masuk, 0);
         const filter_sapronak = sapronak.filter(x => x._id == "PAKAN")
         const pakanMasuk = filter_sapronak.reduce((a, {pakan_masuk}) => a + pakan_masuk, 0);
-        // console.log(getPeriode);
-        // console.log(alldeplesi);
+
         res.json({
             populasiAkhir: getPeriode.populasi - (allDeplesi + allKematian + allPenjualan),
             populasiAwal: getPeriode.populasi,
             panen: allPenjualan,
             jenisDoc: getPeriode.jenisDOC ? getPeriode.jenisDOC.name : "",
-            IP: (atas / bawah) * 100,
+            IP: bawah == 0 ? (atas/(bawah-1) * 100) : (atas / bawah) * 100,
             deplesi: ((allDeplesi + allKematian) / getPeriode.populasi) * 100,
             beratAktual: avg,
             feedIntake: allPakan / (getPeriode.populasi - (allDeplesi + allKematian + allPenjualan)),
