@@ -324,11 +324,17 @@ exports.ringkasan = async (req, res, next) => {
             {$group: {_id: '$_id', avgBerat: {$avg: '$berat.beratTimbang'}, tonase: {$sum: {$multiply: ['$berat.beratTimbang', '$berat.populasi']}}, totalPakan: {$sum: '$pakanPakai.beratPakan'}, totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
             // {$group: {id: '$_id'}}
         ])
+
+        const getKegiatan = await KegiatanHarian.find({periode: getPeriode.id}).sort({'cratedAt': -1}).limit(1).select('-periode')
+        // console.log(getKegiatan[0].berat);
         // console.log(data)
         const oneDay = 24 * 60 * 60 * 1000;
         const now = new Date(Date.now());
         const start = new Date(getPeriode.tanggalMulai);
         const result = Math.round(Math.abs((now - start) / oneDay))
+
+        const latestWeight = getKegiatan[0].berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0)
+        // console.log(latestWeight);
 
         const allTonase = data.reduce((a, {tonase}) => a + tonase, 0)
         const allDeplesi = data.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
@@ -349,7 +355,7 @@ exports.ringkasan = async (req, res, next) => {
             jenisDoc: getPeriode.jenisDOC ? getPeriode.jenisDOC.name : "",
             IP: bawah == 0 ? (atas/(bawah-1) * 100) : (atas / bawah) * 100,
             deplesi: ((allDeplesi + allKematian) / getPeriode.populasi) * 100,
-            beratAktual: avg,
+            beratAktual: latestWeight,
             feedIntake: allPakan / (getPeriode.populasi - (allDeplesi + allKematian + allPenjualan)),
             ADG: 0,
             fcrAktual: allPakan / allTonase,
