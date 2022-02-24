@@ -3,7 +3,7 @@ const {parseQuery} = require('../../helpers')
 
 exports.findByDay = async (req, res, next) => {
     try {
-        console.log(req.query.day)
+        // console.log(req.query.day)
         const result = await Model.findOne({day: req.query.day})
         res.json({
             message: 'Ok',

@@ -56,10 +56,16 @@ exports.findById = async (req, res, next) => {
 exports.insert = async (req, res, next) => {
     const data = req.body
     try {
+        data.kuantitas = req.body.zak * 50
         data.stock = req.body.kuantitas
-        const results = await Model.create(data);
+        const findByPeriode = await Model.findOne({periode: data.periode})
+        findByPeriode ? data.stock = data.stock + findByPeriode.stock : data.stock
+        const inserSapronak = await Model.create(data);
+        const updateStock = await Model.updateMany({periode: data.periode, _id: {$ne: inserSapronak._id}}, {$inc:{stock: data.kuantitas}})
+        // console.log(results[1])
         res.json({
-            data: results,
+            updated: updateStock,
+            data: inserSapronak,
             message: 'Ok'
         });
     } catch (error) {
@@ -71,6 +77,7 @@ exports.updateById = async (req, res, next) => {
     const id = req.params.id;
     const data = req.body;
     try {
+        data.kuantitas = req.body.zak * 50
         const results = await Model.findByIdAndUpdate(id, data, {new: true}).exec();
         res.json({
             data: results,

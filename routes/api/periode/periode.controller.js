@@ -11,6 +11,7 @@ const selectPublic = '-createdAt -updatedAt'
 const mongoose = require('mongoose')
 
 const ONE_DAY = 24 * 60 * 60 * 1000;
+const reducer = (acc, value) => acc + value
 
 // const _beforeSave = (data) => {
 //     if(!data.kemitraan){
@@ -36,7 +37,7 @@ exports.umurAyam = async (req, res, next) => {
         const now = new Date(Date.now());
         const start = new Date(data.tanggalMulai);
         const result = Math.round(Math.abs((now - start) / ONE_DAY))
-        console.log(start, now)
+        // console.log(start, now)
         res.json({
             data: result,
             message: 'Ok'
@@ -82,31 +83,33 @@ exports.findKegiatan = async (req, res, next) => {
         // console.log(periode.populasi);
         const data = await KegiatanHarian.find({periode: id}).select('-periode').sort({'tanggal': -1})
 
+        //findBWage0
+        const findBW0 = data.find((e) => {
+            const tanggal = new Date(e.tanggal)
+            var umur = Math.round(Math.abs((tanggal - start) / ONE_DAY))
+            if (umur === 0) return e
+        })
+        const BW0 = findBW0.berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0);
+        //mappingData
         const map = await Promise.all(data.map(async (x) => {
             var tmp = x
+            //findUmur
             const tanggal = new Date(x.tanggal)
             var umur = Math.round(Math.abs((tanggal - start) / ONE_DAY))
+            //findDeplesi
             if (umur >= 50){ umur = 50 }
             const deplesiEkor = x.deplesi
             const populasiNow = periode.populasi - (x.deplesi + x.pemusnahan)
             tmp.deplesi = (x.deplesi + x.pemusnahan) / periode.populasi
             const std = await Data.findOne({day: umur})
-            return {...tmp.toObject(), std: std == null ? null : std.toObject(), deplesiEkor: deplesiEkor, age: umur, populasi: populasiNow} // Join all of them in coolest way :-* - Atha
+
+            //findRGR
+            const BW7 = x.berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0)
+            const rgr = umur === 7 ? (BW0 - BW7) / BW0 * 100 : null
+
+            return {...tmp.toObject(), std: std == null ? null : std.toObject(), deplesiEkor: deplesiEkor, age: umur, populasi: populasiNow, rgr: rgr} // Join all of them in coolest way :-* - Atha
         }))
 
-        //console.log(map)
-
-        // const asyncResults = await Promise.all(data.map(async(x) => {
-        //     var findData = {}
-        //     const tanggal = new Date(x.tanggal)
-        //     var umur = Math.round(Math.abs((tanggal - start) / ONE_DAY) - 1)
-        //     if(umur >= 50){umur = 50}
-        //     const std = await Data.find({day: umur})
-        //     x.deplesi = (x.deplesi + x.pemusnahan) / periode.populasi
-        //     Object.assign(findData, x._doc, std)
-        //     x.std = std
-        //     return findData
-        // }))
         res.json({
             data: map,
             message: 'Ok'
@@ -245,7 +248,6 @@ exports.removeById = async (req, res, next) => {
 
 exports.getBudidaya = async (req, res, next) => {
     const id = req.params.id
-    const reducer = (acc, value) => acc + value
     try {
         let harian = []
         let kematian = []
@@ -256,7 +258,7 @@ exports.getBudidaya = async (req, res, next) => {
         const getSapronak = await Sapronak.find({periode: id});
         // const penjualanAyamBesar = await 
         for (let i = 0; i < getSapronak.length; i++) {
-            console.log(getSapronak)
+            // console.log(getSapronak)
             if (getSapronak[i].produk.jenis === 'PAKAN') {
                 const compliment = getSapronak[i].kuantitas * getSapronak[i].hargaSatuan
                 pembelianPakan += compliment
@@ -401,7 +403,7 @@ exports.performa = async (req, res, next) => {
                 // {$project: {periode: '$periode._id'}},
                 {$group: {_id: '$_id', avgBerat: {$avg: '$berat.beratTimbang'}, tonase: {$sum: {$multiply: ['$berat.beratTimbang', '$berat.populasi']}}, pakan: {$sum: '$pakanPakai.beratPakan'}, totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
             ])
-            console.log(data);
+            // console.log(data);
             const oneDay = 24 * 60 * 60 * 1000;
             const now = new Date(x.tanggalAkhir);
             const start = new Date(x.tanggalMulai);

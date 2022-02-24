@@ -4,6 +4,7 @@ const Model = require('./kandang.model');
 // const Flock = require('../flock/flock.model');
 const Periode = require('../periode/periode.model');
 const selectPublic = '-createdAt -updatedAt';
+const fetch = require('node-fetch')
 
 
 const _find = async (req, isPublic = false) => {
@@ -91,9 +92,9 @@ exports.findPeriode = async (req, res, next) => {
             const oneDay = 24 * 60 * 60 * 1000;
             const now = new Date(Date.now());
             const start = new Date(results[results.length - 1].tanggalMulai);
-            console.log(start);
+            // console.log(start);
             const umurAyam = Math.round(Math.abs((now - start) / oneDay))
-            console.log(umurAyam);
+            // console.log(umurAyam);
             res.json({
                 age: umurAyam,
                 dataLuar: results[results.length - 1],
@@ -126,12 +127,28 @@ exports.findById = async (req, res, next) => {
 }
 
 exports.insert = async (req, res, next) => {
+    const token = req.headers['authorization']
     const {kode, alamat, tipe, isMandiri, kota, populasi} = req.body;
     const createdBy = req.user._id
+    const flock = []
     try {
         const results = await Model.create({kode, alamat, tipe, isMandiri, kota, createdBy, populasi});
+        // console.log(results._id)
+        const body = {
+            name: 'flock 1',
+            kandang: results._id
+        }
+        await fetch('https://iot.chickinindonesia.com/api/flock', {
+            method: 'post',
+            body: JSON.stringify(body),
+            headers: {
+                'Authorization': token,
+                "Content-Type": "application/json" }
+        }).then(res => res.json()).then(data => flock.push(data))
+        // console.log(insertFlock)
         res.json({
             data: results,
+            flock: flock,
             message: 'Ok'
         })
     } catch (error) {
@@ -187,5 +204,18 @@ exports.removeById = async (req, res, next) => {
         })
     } catch (error) {
         next(error);
+    }
+}
+
+exports.findByUser = async (req, res, next) => {
+    try {
+        const id = req.user._id
+        const results = await Model.find({createdBy: id})
+        res.json({
+            data: results,
+            message: 'Ok'
+        })
+    } catch (error) {
+        next(error)
     }
 }

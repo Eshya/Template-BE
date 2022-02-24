@@ -318,7 +318,7 @@ exports.getToken = async (req, res, next) => {
 
 exports.resetPassword = async (req, res, next) => {
     try {
-        console.log(req.query.token);
+        // console.log(req.query.token);
         const isInvalid = await Model.findOne({resetPasswordToken: req.params.token,  resetPasswordExpires: { $gt: Date.now()}});
         if (!isInvalid) return next(createError(403, 'Token tidak valid atau kadaluarsa'))
         const newPassword = passwordHash.generate(req.body.password, {saltLength: 10});

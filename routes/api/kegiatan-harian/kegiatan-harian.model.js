@@ -6,7 +6,8 @@ const pakanPakaiSchema = new Schema({
         ref: 'Sapronak',
         autopopulate: {maxDepth: 2}
     }, 
-    beratPakan: {type: Number, required: true}
+    beratPakan: Number,
+    beratZak: {type: Number, required: true}
 })
 
 const beratSchema = new Schema({
@@ -34,6 +35,15 @@ const scheme = new Schema({
     berat: [beratSchema],
     populasi: {
         type: Number,
+    },
+    catatan: {
+        type: String,
+    },
+    image: {
+        type: Schema.Types.ObjectId,
+        ref: 'KegiatanImage', select: true,
+        autopopulate: {maxDepth: 1},
+        default: null
     }
 }, {versionKey: false, timestamps: true})
 scheme.plugin(require('mongoose-autopopulate'));

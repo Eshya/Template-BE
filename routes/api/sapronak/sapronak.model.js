@@ -14,13 +14,17 @@ const scheme = new Schema({
         type: Date,
         required: true
     },
-    kuantitas: {
+    zak: {
         type: Number,
         required: true
     },
+    kuantitas: {
+        type: Number,
+        // required: true
+    },
     stock: {
         type: Number,
-        required: true
+        // required: true
     },
     hargaSatuan: {
         type: Number,

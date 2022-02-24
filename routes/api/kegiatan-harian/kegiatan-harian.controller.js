@@ -2,6 +2,7 @@ const {parseQuery, createError} = require('../../helpers');
 const Model = require('./kegiatan-harian.model');
 const Sapronak = require('../sapronak/sapronak.model');
 const mongoose = require('mongoose');
+const { create } = require('./kegiatan-harian.model');
 const selectPublic = '-createdAt -updatedAt';
 
 const _find = async (req, isPublic = false) => {
@@ -81,44 +82,31 @@ exports.findSisaAyam = async (req, res, next) => {
     }
 }
 
-
-exports.insert = async (req, res, next) => {
+exports.insert = (req, res, next) => {
     const data = req.body
     try {
-        // const findDate = await Model.findOne({tanggal: {$lt: Date(), $gte: new Date(new Date().setDate(new Date().getDate()-1))}})
-        // if(findDate) return res.json({error:400, message: 'Sudah melakukan pengisian data harian untuk hari ini'})
-
         Promise.all(data.pakanPakai.map(async(x) => {
-            const foundSapronak = await Sapronak.findById(x.jenisPakan)
-            if (foundSapronak.stock - x.beratPakan <= 0){
-                return res.json({error: 400, message: 'pakan tidak mencukupi!'})
-            }
+            x.beratPakan = x.beratZak * 50
 
-            const dec = await Sapronak.findByIdAndUpdate(x.jenisPakan, {$inc:{stock: -x.beratPakan}})
+            const foundSapronak = await Sapronak.findById(x.jenisPakan)
+            if(!foundSapronak) throw createError(400, 'sapronak not found')
+            if (foundSapronak.stock - x.beratPakan < 0){
+                throw createError(400, 'pakan tidak mencukupi')
+            }
+            const dec = await Sapronak.updateMany({periode: mongoose.Types.ObjectId(data.periode), produk: mongoose.Types.ObjectId(foundSapronak.produk._id)}, {$inc:{stock: -x.beratPakan}})
             return dec
         }))
-        
-        const findKandang = await Model.findOne({periode: data.periode })
-        console.log(findKandang)
-
-        const results = await Model.create(data);
-        res.json({
-            data: results,
-            message: 'Ok'
+        .then(() => {
+            const results = Model.create(data)
+            results.then(result => {
+                res.json({
+                    data: result,
+                    message: 'Ok'
+                })
+            })
         })
-        // const foundSapronak = await Sapronak.findOne({periode: data.periode})
-        // if(!foundSapronak) return next(createError(404, 'Sapronak not found'))
-        // const jenisProduk = foundSapronak.produk.jenis
-        // // console.log(jenisProduk);
-        // if(jenisProduk == "PAKAN"){
-        //     const results = await Model.create(data);
-        //     res.json({
-        //         data: results,
-        //         message: 'Ok'
-        //     });
-        // } else {return next(createError(404, 'Pakan not found'))}
     } catch (error) {
-        next(error);
+        next(error)
     }
 }
 
@@ -126,6 +114,15 @@ exports.updateById = async (req, res, next) => {
     const id = req.params.id;
     const data = req.body;
     try {
+        const findKegiatan = await Model.findById(id);
+        const findByPeriode = await Sapronak.findOne({periode: findKegiatan.periode})
+        if(req.body.pakanPakai.beratPakan){
+            Promise.all(findKegiatan.pakanPakai.map(async(x) => {
+                const diff = x.beratPakan - data.pakanPakai.beratPakan
+                const dec = await Sapronak.updateMany({periode: mongoose.Types.ObjectId(findKegiatan.periode), produk: mongoose.Types.ObjectId(findByPeriode.produk._id)}, {$inc: {stock: diff}})
+                return dec
+            }))
+        }
         const results = await Model.findByIdAndUpdate(id, data, {new: true}).exec();
         res.json({
             data: results,
@@ -164,11 +161,19 @@ exports.remove = async (req, res, next) => {
 }
 
 exports.removeById = async (req, res, next) => {
+    const id = req.params.id
     try {
-        const results = await Model.findByIdAndRemove(req.params.id).exec();
-        res.json({
-            data: results,
-            message: 'Ok'
+        const findKegiatan = await Model.findById(id)
+        Promise.all(findKegiatan.pakanPakai.map(async(x) => {
+            const dec = await Sapronak.updateMany({periode: mongoose.Types.ObjectId(findKegiatan.periode._id), produk: mongoose.Types.ObjectId(x.jenisPakan.produk._id)}, {$inc:{stock: x.beratPakan}})
+            return dec
+        })).then(() => {
+            Model.findByIdAndRemove(id).then((result) => {
+                res.json({
+                    data: result,
+                    message: 'Ok'
+                })
+            })
         })
     } catch (error) {
         next(error);
