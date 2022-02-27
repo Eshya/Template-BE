@@ -115,11 +115,19 @@ exports.updateById = async (req, res, next) => {
     const data = req.body;
     try {
         const findKegiatan = await Model.findById(id);
-        const findByPeriode = await Sapronak.findOne({periode: findKegiatan.periode})
-        if(req.body.pakanPakai.beratPakan){
-            Promise.all(findKegiatan.pakanPakai.map(async(x) => {
-                const diff = x.beratPakan - data.pakanPakai.beratPakan
-                const dec = await Sapronak.updateMany({periode: mongoose.Types.ObjectId(findKegiatan.periode), produk: mongoose.Types.ObjectId(findByPeriode.produk._id)}, {$inc: {stock: diff}})
+        // const findByPeriode = await Sapronak.findOne({periode: findKegiatan.periode})
+        // console.log(findKegiatan.periode)
+        if(req.body.pakanPakai){
+
+            Promise.all(data.pakanPakai.map(async(x) => {
+                x.beratPakan = x.beratZak * 50
+
+                const findSapronak = await Sapronak.findById(x.jenisPakan)
+                const oldStock = findKegiatan.pakanPakai.find(e => e._id == x._id)
+                console.log(oldStock)
+                const diff = oldStock.beratPakan - (x.beratZak * 50)
+                // console.log(diff)
+                const dec = await Sapronak.updateMany({periode: mongoose.Types.ObjectId(findSapronak.periode._id), produk: mongoose.Types.ObjectId(findSapronak.produk._id)}, {$inc: {stock: diff}})
                 return dec
             }))
         }

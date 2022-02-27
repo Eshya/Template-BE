@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const {parseQuery} = require('../../helpers');
 const Model = require('./sapronak.model');
 const selectPublic = '-createdAt -updatedAt';
@@ -77,7 +78,13 @@ exports.updateById = async (req, res, next) => {
     const id = req.params.id;
     const data = req.body;
     try {
-        data.kuantitas = req.body.zak * 50
+        data.kuantitas = data.zak * 50
+        const findSapronak = await Model.findById(id)
+
+        if(req.body.zak) {
+            const diff = findSapronak.kuantitas - data.kuantitas
+            await Model.updateMany({periode: mongoose.Types.ObjectId(findSapronak.periode._id), produk: mongoose.Types.ObjectId(findSapronak.produk._id)}, {$inc: {stock: diff}})
+        }
         const results = await Model.findByIdAndUpdate(id, data, {new: true}).exec();
         res.json({
             data: results,
@@ -117,9 +124,12 @@ exports.remove = async (req, res, next) => {
 
 exports.removeById = async (req, res, next) => {
     try {
-        const results = await Model.findByIdAndRemove(req.params.id).exec();
+        const findById = await Model.find({_id: req.params.id})
+        const updateSapronak = await Model.updateMany({periode: findById.periode, _id: {$ne: req.params._id}}, {$inc:{stock: findById.kuantitas}})
+        const deleteSapronak = await Model.findByIdAndRemove(req.params.id).exec();
         res.json({
-            data: results,
+            updated: updateSapronak,
+            data: deleteSapronak,
             message: 'Ok'
         })
     } catch (error) {

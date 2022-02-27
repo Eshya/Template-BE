@@ -6,8 +6,17 @@ const pakanPakaiSchema = new Schema({
         ref: 'Sapronak',
         autopopulate: {maxDepth: 2}
     }, 
-    beratPakan: Number,
+    beratPakan: {type: Number, required: true},
     beratZak: {type: Number, required: true}
+})
+
+const ovkPakaiSchema = new Schema({
+    jenisOVK: {
+        type: Schema.Types.ObjectId,
+        ref: 'Sapronak',
+        autopopulate: {maxDepth: 2}
+    },
+    kuantitas: {type: Number, required: true}
 })
 
 const beratSchema = new Schema({
@@ -26,6 +35,7 @@ const scheme = new Schema({
         required: true
     },
     pakanPakai: [pakanPakaiSchema],
+    ovkPakai: [ovkPakaiSchema],
     pemusnahan: {
         type: Number
     },
@@ -39,12 +49,12 @@ const scheme = new Schema({
     catatan: {
         type: String,
     },
-    image: {
+    image: [{
         type: Schema.Types.ObjectId,
         ref: 'KegiatanImage', select: true,
         autopopulate: {maxDepth: 1},
         default: null
-    }
+    }]
 }, {versionKey: false, timestamps: true})
 scheme.plugin(require('mongoose-autopopulate'));
 module.exports = model('KegiatanHarian', scheme, 'kegiatan-harian')
