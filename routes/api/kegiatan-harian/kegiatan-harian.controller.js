@@ -89,8 +89,8 @@ exports.insert = async (req, res, next) => {
             Promise.all(data.OVKPakai.map(async(x) => {
                 const foundSapronak = await Sapronak.findById(x.jenisOVK)
                 if (!foundSapronak) throw createError(400, 'sapronak not found')
-                if (foundSapronak.stock - x.kuantitas < 0) throw createError(401, 'OVK tidak mencukupi')
-                const dec = await Sapronak.updateMany({periode: mongoose.Types.ObjectId(data.periode), produk: mongoose.Types.ObjectId(foundSapronak.produk._id)}, {$inc:{stock: -x.kuantitas}})
+                if (foundSapronak.stockOVK - x.kuantitas < 0) throw createError(401, 'OVK tidak mencukupi')
+                const dec = await Sapronak.updateMany({periode: mongoose.Types.ObjectId(data.periode), produk: mongoose.Types.ObjectId(foundSapronak.produk._id)}, {$inc:{stockOVK: -x.kuantitas}})
                 return dec
             }))
         }
@@ -124,7 +124,8 @@ exports.updateById = async (req, res, next) => {
             Promise.all(data.OVKPakai.map(async(x) => {
                 const findSapronak = await Sapronak.findById(x.jenisOVK)
                 const oldStock = findKegiatan.ovkPakai.find(e => e._id == x._id)
-                const dec = await Sapronak.updateMany({periode: mongoose.Types.ObjectId(findSapronak.periode._id), produk: mongoose.Types.ObjectId(findSapronak.produk._id)}, {$inc: {stock: diff}})
+                const diff = oldStock.kuantitas - x.kuantitas
+                const dec = await Sapronak.updateMany({periode: mongoose.Types.ObjectId(findSapronak.periode._id), produk: mongoose.Types.ObjectId(findSapronak.produk._id)}, {$inc: {stockOVK: diff}})
                 return dec
             }))
         }
@@ -181,7 +182,7 @@ exports.removeById = async (req, res, next) => {
 
         if(findKegiatan.OVKPakai){
             Promise.all(findKegiatan.OVKPakai.map(async(x) => {
-                const dec = await Sapronak.updateMany({periode: mongoose.Types.ObjectId(findKegiatan.periode._id), produk: mongoose.Types.ObjectId(x.jenisPakan.produk._id)}, {$inc:{stock: x.beratPakan}})
+                const dec = await Sapronak.updateMany({periode: mongoose.Types.ObjectId(findKegiatan.periode._id), produk: mongoose.Types.ObjectId(x.jenisPakan.produk._id)}, {$inc:{stockOVK: x.kuantitas}})
                 return dec
             }))
         }

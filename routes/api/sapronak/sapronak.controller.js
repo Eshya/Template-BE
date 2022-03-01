@@ -66,7 +66,7 @@ exports.insert = async (req, res, next) => {
         const findByPeriode = await Model.findOne({periode: data.periode})
         findByPeriode ? data.stock = data.stock + findByPeriode.stock : data.stock
         const insertSapronak = await Model.create(data);
-        const updateStock = await Model.updateMany({periode: data.periode, _id: {$ne: insertSapronak._id}}, {$inc:{stock: data.kuantitas}})
+        const updateStock = await Model.updateMany({periode: data.periode, _id: {$ne: insertSapronak._id}}, {$inc: findProduk.jenis === "OVK" ? {stockOVK: data.kuantitas} : {stock: data.kuantitas}})
         // console.log(results[1])
         res.json({
             updated: updateStock,
@@ -83,13 +83,14 @@ exports.updateById = async (req, res, next) => {
     const data = req.body;
     try {
         // data.kuantitas = data.zak * 50
+        const findProduk = await Produk.findById(data.produk)
         findProduk.jenis === "OVK" ? data.kuantitas : data.kuantitas = data.zak * 50
 
         const findSapronak = await Model.findById(id)
 
         if(req.body.zak || req.body.kuantitas) {
             const diff = findSapronak.kuantitas - data.kuantitas
-            await Model.updateMany({periode: mongoose.Types.ObjectId(findSapronak.periode._id), produk: mongoose.Types.ObjectId(findSapronak.produk._id)}, {$inc: {stock: diff}})
+            await Model.updateMany({periode: mongoose.Types.ObjectId(findSapronak.periode._id), produk: mongoose.Types.ObjectId(findSapronak.produk._id)}, {$inc: findProduk.jenis === "OVK" ? {stockOVK: diff} : {stock: diff}})
         }
         const results = await Model.findByIdAndUpdate(id, data, {new: true}).exec();
         res.json({
@@ -131,7 +132,8 @@ exports.remove = async (req, res, next) => {
 exports.removeById = async (req, res, next) => {
     try {
         const findById = await Model.find({_id: req.params.id})
-        const updateSapronak = await Model.updateMany({periode: findById.periode, _id: {$ne: req.params._id}}, {$inc:{stock: -findById.kuantitas}})
+        const findProduk = await Sapronak.findById(findById.produk._id)
+        const updateSapronak = await Model.updateMany({periode: findById.periode, _id: {$ne: req.params._id}}, {$inc: findProduk === "OVK" ? {stockOVK: -findById.kuantitas} : {stock: -findById.kuantitas}})
         const deleteSapronak = await Model.findByIdAndRemove(req.params.id).exec();
         res.json({
             updated: updateSapronak,
