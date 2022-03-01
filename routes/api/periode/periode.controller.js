@@ -89,7 +89,8 @@ exports.findKegiatan = async (req, res, next) => {
             var umur = Math.round(Math.abs((tanggal - start) / ONE_DAY))
             if (umur === 0) return e
         })
-        const BW0 = findBW0.berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0);
+        console.log(!findBW0)
+        const BW0 = !findBW0 ? 0 : findBW0.berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0);
         //mappingData
         const map = await Promise.all(data.map(async (x) => {
             var tmp = x
