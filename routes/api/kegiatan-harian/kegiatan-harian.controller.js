@@ -133,6 +133,7 @@ exports.updateById = async (req, res, next) => {
             x.beratPakan = x.beratZak * 50
             const findSapronak = await Sapronak.findById(x.jenisPakan)
             const oldStock = findKegiatan.pakanPakai.find(e => e._id == x._id)
+            console.log(oldStock)
             const diff = oldStock.beratPakan - (x.beratZak * 50)
             const dec = await Sapronak.updateMany({periode: mongoose.Types.ObjectId(findSapronak.periode._id), produk: mongoose.Types.ObjectId(findSapronak.produk._id)}, {$inc: {stock: diff}})
             return dec
