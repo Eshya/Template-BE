@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const {parseQuery} = require('../../helpers');
 const Model = require('./sapronak.model');
 const selectPublic = '-createdAt -updatedAt';
+const Produk = require('../produk/produk.model');
 
 const _find = async (req, isPublic = false) => {
     const {where, limit, offset, sort} = parseQuery(req.query);
@@ -57,16 +58,19 @@ exports.findById = async (req, res, next) => {
 exports.insert = async (req, res, next) => {
     const data = req.body
     try {
-        data.kuantitas = req.body.zak * 50
         data.stock = req.body.kuantitas
+        const findProduk = await Produk.findById(data.produk)
+        
+        findProduk.jenis === "OVK" ? data.kuantitas : data.kuantitas = data.zak * 50
+
         const findByPeriode = await Model.findOne({periode: data.periode})
         findByPeriode ? data.stock = data.stock + findByPeriode.stock : data.stock
-        const inserSapronak = await Model.create(data);
-        const updateStock = await Model.updateMany({periode: data.periode, _id: {$ne: inserSapronak._id}}, {$inc:{stock: data.kuantitas}})
+        const insertSapronak = await Model.create(data);
+        const updateStock = await Model.updateMany({periode: data.periode, _id: {$ne: insertSapronak._id}}, {$inc:{stock: data.kuantitas}})
         // console.log(results[1])
         res.json({
             updated: updateStock,
-            data: inserSapronak,
+            data: insertSapronak,
             message: 'Ok'
         });
     } catch (error) {
@@ -78,10 +82,12 @@ exports.updateById = async (req, res, next) => {
     const id = req.params.id;
     const data = req.body;
     try {
-        data.kuantitas = data.zak * 50
+        // data.kuantitas = data.zak * 50
+        findProduk.jenis === "OVK" ? data.kuantitas : data.kuantitas = data.zak * 50
+
         const findSapronak = await Model.findById(id)
 
-        if(req.body.zak) {
+        if(req.body.zak || req.body.kuantitas) {
             const diff = findSapronak.kuantitas - data.kuantitas
             await Model.updateMany({periode: mongoose.Types.ObjectId(findSapronak.periode._id), produk: mongoose.Types.ObjectId(findSapronak.produk._id)}, {$inc: {stock: diff}})
         }
@@ -125,7 +131,7 @@ exports.remove = async (req, res, next) => {
 exports.removeById = async (req, res, next) => {
     try {
         const findById = await Model.find({_id: req.params.id})
-        const updateSapronak = await Model.updateMany({periode: findById.periode, _id: {$ne: req.params._id}}, {$inc:{stock: findById.kuantitas}})
+        const updateSapronak = await Model.updateMany({periode: findById.periode, _id: {$ne: req.params._id}}, {$inc:{stock: -findById.kuantitas}})
         const deleteSapronak = await Model.findByIdAndRemove(req.params.id).exec();
         res.json({
             updated: updateSapronak,

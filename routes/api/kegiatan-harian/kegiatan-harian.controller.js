@@ -82,28 +82,33 @@ exports.findSisaAyam = async (req, res, next) => {
     }
 }
 
-exports.insert = (req, res, next) => {
+exports.insert = async (req, res, next) => {
     const data = req.body
     try {
+        if(data.OVKPakai){
+            Promise.all(data.OVKPakai.map(async(x) => {
+                const foundSapronak = await Sapronak.findById(x.jenisOVK)
+                if (!foundSapronak) throw createError(400, 'sapronak not found')
+                if (foundSapronak.stock - x.kuantitas < 0) throw createError(401, 'OVK tidak mencukupi')
+                const dec = await Sapronak.updateMany({periode: mongoose.Types.ObjectId(data.periode), produk: mongoose.Types.ObjectId(foundSapronak.produk._id)}, {$inc:{stock: -x.kuantitas}})
+                return dec
+            }))
+        }
         Promise.all(data.pakanPakai.map(async(x) => {
             x.beratPakan = x.beratZak * 50
 
             const foundSapronak = await Sapronak.findById(x.jenisPakan)
-            if(!foundSapronak) throw createError(400, 'sapronak not found')
-            if (foundSapronak.stock - x.beratPakan < 0){
-                throw createError(400, 'pakan tidak mencukupi')
-            }
+            if(!foundSapronak) throw createError(401, 'sapronak not found')
+            if (foundSapronak.stock - x.beratPakan < 0) throw createError(400, 'pakan tidak mencukupi')
             const dec = await Sapronak.updateMany({periode: mongoose.Types.ObjectId(data.periode), produk: mongoose.Types.ObjectId(foundSapronak.produk._id)}, {$inc:{stock: -x.beratPakan}})
             return dec
         }))
-        .then(() => {
-            const results = Model.create(data)
-            results.then(result => {
-                res.json({
-                    data: result,
-                    message: 'Ok'
-                })
-            })
+
+
+        const results = await Model.create(data)
+        res.json({
+            data: results,
+            message: 'Ok'
         })
     } catch (error) {
         next(error)
@@ -115,22 +120,23 @@ exports.updateById = async (req, res, next) => {
     const data = req.body;
     try {
         const findKegiatan = await Model.findById(id);
-        // const findByPeriode = await Sapronak.findOne({periode: findKegiatan.periode})
-        // console.log(findKegiatan.periode)
-        if(req.body.pakanPakai){
-
-            Promise.all(data.pakanPakai.map(async(x) => {
-                x.beratPakan = x.beratZak * 50
-
-                const findSapronak = await Sapronak.findById(x.jenisPakan)
-                const oldStock = findKegiatan.pakanPakai.find(e => e._id == x._id)
-                console.log(oldStock)
-                const diff = oldStock.beratPakan - (x.beratZak * 50)
-                // console.log(diff)
+        if(data.OVKPakai){
+            Promise.all(data.OVKPakai.map(async(x) => {
+                const findSapronak = await Sapronak.findById(x.jenisOVK)
+                const oldStock = findKegiatan.ovkPakai.find(e => e._id == x._id)
                 const dec = await Sapronak.updateMany({periode: mongoose.Types.ObjectId(findSapronak.periode._id), produk: mongoose.Types.ObjectId(findSapronak.produk._id)}, {$inc: {stock: diff}})
                 return dec
             }))
         }
+        Promise.all(data.pakanPakai.map(async(x) => {
+            x.beratPakan = x.beratZak * 50
+            const findSapronak = await Sapronak.findById(x.jenisPakan)
+            const oldStock = findKegiatan.pakanPakai.find(e => e._id == x._id)
+            const diff = oldStock.beratPakan - (x.beratZak * 50)
+            const dec = await Sapronak.updateMany({periode: mongoose.Types.ObjectId(findSapronak.periode._id), produk: mongoose.Types.ObjectId(findSapronak.produk._id)}, {$inc: {stock: diff}})
+            return dec
+        }))
+        // }
         const results = await Model.findByIdAndUpdate(id, data, {new: true}).exec();
         res.json({
             data: results,
@@ -172,16 +178,22 @@ exports.removeById = async (req, res, next) => {
     const id = req.params.id
     try {
         const findKegiatan = await Model.findById(id)
+
+        if(findKegiatan.OVKPakai){
+            Promise.all(findKegiatan.OVKPakai.map(async(x) => {
+                const dec = await Sapronak.updateMany({periode: mongoose.Types.ObjectId(findKegiatan.periode._id), produk: mongoose.Types.ObjectId(x.jenisPakan.produk._id)}, {$inc:{stock: x.beratPakan}})
+                return dec
+            }))
+        }
         Promise.all(findKegiatan.pakanPakai.map(async(x) => {
             const dec = await Sapronak.updateMany({periode: mongoose.Types.ObjectId(findKegiatan.periode._id), produk: mongoose.Types.ObjectId(x.jenisPakan.produk._id)}, {$inc:{stock: x.beratPakan}})
             return dec
-        })).then(() => {
-            Model.findByIdAndRemove(id).then((result) => {
-                res.json({
-                    data: result,
-                    message: 'Ok'
-                })
-            })
+        }))
+
+        const results = await Model.findByIdAndRemove(id)
+        res.json({
+            data: results,
+            message: 'Ok'
         })
     } catch (error) {
         next(error);

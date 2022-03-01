@@ -16,7 +16,7 @@ const scheme = new Schema({
     },
     zak: {
         type: Number,
-        required: true
+        // required: true
     },
     kuantitas: {
         type: Number,
