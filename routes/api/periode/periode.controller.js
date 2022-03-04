@@ -335,8 +335,8 @@ exports.ringkasan = async (req, res, next) => {
         const now = new Date(Date.now());
         const start = new Date(getPeriode.tanggalMulai);
         const result = Math.round(Math.abs((now - start) / oneDay))
-
-        const latestWeight = getKegiatan[0].berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0)
+        
+        const latestWeight = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0) : 0
         // console.log(latestWeight);
 
         const allTonase = data.reduce((a, {tonase}) => a + tonase, 0)
