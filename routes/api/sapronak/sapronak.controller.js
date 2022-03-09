@@ -56,21 +56,24 @@ exports.findById = async (req, res, next) => {
 }
 
 exports.insert = async (req, res, next) => {
-    const data = req.body
+    var data = req.body
     try {
-        data.stock = req.body.kuantitas
         const findProduk = await Produk.findById(data.produk)
         
         findProduk.jenis === "OVK" ? data.kuantitas : data.kuantitas = data.zak * 50
 
-        const findByPeriode = await Model.findOne({periode: data.periode})
-        findByPeriode ? data.stock = data.stock + findByPeriode.stock : data.stock
-        const insertSapronak = await Model.create(data);
-        const updateStock = await Model.updateMany({periode: data.periode, _id: {$ne: insertSapronak._id}}, {$inc: findProduk.jenis === "OVK" ? {stockOVK: data.kuantitas} : {stock: data.kuantitas}})
-        // console.log(results[1])
+        const findByPeriode = await Model.findOne({periode: data.periode, produk: data.produk})
+        // console.log(findByPeriode)
+        if (findProduk.jenis === "OVK") { findByPeriode ? data.stockOVK = Number(data.kuantitas) + Number(findByPeriode.stockOVK) : data.stockOVK = data.kuantitas }
+        if (findProduk.jenis === "PAKAN") { findByPeriode ? data.stock = Number(data.kuantitas) + Number(findByPeriode.stock) : data.stock = data.kuantitas }
+
+        // console.log(data)
+        const insertSapronak = await Model.create(data)
+        const updateStock = await Model.updateMany({periode: data.periode, _id: {$ne: insertSapronak._id}, produk: data.produk}, {$inc: findProduk.jenis === "OVK" ? {stockOVK: data.kuantitas} : {stock: data.kuantitas}});
+
         res.json({
-            updated: updateStock,
             data: insertSapronak,
+            updated: updateStock,
             message: 'Ok'
         });
     } catch (error) {
@@ -90,7 +93,7 @@ exports.updateById = async (req, res, next) => {
 
         if(req.body.zak || req.body.kuantitas) {
             const diff = findSapronak.kuantitas - data.kuantitas
-            await Model.updateMany({periode: mongoose.Types.ObjectId(findSapronak.periode._id), produk: mongoose.Types.ObjectId(findSapronak.produk._id)}, {$inc: findProduk.jenis === "OVK" ? {stockOVK: diff} : {stock: diff}})
+            await Model.updateMany({periode: findSapronak.periode._id, produk: findSapronak.produk._id, _id: {$ne: req.params._id}}, {$inc: findProduk.jenis === "OVK" ? {stockOVK: diff} : {stock: diff}})
         }
         const results = await Model.findByIdAndUpdate(id, data, {new: true}).exec();
         res.json({
@@ -131,9 +134,9 @@ exports.remove = async (req, res, next) => {
 
 exports.removeById = async (req, res, next) => {
     try {
-        const findById = await Model.find({_id: req.params.id})
-        const findProduk = await Sapronak.findById(findById.produk._id)
-        const updateSapronak = await Model.updateMany({periode: findById.periode, _id: {$ne: req.params._id}}, {$inc: findProduk === "OVK" ? {stockOVK: -findById.kuantitas} : {stock: -findById.kuantitas}})
+        const findById = await Model.findOne({_id: req.params.id})
+        const findProduk = await Produk.findById(findById.produk._id)
+        const updateSapronak = await Model.updateMany({periode: findById.periode, _id: {$ne: req.params._id}, produk: findById.produk._id}, {$inc: findProduk === "OVK" ? {stockOVK: -findById.kuantitas} : {stock: -findById.kuantitas}})
         const deleteSapronak = await Model.findByIdAndRemove(req.params.id).exec();
         res.json({
             updated: updateSapronak,
