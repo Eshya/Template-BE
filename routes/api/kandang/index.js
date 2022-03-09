@@ -10,6 +10,7 @@ router.get('/populasi/:id', auth, paramCek, c.countPopulasi);
 // router.get('/public', queryCek, c.findPublic);
 router.get('/count', queryCek, c.count);
 router.get('/user', auth, queryCek, c.findByUser);
+router.get('/dashboard/getKelola', auth, queryCek, c.getKelola);
 // router.get('/flock/:id', auth, paramCek, c.findFlock);
 router.get('/periode/:id', auth, paramCek, c.findPeriode);
 router.get('/:id', auth, paramCek, c.findById);
