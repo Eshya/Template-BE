@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const {parseQuery} = require('../../helpers');
 const Model = require('./kandang.model');
+const Role = require('../roles/roles.model')
 // const Flock = require('../flock/flock.model');
 const Periode = require('../periode/periode.model');
 const selectPublic = '-createdAt -updatedAt';
@@ -209,8 +210,16 @@ exports.removeById = async (req, res, next) => {
 
 exports.findByUser = async (req, res, next) => {
     try {
-        const id = req.user._id
-        const results = await Model.find({createdBy: id})
+        const roles = Role.findById(req.user.roles)
+        var results = null
+        if (roles.name == 'ppl'){
+            results = await Model.find({_id: { $in: req.user.kelola}})
+        } else if (roles.name = 'peternak') {
+            const id = req.user._id
+            results = await Model.find({createdBy: id})
+        } else {
+            results = await Model.find()
+        }
         res.json({
             data: results,
             message: 'Ok'
