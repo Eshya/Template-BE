@@ -3,6 +3,7 @@ const {parseQuery} = require('../../helpers');
 const Model = require('./kandang.model');
 // const Flock = require('../flock/flock.model');
 const Periode = require('../periode/periode.model');
+const KegiatanHarian = require('../kegiatan-harian/kegiatan-harian.model')
 const selectPublic = '-createdAt -updatedAt';
 const fetch = require('node-fetch')
 const Promise = require("bluebird");
@@ -228,16 +229,32 @@ exports.getKelola = async (req, res, next) => {
 
         let dataKelola = [];
         await Promise.map(kandang, async (item) => {
-            console.log(item);
 
             // get periode
             let dataPeriode = [];
             let periode = await Periode.find({kandang: item._id}).sort('updatedAt')
             await Promise.map(periode, async (itemPeriode) => {
+                // kalkulasi umur ayam
                 let oneDay = 24 * 60 * 60 * 1000;
                 let now = new Date(Date.now());
                 let start = new Date(itemPeriode.tanggalMulai);
                 let umurAyam = Math.round(Math.abs((now - start) / oneDay))
+
+                // get kegiatan harian
+                const dataKegiatanHarian = await KegiatanHarian.aggregate([
+                    {$match: {periode: mongoose.Types.ObjectId(itemPeriode._id)}},
+                    {$unwind: {'path': '$pakanPakai', "preserveNullAndEmptyArrays": true}},
+                    {$unwind: '$berat'},
+                    {$group: {_id: '$_id', avgBerat: {$avg: '$berat.beratTimbang'}, tonase: {$sum: {$multiply: ['$berat.beratTimbang', '$berat.populasi']}}, totalPakan: {$sum: '$pakanPakai.beratPakan'}, totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
+                ])
+
+                const allTonase = dataKegiatanHarian.reduce((a, {tonase}) => a + tonase, 0)
+                const allDeplesi = dataKegiatanHarian.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
+                const allKematian = dataKegiatanHarian.reduce((a, {totalKematian}) => a + totalKematian, 0);
+                const allPakan = dataKegiatanHarian.reduce((a, {totalPakan})=>a + totalPakan, 0);
+                const avg = dataKegiatanHarian.reduce((a, {avgBerat}) => a + avgBerat, 0) / (dataKegiatanHarian.length);
+                const atas = (100 - (((itemPeriode.populasi - (allDeplesi + allKematian)) / itemPeriode.populasi) * 100)) * avg;
+                const bawah = (allPakan/allTonase) * umurAyam;
 
                 dataPeriode.push({
                     idPeriode: itemPeriode._id,
@@ -247,7 +264,8 @@ exports.getKelola = async (req, res, next) => {
                     isEnd: itemPeriode.isEnd,
                     hargaSatuan: itemPeriode.hargaSatuan,
                     jenisDOC: itemPeriode.jenisDOC,
-                    populasi: itemPeriode.populasi
+                    populasi: itemPeriode.populasi,
+                    IP: bawah == 0 ? (atas/(bawah-1) * 100) : (atas / bawah) * 100,
                 });
             });
 
