@@ -16,15 +16,12 @@ const scheme = new Schema({
     },
     zak: {
         type: Number,
-        // required: true
     },
     kuantitas: {
         type: Number,
-        // required: true
     },
     stock: {
         type: Number,
-        // required: true
     },
     stockOVK: {
         type: Number

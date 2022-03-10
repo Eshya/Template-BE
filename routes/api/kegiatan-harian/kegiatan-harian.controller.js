@@ -90,7 +90,8 @@ exports.insert = async (req, res, next) => {
                 const foundSapronak = await Sapronak.findById(x.jenisOVK)
                 if (!foundSapronak) throw createError(400, 'sapronak not found')
                 if (foundSapronak.stockOVK - x.kuantitas < 0) throw createError(401, 'OVK tidak mencukupi')
-                const dec = await Sapronak.updateMany({periode: mongoose.Types.ObjectId(data.periode), produk: mongoose.Types.ObjectId(foundSapronak.produk._id)}, {$inc:{stockOVK: -x.kuantitas}})
+                const dec = await Sapronak.updateMany({periode: data.periode, produk: foundSapronak.produk._id}, {$inc:{stockOVK: -x.kuantitas}})
+                console.log(dec)
                 return dec
             }))
         }
@@ -100,7 +101,8 @@ exports.insert = async (req, res, next) => {
             const foundSapronak = await Sapronak.findById(x.jenisPakan)
             if(!foundSapronak) throw createError(401, 'sapronak not found')
             if (foundSapronak.stock - x.beratPakan < 0) throw createError(400, 'pakan tidak mencukupi')
-            const dec = await Sapronak.updateMany({periode: mongoose.Types.ObjectId(data.periode), produk: mongoose.Types.ObjectId(foundSapronak.produk._id)}, {$inc:{stock: -x.beratPakan}})
+            const dec = await Sapronak.updateMany({periode: data.periode, produk: foundSapronak.produk._id}, {$inc:{stock: -x.beratPakan}})
+            console.log(dec)
             return dec
         }))
 

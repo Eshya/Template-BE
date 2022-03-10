@@ -4,9 +4,10 @@ const Model = require('./kandang.model');
 const Role = require('../roles/roles.model')
 // const Flock = require('../flock/flock.model');
 const Periode = require('../periode/periode.model');
+const KegiatanHarian = require('../kegiatan-harian/kegiatan-harian.model')
 const selectPublic = '-createdAt -updatedAt';
 const fetch = require('node-fetch')
-
+const Promise = require("bluebird");
 
 const _find = async (req, isPublic = false) => {
     const {where, limit, offset, sort} = parseQuery(req.query);
@@ -222,6 +223,86 @@ exports.findByUser = async (req, res, next) => {
         }
         res.json({
             data: results,
+            message: 'Ok'
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
+exports.getKelola = async (req, res, next) => {
+    try {
+        const token = req.headers['authorization']
+        const id = req.user._id
+        const kandang = await Model.find({createdBy: id}).select('kode alamat kota populasi isActive isMandiri')
+
+        let dataKelola = [];
+        await Promise.map(kandang, async (item) => {
+
+            // get periode
+            let dataPeriode = [];
+            let periode = await Periode.find({kandang: item._id}).sort('updatedAt')
+            await Promise.map(periode, async (itemPeriode) => {
+                // kalkulasi umur ayam
+                let oneDay = 24 * 60 * 60 * 1000;
+                let now = new Date(Date.now());
+                let start = new Date(itemPeriode.tanggalMulai);
+                let umurAyam = Math.round(Math.abs((now - start) / oneDay))
+
+                // get kegiatan harian
+                const dataKegiatanHarian = await KegiatanHarian.aggregate([
+                    {$match: {periode: mongoose.Types.ObjectId(itemPeriode._id)}},
+                    {$unwind: {'path': '$pakanPakai', "preserveNullAndEmptyArrays": true}},
+                    {$unwind: '$berat'},
+                    {$group: {_id: '$_id', avgBerat: {$avg: '$berat.beratTimbang'}, tonase: {$sum: {$multiply: ['$berat.beratTimbang', '$berat.populasi']}}, totalPakan: {$sum: '$pakanPakai.beratPakan'}, totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
+                ])
+
+                const allTonase = dataKegiatanHarian.reduce((a, {tonase}) => a + tonase, 0)
+                const allDeplesi = dataKegiatanHarian.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
+                const allKematian = dataKegiatanHarian.reduce((a, {totalKematian}) => a + totalKematian, 0);
+                const allPakan = dataKegiatanHarian.reduce((a, {totalPakan})=>a + totalPakan, 0);
+                const avg = dataKegiatanHarian.reduce((a, {avgBerat}) => a + avgBerat, 0) / (dataKegiatanHarian.length);
+                const atas = (100 - (((itemPeriode.populasi - (allDeplesi + allKematian)) / itemPeriode.populasi) * 100)) * avg;
+                const bawah = (allPakan/allTonase) * umurAyam;
+
+                dataPeriode.push({
+                    idPeriode: itemPeriode._id,
+                    umurAyam: umurAyam,
+                    tanggalMulai: itemPeriode.tanggalMulai,
+                    tanggalAkhir: itemPeriode.tanggalAkhir,
+                    isEnd: itemPeriode.isEnd,
+                    hargaSatuan: itemPeriode.hargaSatuan,
+                    jenisDOC: itemPeriode.jenisDOC,
+                    populasi: itemPeriode.populasi,
+                    IP: bawah == 0 ? (atas/(bawah-1) * 100) : (atas / bawah) * 100,
+                });
+            });
+
+            //get flock
+            let flock = [];
+            flock = await fetch('https://iot.chickinindonesia.com/api/flock/kandang/' + item._id, {
+                method: 'get',
+                headers: {
+                    'Authorization': token,
+                    "Content-Type": "application/json" }
+            }).then(res => res.json()).then(result => {
+                return result
+            });
+
+            dataKelola.push({
+                idPemilik: item.createdBy ? item.createdBy._id : null,
+                namaPemilik: item.createdBy ?  item.createdBy.fullname : null,
+                idKandang: item._id,
+                kodeKandang: item.kode,
+                alamatKandang: item.alamat,
+                kotaKandang: item.kota,
+                dataPeriode: dataPeriode,
+                dataFlock: flock.data
+            });
+        });
+
+        res.json({
+            data: dataKelola,
             message: 'Ok'
         })
     } catch (error) {

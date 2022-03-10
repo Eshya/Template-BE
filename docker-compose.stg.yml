@@ -10,6 +10,7 @@ services:
       DB_USER: chickindb
       DB_PASS: IniDBch1ck1n
       DB_NAME: chckin-stagging
+      DB_NAME_AUTH: chickin-auth-stagging
     volumes:
       - /home/chickin/projects/smartfarm/upload-stg:/app/uploads
     networks:
