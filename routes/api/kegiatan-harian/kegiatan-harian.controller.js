@@ -85,8 +85,8 @@ exports.findSisaAyam = async (req, res, next) => {
 exports.insert = async (req, res, next) => {
     const data = req.body
     try {
-        if(data.OVKPakai){
-            Promise.all(data.OVKPakai.map(async(x) => {
+        if(data.ovkPakai){
+            Promise.all(data.ovkPakai.map(async(x) => {
                 const foundSapronak = await Sapronak.findById(x.jenisOVK)
                 if (!foundSapronak) throw createError(400, 'sapronak not found')
                 if (foundSapronak.stockOVK - x.kuantitas < 0) throw createError(401, 'OVK tidak mencukupi')
@@ -95,16 +95,18 @@ exports.insert = async (req, res, next) => {
                 return dec
             }))
         }
-        Promise.all(data.pakanPakai.map(async(x) => {
-            x.beratPakan = x.beratZak * 50
-
-            const foundSapronak = await Sapronak.findById(x.jenisPakan)
-            if(!foundSapronak) throw createError(401, 'sapronak not found')
-            if (foundSapronak.stock - x.beratPakan < 0) throw createError(400, 'pakan tidak mencukupi')
-            const dec = await Sapronak.updateMany({periode: data.periode, produk: foundSapronak.produk._id}, {$inc:{stock: -x.beratPakan}})
-            console.log(dec)
-            return dec
-        }))
+        if(data.pakanPakai){
+            Promise.all(data.pakanPakai.map(async(x) => {
+                x.beratPakan = x.beratZak * 50
+    
+                const foundSapronak = await Sapronak.findById(x.jenisPakan)
+                if(!foundSapronak) throw createError(401, 'sapronak not found')
+                if (foundSapronak.stock - x.beratPakan < 0) throw createError(400, 'pakan tidak mencukupi')
+                const dec = await Sapronak.updateMany({periode: data.periode, produk: foundSapronak.produk._id}, {$inc:{stock: -x.beratPakan}})
+                console.log(dec)
+                return dec
+            }))
+        }
 
 
         const results = await Model.create(data)
@@ -122,8 +124,8 @@ exports.updateById = async (req, res, next) => {
     const data = req.body;
     try {
         const findKegiatan = await Model.findById(id);
-        if(data.OVKPakai){
-            Promise.all(data.OVKPakai.map(async(x) => {
+        if(data.ovkPakai){
+            Promise.all(data.ovkPakai.map(async(x) => {
                 const findSapronak = await Sapronak.findById(x.jenisOVK)
                 const oldStock = findKegiatan.ovkPakai.find(e => e._id == x._id)
                 const diff = oldStock.kuantitas - x.kuantitas
@@ -131,15 +133,17 @@ exports.updateById = async (req, res, next) => {
                 return dec
             }))
         }
-        Promise.all(data.pakanPakai.map(async(x) => {
-            x.beratPakan = x.beratZak * 50
-            const findSapronak = await Sapronak.findById(x.jenisPakan)
-            const oldStock = findKegiatan.pakanPakai.find(e => e._id == x._id)
-            console.log(oldStock)
-            const diff = oldStock.beratPakan - (x.beratZak * 50)
-            const dec = await Sapronak.updateMany({periode: mongoose.Types.ObjectId(findSapronak.periode._id), produk: mongoose.Types.ObjectId(findSapronak.produk._id)}, {$inc: {stock: diff}})
-            return dec
-        }))
+        if(data.pakanPakai){
+            Promise.all(data.pakanPakai.map(async(x) => {
+                x.beratPakan = x.beratZak * 50
+                const findSapronak = await Sapronak.findById(x.jenisPakan)
+                const oldStock = findKegiatan.pakanPakai.find(e => e._id == x._id)
+                console.log(oldStock)
+                const diff = oldStock.beratPakan - (x.beratZak * 50)
+                const dec = await Sapronak.updateMany({periode: mongoose.Types.ObjectId(findSapronak.periode._id), produk: mongoose.Types.ObjectId(findSapronak.produk._id)}, {$inc: {stock: diff}})
+                return dec
+            }))
+        }
         // }
         const results = await Model.findByIdAndUpdate(id, data, {new: true}).exec();
         res.json({
@@ -183,8 +187,8 @@ exports.removeById = async (req, res, next) => {
     try {
         const findKegiatan = await Model.findById(id)
 
-        if(findKegiatan.OVKPakai){
-            Promise.all(findKegiatan.OVKPakai.map(async(x) => {
+        if(findKegiatan.ovkPakai){
+            Promise.all(findKegiatan.ovkPakai.map(async(x) => {
                 const dec = await Sapronak.updateMany({periode: mongoose.Types.ObjectId(findKegiatan.periode._id), produk: mongoose.Types.ObjectId(x.jenisPakan.produk._id)}, {$inc:{stockOVK: x.kuantitas}})
                 return dec
             }))
