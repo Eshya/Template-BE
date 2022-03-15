@@ -225,7 +225,7 @@ exports.getKelola = async (req, res, next) => {
     try {
         const token = req.headers['authorization']
         const id = req.user._id
-        const kandang = await Model.find({createdBy: id}).select('kode alamat kota populasi isActive isMandiri')
+        const kandang = await Model.find({createdBy: id, isActive: true}).select('kode alamat kota populasi isActive isMandiri')
 
         let dataKelola = [];
         await Promise.map(kandang, async (item) => {
