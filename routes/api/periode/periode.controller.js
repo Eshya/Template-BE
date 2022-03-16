@@ -106,7 +106,7 @@ exports.findKegiatan = async (req, res, next) => {
 
             //findRGR
             const BW7 = x.berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0)
-            const rgr = umur === 7 ? (BW0 - BW7) / BW0 * 100 : null
+            const rgr = umur === 7 ? (BW7 - BW0) / BW0 * 100 : null
 
             return {...tmp.toObject(), std: std == null ? null : std.toObject(), deplesiEkor: deplesiEkor, age: umur, populasi: populasiNow, rgr: rgr} // Join all of them in coolest way :-* - Atha
         }))
