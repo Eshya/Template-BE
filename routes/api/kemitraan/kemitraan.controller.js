@@ -38,10 +38,11 @@ exports.findAll =  async (req, res, next) => {
             filter.phoneNumber = phoneNumber
         }
 
+        const count = await Model.countDocuments(filter)
         const data = await Model.find(filter).limit(limit).skip(offset).sort(sort)
         res.json({
             message: 'Ok',
-            length: data.length,
+            length: count,
             data: data
         })
     } catch (error) {
