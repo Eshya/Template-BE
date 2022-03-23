@@ -100,7 +100,7 @@ exports.getKandangPeriode = async (req, res, next) => {
                 let pembelianOVK = 0
                 const getSapronak = await Sapronak.find({periode: itemPeriode._id});
                 for (let i = 0; i < getSapronak.length; i++) {
-                    if (getSapronak[i].produk.jenis === 'PAKAN') {
+                    if (getSapronak[i].produk && (getSapronak[i].produk.jenis === 'PAKAN')) {
                         const compliment = getSapronak[i].kuantitas * getSapronak[i].hargaSatuan
                         pembelianPakan += compliment
                     } else {
