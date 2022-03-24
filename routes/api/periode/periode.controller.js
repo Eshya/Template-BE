@@ -259,9 +259,8 @@ exports.getBudidaya = async (req, res, next) => {
         const getSapronak = await Sapronak.find({periode: id});
         // const penjualanAyamBesar = await 
         for (let i = 0; i < getSapronak.length; i++) {
-            // console.log(getSapronak)
             if (getSapronak[i].produk.jenis === 'PAKAN') {
-                const compliment = getSapronak[i].kuantitas * getSapronak[i].hargaSatuan
+                const compliment = getSapronak[i].zak * getSapronak[i].hargaSatuan
                 pembelianPakan += compliment
             } else {
                 const compliment = getSapronak[i].kuantitas * getSapronak[i].hargaSatuan
@@ -325,37 +324,32 @@ exports.ringkasan = async (req, res, next) => {
             {$group: {_id: '$_id', totalPakan: {$sum: '$pakanPakai.beratPakan'}}}
         ])
 
-        const data = await KegiatanHarian.aggregate([
+        const dataDeplesi = await KegiatanHarian.aggregate([
             {$match: {periode: mongoose.Types.ObjectId(getPeriode.id)}},
-            {$unwind: '$berat'},
-            {$group: {_id: '$_id', avgBerat: {$avg: '$berat.beratTimbang'}, totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
+            {$group: {_id: '$_id', totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
         ])
 
-        const getKegiatan = await KegiatanHarian.find({periode: getPeriode.id}).sort({'cratedAt': -1}).limit(1).select('-periode')
+        const getKegiatan = await KegiatanHarian.find({periode: getPeriode.id}).sort({'tanggal': -1}).limit(1).select('-periode')
         const now = new Date(Date.now());
         const start = new Date(getPeriode.tanggalMulai);
         const umur = Math.round(Math.abs((now - start) / ONE_DAY))
         
         const latestWeight = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0) : 0
 
-        const allTonase = data.reduce((a, {tonase}) => a + tonase, 0)
-        const allDeplesi = data.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
-        const allKematian = data.reduce((a, {totalKematian}) => a + totalKematian, 0);
+        const allDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
+        const allKematian = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
         const allPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
         const allPakan = dataPakan.reduce((a, {totalPakan})=>a + totalPakan, 0);
-        // console.log(allPakan)
-        const avg = data.reduce((a, {avgBerat}) => a + avgBerat, 0) / (data.length);
-        const atas = (100 - (((getPeriode.populasi - (allDeplesi + allKematian)) / getPeriode.populasi) * 100)) * avg
-        const bawah = (allPakan/allTonase) * umur
-        // const pakanMasuk = sapronak.reduce((a, {pakan_masuk}) => a + pakan_masuk, 0);
         const filter_sapronak = sapronak.filter(x => x._id == "PAKAN")
         const pakanMasuk = filter_sapronak.reduce((a, {pakan_masuk}) => a + pakan_masuk, 0);
 
         const populasiAkhir = getPeriode.populasi - (allDeplesi + allKematian + allPenjualan)
         const deplesi = (getPeriode.populasi - (getPeriode.populasi - (allDeplesi + allKematian))) * 100 / getPeriode.populasi
         const presentaseAyamHidup = 100 - deplesi
-        const FCR = allPakan / (populasiAkhir * avg)
-        const IP = (presentaseAyamHidup * avg) / (FCR / umur) * 100
+        const FCR = allPakan / (populasiAkhir * (latestWeight/1000)) 
+        const atas = presentaseAyamHidup * (latestWeight/1000)
+        const bawah = FCR*(dataPakan.length)
+        const IP = (atas / bawah) * 100
 
         res.json({
             populasiAkhir: populasiAkhir,
@@ -363,7 +357,6 @@ exports.ringkasan = async (req, res, next) => {
             panen: allPenjualan,
             jenisDoc: getPeriode.jenisDOC ? getPeriode.jenisDOC.name : "",
             IP: IP,
-            // deplesi: ((allDeplesi + allKematian) / getPeriode.populasi) * 100,
             deplesi: deplesi,
             beratAktual: latestWeight,
             feedIntake: allPakan / populasiAkhir,
