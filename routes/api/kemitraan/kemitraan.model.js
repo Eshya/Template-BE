@@ -1,4 +1,41 @@
-const { Schema, model } = require("mongoose");
+const { createConnection, Schema, model} = require('mongoose');
+const host = process.env.DB_HOST || '103.31.39.17'
+const dbPort = process.env.DB_PORT || 27018
+const dbName = process.env.DB_NAME_AUTH || 'chickin-auth-stagging'
+const user = process.env.DB_USER || 'chickindb'
+const pass = process.env.DB_PASS || 'IniDBch1ck1n'
+const mongoString = process.env.MONGO_CONNECTIONSTRING || `mongodb://${host}:${dbPort}`
+
+const options = {
+    useFindAndModify: false,
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useCreateIndex: true,
+    dbName,
+    user,
+    pass,
+    auth: {
+        authSource: 'admin'
+    }
+}
+
+const UsersSchema = new Schema({
+    fullname: {
+        type: String,
+        required: true,
+        select: true,
+    },
+    username: {
+        type: String,
+        required: true,
+        unique: true,
+        trim: true,
+    }
+}, {timestamps: true, versionKey: false})
+
+const dbAuth = createConnection(mongoString, options);
+const Users = dbAuth.model('Users', UsersSchema);
+
 const scheme = new Schema({
     name: {
         type: String,
@@ -15,6 +52,29 @@ const scheme = new Schema({
       type: Number,
       required: true
     },
-    contactPerson: String,
+    contactPerson: {
+        type: Schema.Types.ObjectId,
+        ref: Users,
+        autopopulate: {maxDepth: 1}
+    },
+    province: {
+        type: Schema.Types.ObjectId,
+        ref: 'Provinces',
+        select: true,
+        autopopulate: true
+    },
+    regency: {
+        type: Schema.Types.ObjectId,
+        ref: 'Regencies',
+        select: true,
+        autopopulate: true
+    },
+    districts: {
+        type: Schema.Types.ObjectId,
+        ref: 'Districts',
+        select: true,
+        autopopulate: true
+    },
 },{versionKey: false, timestamps: true})
+scheme.plugin(require('mongoose-autopopulate'));
 module.exports = model('Kemitraan', scheme, 'kemitraan')

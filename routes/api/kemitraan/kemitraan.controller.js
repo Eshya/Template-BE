@@ -22,7 +22,7 @@ const handleQuerySort = (query) => {
 exports.findAll =  async (req, res, next) => {
     try {
         const {limit, offset} = parseQuery(req.query);
-        const { name, alamat, email, phoneNumber, contactPerson } = req.query;
+        const { name, alamat, email, phoneNumber } = req.query;
         const sort = handleQuerySort(req.query.sort)
         const filter = {}
         if (name) {
@@ -33,9 +33,6 @@ exports.findAll =  async (req, res, next) => {
         }
         if (email) {
             filter.email = new RegExp(email, 'i') 
-        }
-        if (contactPerson) {
-            filter.contactPerson = new RegExp(contactPerson, 'i') 
         }
         if (phoneNumber) {
             filter.phoneNumber = phoneNumber
@@ -100,7 +97,7 @@ exports.getKandangPeriode = async (req, res, next) => {
                 let pembelianOVK = 0
                 const getSapronak = await Sapronak.find({periode: itemPeriode._id});
                 for (let i = 0; i < getSapronak.length; i++) {
-                    if (getSapronak[i].produk.jenis === 'PAKAN') {
+                    if (getSapronak[i].produk && (getSapronak[i].produk.jenis === 'PAKAN')) {
                         const compliment = getSapronak[i].kuantitas * getSapronak[i].hargaSatuan
                         pembelianPakan += compliment
                     } else {
