@@ -75,6 +75,9 @@ const scheme = new Schema({
         select: true,
         autopopulate: true
     },
+    image: {
+        type: String,
+    }
 },{versionKey: false, timestamps: true})
 scheme.plugin(require('mongoose-autopopulate'));
 module.exports = model('Kemitraan', scheme, 'kemitraan')
