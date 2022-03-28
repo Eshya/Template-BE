@@ -7,6 +7,7 @@ const Sapronak = require("../sapronak/sapronak.model");
 const Promise = require("bluebird");
 const mongoose = require('mongoose');
 const reducer = (acc, value) => acc + value;
+const fs = require('fs');
 
 const handleQuerySort = (query) => {
     try{
@@ -153,6 +154,13 @@ exports.getKandangPeriode = async (req, res, next) => {
 exports.insert = async (req, res, next) => {
     const data = req.body
     try {
+        if (data.image) {
+            const path = 'uploads/images/kemitraan/'+Date.now()+'.png';
+            const imgdata = data.image;
+            const base64Data = imgdata.replace(/^data:([A-Za-z-+/]+);base64,/, '');
+            fs.writeFileSync(path, base64Data,  {encoding: 'base64'});
+            data.image = path;
+        }
         const result = await Model.create(data)
         res.json({
             data: result,
@@ -167,6 +175,15 @@ exports.updateById = async (req, res, next) => {
     const id = req.params.id
     const data = req.body
     try {
+        if (!data.image) {
+            delete data.image
+        } else {
+            const path = 'uploads/images/kemitraan/'+Date.now()+'.png';
+            const imgdata = data.image;
+            const base64Data = imgdata.replace(/^data:([A-Za-z-+/]+);base64,/, '');
+            fs.writeFileSync(path, base64Data,  {encoding: 'base64'});
+            data.image = path;
+        }
         const result = await Model.findByIdAndUpdate(id, data, {new: true}).exec()
         res.json({
             data: result,
