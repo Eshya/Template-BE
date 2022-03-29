@@ -35,6 +35,8 @@ exports.insert = async (req, res, next) => {
     const data = req.body;
     try {
         const findKegiatan = await KegiatanHarian.find({periode: data.periode}).sort({tanggal: -1}).limit(1)
+        if(!findKegiatan[0]) return res.json({error: 1005, message: 'isi kegiatan harian terlebih dahulu!'})
+
         const populasi = findKegiatan[0].periode.populasi
         
         const dataDeplesi = await KegiatanHarian.aggregate([
