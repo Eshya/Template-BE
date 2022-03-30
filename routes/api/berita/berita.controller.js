@@ -25,7 +25,10 @@ exports.findPosts = async (req, res, next) => {
             }
             return obj
         }))
-        res.json(asyncMap)
+        res.json({
+            data: asyncMap,
+            message: 'Ok'
+        })
     } catch (error) {
         next(error)
     }
