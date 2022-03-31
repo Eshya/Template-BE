@@ -55,7 +55,7 @@ exports.insert = async (req, res, next) => {
 
         const populasiAkhir = populasi - (allDeplesi + allKematian + allPenjualan)
         
-        if(findKegiatan[0].tanggal < new Date(data.tanggal)) return res.json({error: 1005, message: 'isi kegiatan harian terlebih dahulu!'})
+        if(new Date(data.tanggal) >= findKegiatan[0].tanggal ) return res.json({error: 1005, message: 'isi kegiatan harian terlebih dahulu!'})
         if(populasiAkhir < data.qty) return res.json({error: 1006, message: 'kuantiti melebihi populasi akhir!'})
 
         const results = await Model.create(data);
