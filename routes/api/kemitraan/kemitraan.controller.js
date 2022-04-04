@@ -70,27 +70,37 @@ exports.getKandangPeriode = async (req, res, next) => {
         let dataKandangPeriode = [];
         await Promise.map(periode, async (itemPeriode) => {
             if (itemPeriode.kandang) {
-                // kalkulasi umur ayam
-                let oneDay = 24 * 60 * 60 * 1000;
-                let now = new Date(Date.now());
-                let start = new Date(itemPeriode.tanggalMulai);
-                let umurAyam = Math.round(Math.abs((now - start) / oneDay))
-
-                // get kegiatan harian
-                const dataKegiatanHarian = await KegiatanHarian.aggregate([
-                    {$match: {periode: mongoose.Types.ObjectId(itemPeriode._id)}},
-                    {$unwind: {'path': '$pakanPakai', "preserveNullAndEmptyArrays": true}},
-                    {$unwind: '$berat'},
-                    {$group: {_id: '$_id', avgBerat: {$avg: '$berat.beratTimbang'}, tonase: {$sum: {$multiply: ['$berat.beratTimbang', '$berat.populasi']}}, totalPakan: {$sum: '$pakanPakai.beratPakan'}, totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
+                // get IP
+                const penjualan = await Penjualan.aggregate([
+                    {$match: {periode: mongoose.Types.ObjectId(itemPeriode.id)}},
+                    {$group: {_id: '$_id', terjual: {$sum: '$qty'}}}
                 ])
 
-                const allTonase = dataKegiatanHarian.reduce((a, {tonase}) => a + tonase, 0)
-                const allDeplesi = dataKegiatanHarian.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
-                const allKematian = dataKegiatanHarian.reduce((a, {totalKematian}) => a + totalKematian, 0);
-                const allPakan = dataKegiatanHarian.reduce((a, {totalPakan})=>a + totalPakan, 0);
-                const avg = dataKegiatanHarian.reduce((a, {avgBerat}) => a + avgBerat, 0) / (dataKegiatanHarian.length);
-                const atas = (100 - (((itemPeriode.populasi - (allDeplesi + allKematian)) / itemPeriode.populasi) * 100)) * avg;
-                const bawah = (allPakan/allTonase) * umurAyam;
+                const dataPakan = await KegiatanHarian.aggregate([
+                    {$match: {periode: mongoose.Types.ObjectId(itemPeriode.id)}},
+                    {$unwind: {'path': '$pakanPakai', "preserveNullAndEmptyArrays": true}},
+                    {$group: {_id: '$_id', totalPakan: {$sum: '$pakanPakai.beratPakan'}}}
+                ])
+
+                const dataDeplesi = await KegiatanHarian.aggregate([
+                    {$match: {periode: mongoose.Types.ObjectId(itemPeriode.id)}},
+                    {$group: {_id: '$_id', totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
+                ])
+
+                const getKegiatan = await KegiatanHarian.find({periode: itemPeriode.id}).sort({'tanggal': -1}).limit(1).select('-periode')
+                const latestWeight = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0) : 0
+
+                const allDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
+                const allKematian = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
+                const allPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
+                const allPakan = dataPakan.reduce((a, {totalPakan})=>a + totalPakan, 0);
+                const deplesi = (itemPeriode.populasi - (itemPeriode.populasi - (allDeplesi + allKematian))) * 100 / itemPeriode.populasi
+                const presentaseAyamHidup = 100 - deplesi
+                const populasiAkhir = itemPeriode.populasi - (allDeplesi + allKematian + allPenjualan)
+                const FCR = allPakan / (populasiAkhir * (latestWeight/1000)) 
+                const atas = presentaseAyamHidup * (latestWeight/1000)
+                const bawah = FCR*(dataPakan.length-1)
+                const IP = (atas / bawah) * 100
 
                 // get total penjualan
                 let harian = []
@@ -133,7 +143,7 @@ exports.getKandangPeriode = async (req, res, next) => {
                     jenisKandang: itemPeriode.kandang.tipe ? itemPeriode.kandang.tipe.tipe : null,
                     populasi: itemPeriode.kandang.populasi,
                     periodeEnd: itemPeriode.isEnd,
-                    IP: bawah == 0 ? (atas/(bawah-1) * 100) : (atas / bawah) * 100,
+                    IP: IP,
                     idPeriode: itemPeriode._id,
                     periodeKe: dataPeriode[0],
                     totalPenghasilanKandang: pendapatanPeternak
