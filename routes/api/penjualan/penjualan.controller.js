@@ -35,7 +35,7 @@ exports.insert = async (req, res, next) => {
     const data = req.body;
     try {
         const findKegiatan = await KegiatanHarian.find({periode: data.periode}).sort({tanggal: -1}).limit(1)
-        if(!findKegiatan[0]) return res.json({error: 1005, message: 'isi kegiatan harian terlebih dahulu!'})
+        if(!findKegiatan[0]) return res.json({error: 1005, message: 'kegiatan harian tidak ditemukan!'})
 
         const populasi = findKegiatan[0].periode.populasi
         
@@ -55,8 +55,8 @@ exports.insert = async (req, res, next) => {
 
         const populasiAkhir = populasi - (allDeplesi + allKematian + allPenjualan)
         
-        if(new Date(data.tanggal) >= findKegiatan[0].tanggal ) return res.json({error: 1005, message: 'isi kegiatan harian terlebih dahulu!'})
-        if(populasiAkhir < data.qty) return res.json({error: 1006, message: 'kuantiti melebihi populasi akhir!'})
+        if(new Date(data.tanggal) > new Date(findKegiatan[0].tanggal) ) return res.json({error: 1006, message: 'isi kegiatan harian terlebih dahulu!'})
+        if(populasiAkhir < data.qty) return res.json({error: 1007, message: 'kuantiti melebihi populasi akhir!'})
 
         const results = await Model.create(data);
         
