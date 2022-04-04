@@ -89,8 +89,9 @@ exports.findKegiatan = async (req, res, next) => {
             var umur = Math.round(Math.abs((tanggal - start) / ONE_DAY))
             if (umur === 0) return e
         })
-        console.log(!findBW0)
         const BW0 = !findBW0 ? 0 : findBW0.berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0);
+        const sampleBW0 = !findBW0 ? 0 : findBW0.berat.reduce((a, {populasi}) => a + populasi, 0);
+        const avgBW0 = BW0 / sampleBW0
         //mappingData
         const map = await Promise.all(data.map(async (x) => {
             var tmp = x
@@ -106,7 +107,11 @@ exports.findKegiatan = async (req, res, next) => {
 
             //findRGR
             const BW7 = x.berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0)
-            const rgr = umur === 7 ? (BW7 - BW0) / BW0 * 100 : null
+            const sampleBW7 = x.berat.reduce((a, {populasi}) => a + populasi, 0)
+
+            const avgBW7 = BW7 / sampleBW7
+
+            const rgr = umur === 7 ? (avgBW7 - avgBW0) / avgBW0 * 100 : null
 
             return {...tmp.toObject(), std: std == null ? null : std.toObject(), deplesiEkor: deplesiEkor, age: umur, populasi: populasiNow, rgr: rgr} // Join all of them in coolest way :-* - Atha
         }))
@@ -335,6 +340,9 @@ exports.ringkasan = async (req, res, next) => {
         const umur = Math.round(Math.abs((now - start) / ONE_DAY))
         
         const latestWeight = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0) : 0
+        const latestSampling = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {populasi}) => a + populasi, 0) : 0
+
+        const avgLatestWeight = latestWeight/latestSampling
 
         const allDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
         const allKematian = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
@@ -346,8 +354,8 @@ exports.ringkasan = async (req, res, next) => {
         const populasiAkhir = getPeriode.populasi - (allDeplesi + allKematian + allPenjualan)
         const deplesi = (getPeriode.populasi - (getPeriode.populasi - (allDeplesi + allKematian))) * 100 / getPeriode.populasi
         const presentaseAyamHidup = 100 - deplesi
-        const FCR = allPakan / (populasiAkhir * (latestWeight/1000)) 
-        const atas = presentaseAyamHidup * (latestWeight/1000)
+        const FCR = allPakan / (populasiAkhir * (avgLatestWeight/1000)) 
+        const atas = presentaseAyamHidup * (avgLatestWeight/1000)
         const bawah = FCR*(dataPakan.length-1)
         const IP = (atas / bawah) * 100
 
@@ -358,7 +366,7 @@ exports.ringkasan = async (req, res, next) => {
             jenisDoc: getPeriode.jenisDOC ? getPeriode.jenisDOC.name : "",
             IP: IP,
             deplesi: deplesi,
-            beratAktual: latestWeight,
+            beratAktual: avgLatestWeight,
             feedIntake: allPakan / populasiAkhir,
             ADG: 0,
             fcrAktual: FCR,
