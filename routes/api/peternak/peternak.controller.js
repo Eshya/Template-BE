@@ -23,14 +23,14 @@ const handleQuerySort = (query) => {
 exports.findAll =  async (req, res, next) => {
     try {
         const {limit, offset} = parseQuery(req.query);
-        const { fullname, address, phoneNumber } = req.query;
+        const { name, address, phoneNumber } = req.query;
         const sort = handleQuerySort(req.query.sort)
         const filter = {}
-        if (fullname) {
-            filter.alamat = new RegExp(alamat, 'i') 
+        if (name) {
+            filter.fullname = new RegExp(name, 'i') 
         }
         if (address) {
-            filter.email = new RegExp(email, 'i') 
+            filter.address = new RegExp(address, 'i') 
         }
         if (phoneNumber) {
             filter.phoneNumber = phoneNumber

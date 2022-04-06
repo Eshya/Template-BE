@@ -285,8 +285,10 @@ exports.getKelola = async (req, res, next) => {
                 headers: {
                     'Authorization': token,
                     "Content-Type": "application/json" }
-            }).then(res => res.json()).then(result => {
-                return result
+            }).then(result => {
+                if (result.ok) {
+                    return result.json();
+                }
             });
 
             dataKelola.push({
@@ -297,7 +299,7 @@ exports.getKelola = async (req, res, next) => {
                 alamatKandang: item.alamat,
                 kotaKandang: item.kota,
                 dataPeriode: dataPeriode,
-                dataFlock: flock.data
+                dataFlock: flock ? flock.data : flock,
             });
         });
 
