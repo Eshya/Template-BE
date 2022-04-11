@@ -9,6 +9,7 @@ router.get('/:id', auth, paramCek, c.findById)
 router.get('/kandang/:id', auth, paramCek, c.getKandangPeriode)
 router.post('/', auth, schemaCek(schema), after, c.insert)
 router.put('/:id', auth, schemaCek(schema), after, c.updateById)
+router.put('/remove/:id', auth, after, c.removeKemitraanById)
 router.delete('/:id', auth, paramCek, c.removeById)
 
 module.exports = router;
