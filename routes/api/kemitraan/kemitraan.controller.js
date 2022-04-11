@@ -38,6 +38,7 @@ exports.findAll =  async (req, res, next) => {
         if (phoneNumber) {
             filter.phoneNumber = phoneNumber
         }
+        filter.deleted = false;
 
         const count = await Model.countDocuments(filter)
         const data = await Model.find(filter).limit(limit).skip(offset).sort(sort)
@@ -213,5 +214,21 @@ exports.removeById = async (req, res, next) => {
         })
     } catch (error) {
         next(error)
+    }
+}
+
+exports.removeKemitraanById = async (req, res, next) => {
+    let id = req.params.id;
+    try {
+        const result = await Model.findByIdAndUpdate(id, {deleted: true}, {new: true}).exec();
+        if (!result) {
+            res.json({error: 404, message: 'Partnership not found.'})
+        }
+        res.json({
+            data: result,
+            message: 'Ok'
+        })
+    } catch(err){
+        next(err)
     }
 }
