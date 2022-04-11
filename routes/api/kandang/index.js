@@ -5,6 +5,8 @@ const {schema} = require('./kandang.validation');
 const {auth, queryCek, schemaCek, paramCek, after} = require('../../helpers');
 
 router.get('/', auth, queryCek, c.findAll);
+router.get('/data-pool', auth, queryCek, c.findAllDataPool);
+router.get('/data-pool/:id', auth, queryCek, c.findOneDataPool);
 router.get('/active', auth, queryCek, c.findActive);
 router.get('/populasi/:id', auth, paramCek, c.countPopulasi);
 // router.get('/public', queryCek, c.findPublic);
