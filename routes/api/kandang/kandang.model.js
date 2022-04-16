@@ -1,7 +1,7 @@
 const { createConnection, Schema, model} = require('mongoose');
 const host = process.env.DB_HOST || '103.31.39.17'
 const dbPort = process.env.DB_PORT || 27018
-const dbName = process.env.DB_NAME_AUTH || 'chickin-auth'
+const dbName = process.env.DB_NAME_AUTH || 'chickin-auth-stagging'
 const user = process.env.DB_USER || 'chickindb'
 const pass = process.env.DB_PASS || 'IniDBch1ck1n'
 const mongoString = process.env.MONGO_CONNECTIONSTRING || `mongodb://${host}:${dbPort}`
@@ -132,5 +132,5 @@ const scheme = new Schema({
     }
 }, {versionKey: false, timestamps: true})
 scheme.plugin(require('mongoose-autopopulate'));
-scheme.plugin(require('mongoose-delete', {deleteAt: true}))
+scheme.plugin(require('mongoose-delete'), {deleteAt: true, overrideMethods: true})
 module.exports = model('Kandang', scheme, 'kandang');

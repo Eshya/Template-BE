@@ -2,3 +2,4 @@ node_modules
 /upload-prod
 /upload-stg
 .env
+/uploads

@@ -1,18 +1,38 @@
-const Model = require('./penjualan.model')
+const Model = require('./data-penyakit.model')
 const {parseQuery} = require('../../helpers');
-const KegiatanHarian = require('../kegiatan-harian/kegiatan-harian.model');
-const mongoose = require('mongoose');
+
+const handleQuerySort = (query) => {
+    try{
+      const toJSONString = ("{" + query + "}").replace(/(\w+:)|(\w+ :)/g, (matched => {
+          return '"' + matched.substring(0, matched.length - 1) + '":';
+      }));
+      return JSON.parse(toJSONString);
+    }catch(err){
+      return JSON.parse("{}");
+    }
+}
 
 exports.findAll = async (req, res, next) => {
-    const {where, limit, offset, sort} = parseQuery(req.query);
     try {
-        const count = Model.countDocuments(where);
-        const data = Model.find(where).limit(limit).skip(offset).sort('updatedAt');
-        const results = await Promise.all([count, data]);
+        const {limit, offset} = parseQuery(req.query);
+        const { name, code, description } = req.query;
+        const sort = handleQuerySort(req.query.sort)
+        const filter = {}
+        if (name) {
+            filter.name = new RegExp(name, 'i')
+        }
+        if (code) {
+            filter.code = new RegExp(code, 'i')
+        }
+        if (description) {
+            filter.description = new RegExp(description, 'i')
+        }
+        const count = await Model.countDocuments(filter)
+        const data = await Model.find(filter).limit(limit).skip(offset).sort(sort)
         res.json({
             message: 'Ok',
-            length: results[0],
-            data: results[1]
+            length: count,
+            data: data
         })
     } catch (error) {
         next(error);
@@ -34,32 +54,7 @@ exports.findById = async (req, res, next) => {
 exports.insert = async (req, res, next) => {
     const data = req.body;
     try {
-        const findKegiatan = await KegiatanHarian.find({periode: data.periode}).sort({tanggal: -1}).limit(1)
-        if(!findKegiatan[0]) return res.json({error: 1005, message: 'kegiatan harian tidak ditemukan!'})
-
-        const populasi = findKegiatan[0].periode.populasi
-        
-        const dataDeplesi = await KegiatanHarian.aggregate([
-            {$match: {periode: mongoose.Types.ObjectId(data.periode)}},
-            {$group: {_id: '$_id', totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
-        ])
-
-        const penjualan = await Model.aggregate([
-            {$match: {periode: mongoose.Types.ObjectId(data.periode)}},
-            {$group: {_id: '$_id', terjual: {$sum: '$qty'}}}
-        ])
-
-        const allDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
-        const allKematian = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
-        const allPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
-
-        const populasiAkhir = populasi - (allDeplesi + allKematian + allPenjualan)
-        
-        if(new Date(data.tanggal) > new Date(findKegiatan[0].tanggal) ) return res.json({error: 1006, message: 'isi kegiatan harian terlebih dahulu!'})
-        if(populasiAkhir < data.qty) return res.json({error: 1007, message: 'kuantiti melebihi populasi akhir!'})
-
         const results = await Model.create(data);
-        
         res.json({
             data: results,
             message: 'Ok'
@@ -112,7 +107,7 @@ exports.remove = async (req, res, next) => {
 
 exports.removeById = async (req, res, next) => {
     try {
-        const results = await Model.findByIdAndRemove(req.params.id).exec();
+        const results = await Model.deleteById(req.params.id).exec();
         res.json({
             data: results,
             message: 'Ok'
