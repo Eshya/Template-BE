@@ -154,11 +154,12 @@ exports.findPenjualan = async (req, res, next) => {
 exports.findSapronak = async (req, res, next) => {
     const id = req.params.id
     try {
-        const results = await Sapronak.aggregate([
-            {$match: {periode: mongoose.Types.ObjectId(id)}},
-            {$addFields: {pembelian: {$multiply: ["$kuantitas", "$hargaSatuan"]}}},
-            {$group: {_id: "$tanggal", totalPembelian: {$sum: "$pembelian"}, sapronak: {$push: "$$ROOT"}}},
-        ])
+        const results = await Sapronak.find({periode: id}).sort({'createdAt': -1})
+        // const results = await Sapronak.aggregate([
+        //     {$match: {periode: mongoose.Types.ObjectId(id)}},
+        //     {$addFields: {pembelian: {$multiply: ["$kuantitas", "$hargaSatuan"]}}},
+        //     {$group: {_id: "$tanggal", totalPembelian: {$sum: "$pembelian"}, sapronak: {$push: "$$ROOT"}}},
+        // ])
         res.json({
             data: results,
             message: 'Ok'
