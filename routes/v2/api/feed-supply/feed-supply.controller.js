@@ -1,4 +1,4 @@
-const Model = require('./ovk-supply.model')
+const Model = require('./feed-supply.model')
 const {parseQuery} = require('../../../helpers')
 
 //required
