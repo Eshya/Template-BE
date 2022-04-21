@@ -1,9 +1,8 @@
 const express = require('express')
 const router = express.Router()
-const c = require('./ovk-supply.controller')
-const {schema} = require('./ovk-supply.validation')
+const c = require('./feed-supply.controller')
+const {schema} = require('./feed-supply.validation')
 const { auth, queryCek, schemaCek, paramCek, after } = require('../../../helpers')
-const { queryCek } = require('../../../helpers')
 
 router.get('/', auth, queryCek, c.findAll),
 router.get('/', auth, queryCek, c.count)

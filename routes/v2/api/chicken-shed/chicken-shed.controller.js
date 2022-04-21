@@ -1,4 +1,5 @@
 const Model = require('./chicken-shed.model')
+const fetch = require('node-fetch')
 const {parseQuery} = require('../../../helpers')
 
 //required
@@ -44,9 +45,26 @@ exports.insert = async (req, res, next) => {
     const data = req.body
     data.createdBy = req.user._id
     try {
-        const results = await Model.create(data)
+        const createChickenShed = Model.create(data)
+        
+        var body = {
+            name: 'flock 1',
+            kandang: results._id
+        }
+
+        const createFlock = fetch('https://iot.chickinindonesia.com/api/flock', {
+            method: 'POST',
+            body: JSON.stringify(body),
+            headers: {
+                'Authorization': req.headers['authorization'],
+                "Content-Type": "application/json" }
+        }).then(res => res.json()).then(data => data)
+        
+        const results = await Promise.all([createChickenShed, createFlock])
+        if(results[1]) throw res.json({error: 408, message: 'the server timed out'})
         res.json({
-            data: results,
+            data: results[0],
+            flock: results[1],
             message: 'Ok'
         })
     } catch (error) {

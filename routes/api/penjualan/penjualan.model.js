@@ -20,7 +20,9 @@ const scheme = new Schema ({
     harga: {
         type: Number,
         required: true
-    }
+    },
+    pembeli: String,
+    catatan: String
 }, {versionKey: false, timestamps: true});
 scheme.plugin(require('mongoose-autopopulate'));
 module.exports = model('Penjualan', scheme, 'penjualan');

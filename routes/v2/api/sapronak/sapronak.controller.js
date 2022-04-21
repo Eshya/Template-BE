@@ -1,4 +1,4 @@
-const Model = require('./feed-supply.model')
+const Model = require('./sapronak.model')
 const {parseQuery} = require('../../../helpers')
 
 //required

@@ -3,7 +3,6 @@ const router = express.Router()
 const c = require('./sapronak.controller')
 const {schema} = require('./sapronak.validation')
 const { auth, queryCek, schemaCek, paramCek, after } = require('../../../helpers')
-const { queryCek } = require('../../../helpers')
 
 router.get('/', auth, queryCek, c.findAll),
 router.get('/', auth, queryCek, c.count)
