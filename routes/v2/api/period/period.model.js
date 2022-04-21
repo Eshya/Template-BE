@@ -47,6 +47,6 @@ const scheme = new Schema({
         type: Schema.Types.ObjectId,
         required: false
     }
-})
+}, {versionKey: false, timestamps: true})
 scheme.plugin(require('mongoose-autopopulate'));
 module.exports = model('Period', scheme, 'period')

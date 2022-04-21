@@ -1,5 +1,4 @@
-const Model = require('./chicken-shed.model')
-const fetch = require('node-fetch')
+const Model = require('./sapronak.model')
 const {parseQuery} = require('../../../helpers')
 
 //required
@@ -43,28 +42,10 @@ exports.findById = async (req, res, next) => {
 
 exports.insert = async (req, res, next) => {
     const data = req.body
-    data.createdBy = req.user._id
     try {
-        const createChickenShed = Model.create(data)
-        
-        var body = {
-            name: 'flock 1',
-            kandang: results._id
-        }
-
-        const createFlock = fetch('https://iot.chickinindonesia.com/api/flock', {
-            method: 'POST',
-            body: JSON.stringify(body),
-            headers: {
-                'Authorization': req.headers['authorization'],
-                "Content-Type": "application/json" }
-        }).then(res => res.json()).then(data => data)
-        
-        const results = await Promise.all([createChickenShed, createFlock])
-        if(results[1]) throw res.json({error: 408, message: 'the server timed out'})
+        const results = await Model.create(data)
         res.json({
-            data: results[0],
-            flock: results[1],
+            data: results,
             message: 'Ok'
         })
     } catch (error) {
@@ -124,35 +105,3 @@ exports.remove = async (req, res, next) => {
         next(error)
     }
 }
-
-//dashboard
-const _isActive = async (isActive = true) => {
-    var where = {}
-    if (isActive) {where = {isActive: true}}
-    if (!isActive) {where = {isActive: false}}
-
-    const count = Model.countDocuments(where)
-    const data = Model.find(where).sort('updatedAt')
-    const results = await Promise.all([count, data])
-    return {length: results[0], data: results[1]}
-}
-
-exports.findActive = async (req, res, next) => {
-    try{
-        const results = await _isActive(true)
-        res.json(results)
-    } catch (error) {
-        next(error)
-    }
-}
-
-exports.findInactive = async (req, res, next) => {
-    try {
-        const results = await _isActive(false)
-        res.json(results)
-    } catch (error) {
-        next(error)
-    }
-}
-
-//dashboard peternak

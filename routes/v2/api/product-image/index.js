@@ -1,8 +1,8 @@
 const express = require('express')
-const { auth, after, queryCek, paramCek, schemaCek, permition } = require("../../helpers");
+const { auth, after, queryCek, paramCek, schemaCek, permition } = require("../../../helpers");
 const router = express.Router()
-const c = require('./nekropsi-image.controller')
-const {schema} = require('./nekropsi-image.validation')
+const c = require('./product-image.controller')
+const {schema} = require('./product-image.validation')
 
 router.get('/', auth, queryCek, c.findAll)
 router.get('/:id', auth, paramCek, c.findById)

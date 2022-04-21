@@ -1,4 +1,4 @@
-const {parseQuery} = require('../../helpers')
+const {parseQuery} = require('../../../helpers')
 const Image = require('./product-image.model')
 const {IncomingForm} = require('formidable');
 const UPLOAD_DIR = './uploads/images/product'
