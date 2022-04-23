@@ -22,7 +22,6 @@ docker-build:
     - docker push "$CI_REGISTRY_IMAGE" --all-tags
   only:
     - master
-    - stagging
 
 deploy-stagging:
   stage: deploy
@@ -39,7 +38,7 @@ deploy-stagging:
     - ssh-add ~/.ssh/id_rsa
     - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
   script:
-    - ssh -o StrictHostKeyChecking=no ${SSH_USER}@${SSH_HOST} "export APP_IMAGE_STG=$CI_REGISTRY_IMAGE && export APP_IMAGE_STG_TAG=$TAG_IMAGE && docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY && cd /home/chickin/projects/smartfarm && git checkout stagging && git pull && docker-compose -f docker-compose.stg.yml down && docker-compose -f docker-compose.stg.yml pull && docker-compose -f docker-compose.stg.yml up -d"
+    - ssh -o StrictHostKeyChecking=no ${SSH_USER}@${SSH_HOST} "cd /home/chickin/projects/smartfarm-stagging && git checkout stagging && git pull && npm ci && pm2 restart 0"
   only:
     - stagging
 

@@ -1,4 +1,5 @@
 const { createConnection, Schema, model} = require('mongoose');
+const Kemitraan = require('../kemitraan/kemitraan.model');
 const host = process.env.DB_HOST || '103.31.39.17'
 const dbPort = process.env.DB_PORT || 27018
 const dbName = process.env.DB_NAME_AUTH || 'chickin-auth-stagging'
@@ -21,10 +22,10 @@ const options = {
 
 const scheme = new Schema({
     fullname: {
-        type: String,
-        required: true,
-        select: true,
-      },
+      type: String,
+      required: true,
+      select: true,
+    },
     username: {
         type: String,
         required: true,
@@ -66,8 +67,8 @@ const scheme = new Schema({
     },
     kemitraanUser: {
       type: Schema.Types.ObjectId,
-      ref: 'Kemitraan', select: true,
-      autopopulate: true,
+      ref: Kemitraan, select: true,
+      autopopulate: {maxDepth: 1},
     },
     tokenFCM: {
       type: String,
@@ -101,4 +102,4 @@ const scheme = new Schema({
 }, {timestamps: true, versionKey: false})
 scheme.plugin(require('mongoose-autopopulate'));
 const dbAuth = createConnection(mongoString, options);
-module.exports = dbAuth.model('Users', scheme);
+module.exports = dbAuth.model('Users', scheme, 'users');

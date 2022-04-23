@@ -1,4 +1,5 @@
 node_modules
 /upload-prod
 /upload-stg
-uploads
+.env
+/uploads

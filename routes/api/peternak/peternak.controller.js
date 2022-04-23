@@ -23,14 +23,14 @@ const handleQuerySort = (query) => {
 exports.findAll =  async (req, res, next) => {
     try {
         const {limit, offset} = parseQuery(req.query);
-        const { fullname, address, phoneNumber } = req.query;
+        const { name, address, phoneNumber } = req.query;
         const sort = handleQuerySort(req.query.sort)
         const filter = {}
-        if (fullname) {
-            filter.alamat = new RegExp(alamat, 'i') 
+        if (name) {
+            filter.fullname = new RegExp(name, 'i') 
         }
         if (address) {
-            filter.email = new RegExp(email, 'i') 
+            filter.address = new RegExp(address, 'i') 
         }
         if (phoneNumber) {
             filter.phoneNumber = phoneNumber
@@ -72,7 +72,10 @@ exports.findById = async (req, res, next) => {
         await Promise.map(kandang, async (itemKandang) => {
             const periode = await Periode.findOne({kandang: itemKandang._id}).sort({ createdAt: -1 })
             let dataKandangPeriode = [];
-            if (periode.kandang) {
+            let dataPeriode = [];
+            let IP;
+            let pendapatanPeternak;
+            if (periode && periode.kandang) {
                 // get IP
                 const penjualan = await Penjualan.aggregate([
                     {$match: {periode: mongoose.Types.ObjectId(periode.id)}},
@@ -103,7 +106,7 @@ exports.findById = async (req, res, next) => {
                 const FCR = allPakan / (populasiAkhir * (latestWeight/1000)) 
                 const atas = presentaseAyamHidup * (latestWeight/1000)
                 const bawah = FCR*(dataPakan.length-1)
-                const IP = (atas / bawah) * 100
+                IP = (atas / bawah) * 100
 
                 // get total penjualan
                 let harian = []
@@ -125,33 +128,33 @@ exports.findById = async (req, res, next) => {
                     harian.push(x.beratBadan * x.harga * x.qty)
                 })
                 const penjualanAyamBesar = harian.reduce(reducer, 0);
-                const pendapatanPeternak = penjualanAyamBesar - pembelianDoc - pembelianOVK - pembelianPakan
+                pendapatanPeternak = penjualanAyamBesar - pembelianDoc - pembelianOVK - pembelianPakan
 
                 // get periode ke
                 const kandang = await Periode.find({kandang: periode.kandang._id}).sort('tanggalMulai')
-                let dataPeriode = [];
                 await Promise.map(kandang, async (itemKandang, index) => {
                     if (itemKandang._id.toString() === periode._id.toString()) {
                         dataPeriode.push(index + 1);
                     }
                 });
-                dataKandangPeriode.push({
-                    idPemilik: periode.kandang.createdBy ? periode.kandang.createdBy._id : null,
-                    namaPemilik: periode.kandang.createdBy ? periode.kandang.createdBy.fullname : null,
-                    idKandang: periode.kandang._id,
-                    namaKandang: periode.kandang.kode,
-                    alamat: periode.kandang.alamat,
-                    kota: periode.kandang.kota,
-                    isActive: periode.kandang.isActive,
-                    jenisKandang: periode.kandang.tipe ? periode.kandang.tipe.tipe : null,
-                    kapasitas: periode.kandang.populasi,
-                    periodeEnd: periode.isEnd,
-                    IP: IP,
-                    idPeriode: periode._id,
-                    periodeKe: dataPeriode[0],
-                    totalPenghasilanKandang: pendapatanPeternak,
-                });
+                
             }
+            dataKandangPeriode.push({
+                idPemilik: itemKandang.createdBy ? itemKandang.createdBy._id : null,
+                namaPemilik: itemKandang.createdBy ? itemKandang.createdBy.fullname : null,
+                idKandang: itemKandang._id,
+                namaKandang: itemKandang.kode,
+                alamat: itemKandang.alamat,
+                kota: itemKandang.kota,
+                isActive: itemKandang.isActive,
+                jenisKandang: itemKandang.tipe ? itemKandang.tipe.tipe : null,
+                kapasitas: itemKandang.populasi,
+                periodeEnd: periode ? periode.isEnd : false,
+                IP: periode ? IP : 0,
+                idPeriode: periode ? periode._id : "",
+                periodeKe: periode ? dataPeriode[0] : 0,
+                totalPenghasilanKandang: periode ? pendapatanPeternak : 0,
+            });
             dataKandang.push(dataKandangPeriode[0]);
         });
 

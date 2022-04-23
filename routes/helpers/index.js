@@ -5,9 +5,10 @@ const {checkSchema} = require('express-validator');
 const passport = require('passport');
 const {JWT_SECRET} = require('../../passport/secret')
 const jwt = require('jsonwebtoken')
-
+const {permit} = require('./permition')
 
 // exports.auth = passport.authenticate('jwt', {session: false});
+exports.permition = permit
 exports.schemaCek = checkSchema;
 exports.after = after;
 exports.queryCek = query;
