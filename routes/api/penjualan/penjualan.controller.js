@@ -2,7 +2,6 @@ const Model = require('./penjualan.model')
 const {parseQuery} = require('../../helpers');
 const KegiatanHarian = require('../kegiatan-harian/kegiatan-harian.model');
 const mongoose = require('mongoose');
-const moment = require('moment')
 
 exports.findAll = async (req, res, next) => {
     const {where, limit, offset, sort} = parseQuery(req.query);
@@ -55,8 +54,13 @@ exports.insert = async (req, res, next) => {
         const allPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
 
         const populasiAkhir = populasi - (allDeplesi + allKematian + allPenjualan)
+
+        const date1 = new Date(data.tanggal)
+        const date2 = new Date(findKegiatan[0].tanggal)
         
-        if(new Date(Date.parse(data.tanggal)) > new Date(Date.parse(findKegiatan[0].tanggal)) ) return res.json({error: 1006, message: 'isi kegiatan harian terlebih dahulu!'})
+       
+        
+        if(date1.getMonth() >= date2.getMonth() && date1.getDate() > date2.getDate() ) return res.json({error: 1006, message: 'isi kegiatan harian terlebih dahulu!'})
         if(populasiAkhir < data.qty) return res.json({error: 1007, message: 'kuantiti melebihi populasi akhir!'})
 
         const results = await Model.create(data);
