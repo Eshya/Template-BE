@@ -418,7 +418,7 @@ exports.insert = async (req, res, next) => {
             name: 'flock 1',
             kandang: results._id
         }
-        await fetch('https://iot.chickinindonesia.com/api/flock', {
+        await fetch('http://3.233.186.139:3104/api/flock', {
             method: 'post',
             body: JSON.stringify(body),
             headers: {
