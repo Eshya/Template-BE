@@ -55,8 +55,8 @@ exports.insert = async (req, res, next) => {
         const allPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
 
         const populasiAkhir = populasi - (allDeplesi + allKematian + allPenjualan)
-
-        if(new Date(data.tanggal).getTimezoneOffset() >= new Date(findKegiatan[0].tanggal).getTimezoneOffset() ) return res.json({error: 1006, message: 'isi kegiatan harian terlebih dahulu!'})
+        
+        if(new Date(Date.parse(data.tanggal)) > new Date(Date.parse(findKegiatan[0].tanggal)) ) return res.json({error: 1006, message: 'isi kegiatan harian terlebih dahulu!'})
         if(populasiAkhir < data.qty) return res.json({error: 1007, message: 'kuantiti melebihi populasi akhir!'})
 
         const results = await Model.create(data);
