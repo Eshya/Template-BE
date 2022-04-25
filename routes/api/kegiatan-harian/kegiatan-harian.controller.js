@@ -189,7 +189,7 @@ exports.removeById = async (req, res, next) => {
 
         if(findKegiatan.ovkPakai){
             Promise.all(findKegiatan.ovkPakai.map(async(x) => {
-                const dec = await Sapronak.updateMany({periode: mongoose.Types.ObjectId(findKegiatan.periode._id), produk: mongoose.Types.ObjectId(x.jenisPakan.produk._id)}, {$inc:{stockOVK: x.kuantitas}})
+                const dec = await Sapronak.updateMany({periode: mongoose.Types.ObjectId(findKegiatan.periode._id), produk: mongoose.Types.ObjectId(x.jenisOVK.produk._id)}, {$inc:{stockOVK: x.kuantitas}})
                 return dec
             }))
         }
