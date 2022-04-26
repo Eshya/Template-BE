@@ -372,7 +372,7 @@ exports.ringkasan = async (req, res, next) => {
             IP: IP,
             deplesi: deplesi,
             beratAktual: avgLatestWeight,
-            feedIntake: allPakan / populasiAkhir,
+            feedIntake: allPakan * 1000 / populasiAkhir,
             ADG: 0,
             fcrAktual: FCR,
             diffFcr: 0,
