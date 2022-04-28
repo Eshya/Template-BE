@@ -247,13 +247,17 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
 
                 if (pushData) {
                     resultPeriode.push({
+                        idKandang: periode.kandang.id,
                         namaKandang: periode.kandang.kode,
                         kota: periode.kandang.kota,
                         DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
                         bobot: avgLatestWeight,
                         usia: age,
                         populasi: periode.populasi,
-                        kemitraan: periode.kemitraan ? periode.kemitraan.name : ""
+                        IdKemitraan: periode.kemitraan ? periode.kemitraan.id : null,
+                        namaKemitraan: periode.kemitraan ? periode.kemitraan.name : "",
+                        idPemilik: periode.kandang.createdBy ? periode.kandang.createdBy._id : null,
+                        namaPemilik: periode.kandang.createdBy ? periode.kandang.createdBy.fullname : null,
                     });
                 }
             }
@@ -390,13 +394,17 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
 
                 if (pushData) {
                     resultPeriode.push({
+                        idKandang: periode.kandang.id,
                         namaKandang: periode.kandang.kode,
                         kota: periode.kandang.kota,
                         DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
                         bobot: avgLatestWeight,
                         usia: age,
                         populasi: periode.populasi,
-                        kemitraan: periode.kemitraan ? periode.kemitraan.name : ""
+                        IdKemitraan: periode.kemitraan ? periode.kemitraan.id : null,
+                        namaKemitraan: periode.kemitraan ? periode.kemitraan.name : "",
+                        idPemilik: periode.kandang.createdBy ? periode.kandang.createdBy._id : null,
+                        namaPemilik: periode.kandang.createdBy ? periode.kandang.createdBy.fullname : null,
                     });
                 }
             }

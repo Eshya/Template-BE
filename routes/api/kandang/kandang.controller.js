@@ -8,6 +8,7 @@ const KegiatanHarian = require('../kegiatan-harian/kegiatan-harian.model')
 const Penjualan = require("../penjualan/penjualan.model");
 const Sapronak = require("../sapronak/sapronak.model");
 const Nekropsi = require("../nekropsi/nekropsi.model");
+const DataSTD = require('../data/data.model');
 const selectPublic = '-createdAt -updatedAt';
 const fetch = require('node-fetch')
 const Promise = require("bluebird");
@@ -166,6 +167,7 @@ exports.findOneDataPool =  async (req, res, next) => {
             const getKegiatan = await KegiatanHarian.find({periode: periode.id}).sort({'tanggal': -1}).limit(1).select('-periode')
             const latestWeight = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0) : 0
             const latestSampling = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {populasi}) => a + populasi, 0) : 0
+            const latestFeed = getKegiatan[0] ? getKegiatan[0].pakanPakai.reduce((a, {beratPakan}) => a + beratPakan, 0) : 0
 
             const avgLatestWeight = latestWeight/latestSampling
 
@@ -176,7 +178,8 @@ exports.findOneDataPool =  async (req, res, next) => {
             const filter_sapronak = sapronak.filter(x => x._id == "PAKAN")
             const pakanMasuk = filter_sapronak.reduce((a, {pakan_masuk}) => a + pakan_masuk, 0);
 
-            const deplesi = (periode.populasi - (periode.populasi - (allDeplesi + allKematian)))
+            const deplesi = (periode.populasi - (periode.populasi - (allDeplesi + allKematian))) * 100 / periode.populasi
+            const totalDeplesi = (allDeplesi + allKematian)
             const batasDeplesi = ((5 / 100) * periode.populasi)
             const presentaseAyamHidup = 100 - deplesi
             const populasiAkhir = periode.populasi - (allDeplesi + allKematian + allPenjualan)
@@ -192,7 +195,7 @@ exports.findOneDataPool =  async (req, res, next) => {
             const getSapronak = await Sapronak.find({periode: periode._id});
             for (let i = 0; i < getSapronak.length; i++) {
                 if (getSapronak[i].produk && (getSapronak[i].produk.jenis === 'PAKAN')) {
-                    const compliment = getSapronak[i].kuantitas * getSapronak[i].hargaSatuan
+                    const compliment = getSapronak[i].zak * getSapronak[i].hargaSatuan
                     pembelianPakan += compliment
                 } else {
                     const compliment = getSapronak[i].kuantitas * getSapronak[i].hargaSatuan
@@ -221,8 +224,10 @@ exports.findOneDataPool =  async (req, res, next) => {
             const start = new Date(periode.tanggalMulai);
             const usia = periode.isEnd ? Math.round(Math.abs((periode.tanggalAkhir - start) / ONE_DAY)) :  Math.round(Math.abs((now - start) / ONE_DAY))
 
-            let feedIntakeACT = ((allPakan / populasiAkhir) * 1000);
-            let feedIntakeSTD = ((allPakan / populasiAkhir) * 1000);
+            let feedIntakeACT = latestFeed * 1000 / populasiAkhir;
+
+            // get Data STD
+            const STD = await DataSTD.findOne({day: usia})
 
             dataKandang = {
                 idPemilik: periode.kandang.createdBy ? periode.kandang.createdBy._id : null,
@@ -238,20 +243,21 @@ exports.findOneDataPool =  async (req, res, next) => {
                 idPeriode: periode._id,
                 periodeEnd: periode.isEnd,
                 periodeKe: dataPeriode[0],
-                IP: IP,
+                IP: IP.toFixed(2),
                 totalPenghasilanKandang: pendapatanPeternak,
                 DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
                 populasiAwal: periode.populasi,
                 populasiAkhir: populasiAkhir,
                 pakanAwal: pakanMasuk,
                 pakanPakai: allPakan,
+                pakanSisa: (pakanMasuk - allPakan),
                 usiaAyam: usia,
-                totalDeplesi: deplesi,
+                totalDeplesi: totalDeplesi,
                 batasDeplesi: batasDeplesi,
-                bobotACT: avgLatestWeight * 1000,
-                bobotSTD: avgLatestWeight * 1000,
+                bobotACT: avgLatestWeight,
+                bobotSTD: STD ? STD.bodyWeight: 0,
                 feedIntakeACT: feedIntakeACT.toFixed(2),
-                feedIntakeSTD: feedIntakeSTD.toFixed(2),
+                feedIntakeSTD: STD ? STD.dailyIntake: 0,
             }
 
             // get data harian
@@ -260,35 +266,78 @@ exports.findOneDataPool =  async (req, res, next) => {
                 //find usia ayam
                 const tanggal = new Date(kegiatanHarian.tanggal)
                 let usiaAyam = Math.round(Math.abs((tanggal - start) / ONE_DAY))
+
+                const beratTimbang = kegiatanHarian ? kegiatanHarian.berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0) : 0
+                const populasi = kegiatanHarian ? kegiatanHarian.berat.reduce((a, {populasi}) => a + populasi, 0) : 0
+                const beratPakan = kegiatanHarian ? kegiatanHarian.pakanPakai.reduce((a, {beratPakan}) => a + beratPakan, 0) : 0
+
                 dataHarian.push({
                     usiaAyam: usiaAyam,
                     tanggal: kegiatanHarian.tanggal,
-                    feedIntake: "",
-                    bobot: "",
-                    deplesi: kegiatanHarian.deplesi
+                    feedIntake: (beratPakan / populasi),
+                    bobot: (beratTimbang / populasi),
+                    deplesi: (kegiatanHarian.deplesi + kegiatanHarian.pemusnahan)
                 });
             });
 
             // get sapronak
             let sapronakResult = await Sapronak.find({periode: periode.id}).sort({'createdAt': -1})
             await Promise.map(sapronakResult, async (sapronakResult, index) => {
+                let totalHarga = 0;
+                let quantity = 0;
+                if (sapronakResult.produk && (sapronakResult.produk.jenis === 'PAKAN')) {
+                    totalHarga = sapronakResult.zak * sapronakResult.hargaSatuan
+                    quantity = sapronakResult.zak
+                } else {
+                    totalHarga = sapronakResult.kuantitas * sapronakResult.hargaSatuan
+                    quantity = sapronakResult.kuantitas
+                }
                 dataSapronak.push({
                     tanggal: sapronakResult.tanggal,
                     jenis: sapronakResult.produk ? sapronakResult.produk.jenis : "",
                     produk: sapronakResult.produk ? sapronakResult.produk.merk : "",
-                    quantity: sapronakResult.kuantitas,
-                    totalHarga: (sapronakResult.kuantitas * sapronakResult.hargaSatuan)
+                    quantity: quantity,
+                    totalHarga: totalHarga
                 });
             });
 
             // get nekropsi
             let nekropsiResult = await Nekropsi.find({periode: periode.id}).sort({'tanggal': -1})
             await Promise.map(nekropsiResult, async (nekropsiResult, index) => {
+                let penyakit = nekropsiResult.jenisPenyakit[0]
+                let namaPenyakit = ""
+                if (penyakit.CRD === true) {
+                    namaPenyakit = "CRD"
+                } else if (penyakit.COLLIBACILOSIS === true) {
+                    namaPenyakit = "COLLIBACILOSIS"
+                } else if (penyakit.snot === true) {
+                    namaPenyakit = "snot"
+                } else if (penyakit.colliPanopthalmitis === true) {
+                    namaPenyakit = "colliPanopthalmitis"
+                } else if (penyakit.gumboro === true) {
+                    namaPenyakit = "gumboro"
+                } else if (penyakit.ND === true) {
+                    namaPenyakit = "ND"
+                } else if (penyakit.AI === true) {
+                    namaPenyakit = "AI"
+                } else if (penyakit.koksidiosis === true) {
+                    namaPenyakit = "koksidiosis"
+                } else if (penyakit.aspergilosis === true) {
+                    namaPenyakit = "aspergilosis"
+                } else if (penyakit.candidiasis === true) {
+                    namaPenyakit = "candidiasis"
+                } else if (penyakit.mikotoksikosis === true) {
+                    namaPenyakit = "mikotoksikosis"
+                } else if (penyakit.malariaLike === true) {
+                    namaPenyakit = "malariaLike"
+                }
+
                 dataNekropsi.push({
                     tanggal: nekropsiResult.tanggal,
                     gambar: nekropsiResult.images[index] ? nekropsiResult.images[index].path : "",
                     tindakan: nekropsiResult.actionPlan1,
                     catatan: nekropsiResult.catatan,
+                    penyakit: namaPenyakit
                 });
             });
 
@@ -300,7 +349,7 @@ exports.findOneDataPool =  async (req, res, next) => {
                     tonase: (penjualanResult.qty * penjualanResult.beratBadan),
                     jumlah: penjualanResult.qty,
                     BW: penjualanResult.beratBadan,
-                    pembeli: "",
+                    pembeli: penjualanResult.pembeli,
                     pendapatan: ((penjualanResult.qty * penjualanResult.beratBadan) * penjualanResult.harga)
                 });
             });
