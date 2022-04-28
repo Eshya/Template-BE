@@ -346,6 +346,7 @@ exports.ringkasan = async (req, res, next) => {
         
         const latestWeight = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0) : 0
         const latestSampling = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {populasi}) => a + populasi, 0) : 0
+        const latestFeed = getKegiatan[0] ? getKegiatan[0].pakanPakai.reduce((a, {beratPakan}) => a + beratPakan, 0) : 0
 
         const avgLatestWeight = latestWeight/latestSampling
 
@@ -372,7 +373,7 @@ exports.ringkasan = async (req, res, next) => {
             IP: IP,
             deplesi: deplesi,
             beratAktual: avgLatestWeight,
-            feedIntake: allPakan / populasiAkhir,
+            feedIntake: latestFeed * 1000 / populasiAkhir,
             ADG: 0,
             fcrAktual: FCR,
             diffFcr: 0,

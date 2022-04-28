@@ -17,18 +17,66 @@ const handleQuerySort = (query) => {
     }
 }
 
+function sum( obj ) {
+    var sum = 0;
+    for( var el in obj ) {
+      if( obj.hasOwnProperty( el ) ) {
+        sum += parseFloat( obj[el] );
+      }
+    }
+    return sum;
+}
+
 exports.dashboardKemitraan =  async (req, res, next) => {
     try {
-        let activeKandang = await Kandang.countDocuments({'isActive': true}).exec();
-        let rehatKandang = await Kandang.countDocuments({'isActive': false}).exec();
+        let role = req.user.role ? req.user.role.name : '';
+        let { kemitraan } = req.query;
+        let filter = {}
+        let resultKandangActive = [];
+        let resultPeternak = [];
+        filter.deleted = false;
 
+        let getKandang = await Kandang.find(filter).exec();
+        await Promise.map(getKandang, async (dataItem, index) => {
+            let filterPeriod = {};
+            filterPeriod.kandang = dataItem.id;
+
+            if (kemitraan) {
+                filterPeriod.kemitraan = kemitraan
+            }
+            let kemitraanId = req.user.kemitraanUser ? req.user.kemitraanUser._id : '';
+            if (role === "adminkemitraan") {
+                filterPeriod.kemitraan = kemitraanId
+            }
+
+            let periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 })
+            if (periode && periode.kandang) {
+                if (periode.kandang.createdBy) {
+                    resultPeternak.push(periode.kandang.createdBy._id);
+                }
+
+                if (periode.kandang.isActive === true) {
+                    resultKandangActive.push({
+                        periodeId: periode.id,
+                        kandangId: periode.kandang.id,
+                        user: periode.kandang.createdBy
+                    });
+                }
+            }
+        });
+
+        // get total peternak
+        let countPeternak = {};
+        resultPeternak.forEach(element => {
+            countPeternak[element] = (countPeternak[element] || 0) + 1;
+        });
+        var totalPeternak = sum( countPeternak );
+
+        // get total PPL
         let totalPPl = await User.countDocuments({'role': '61d5608d4a7ba5b05c9c7ae3'}).exec();
-        let totalPeternak = await User.countDocuments({'role': '61d5608d4a7ba5b05c9c7ae4'}).exec();
-
         res.json({
-            totalKandangActive: activeKandang,
-            totalKandangRehat: rehatKandang,
-            totalPPL: totalPPl,
+            totalKandangActive: resultKandangActive.length,
+            totalPPL: role === "superadmin" && !kemitraan ? totalPPl : 0,
             totalPeternak: totalPeternak,
         })
     } catch (error) {
@@ -38,7 +86,8 @@ exports.dashboardKemitraan =  async (req, res, next) => {
 
 exports.dashboardKemitraanPopulasi =  async (req, res, next) => {
     try {
-        let { city } = req.query;
+        let role = req.user.role ? req.user.role.name : '';
+        let { city, kemitraan } = req.query;
         let filter = {}
         let resultPeriode = [];
         if (city) {
@@ -48,7 +97,19 @@ exports.dashboardKemitraanPopulasi =  async (req, res, next) => {
 
         let getKandang = await Kandang.find(filter).exec();
         await Promise.map(getKandang, async (dataItem, index) => {
-            let periode = await Periode.findOne({kandang: dataItem._id, isEnd: false}).sort({ createdAt: -1 })
+            let filterPeriod = {};
+            filterPeriod.kandang = dataItem.id;
+            filterPeriod.isEnd = false;
+
+            if (kemitraan) {
+                filterPeriod.kemitraan = kemitraan
+            }
+            let kemitraanId = req.user.kemitraanUser ? req.user.kemitraanUser._id : '';
+            if (role === "adminkemitraan") {
+                filterPeriod.kemitraan = kemitraanId
+            }
+
+            let periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 })
             if (periode && periode.kandang) {
                 // get usia
                 let now = new Date(Date.now());
@@ -75,11 +136,14 @@ exports.dashboardKemitraanPopulasi =  async (req, res, next) => {
 
 exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
     try {
+        let role = req.user.role ? req.user.role.name : '';
         let sort = handleQuerySort(req.query.sort)
         let {limit, offset} = parseQuery(req.query);
         let { city, populasi, kemitraan } = req.query;
-        let usia = req.query.usia ? req.query.usia : '';
-        let bobot = req.query.bobot ? req.query.bobot : '';
+        let usiaFrom = req.query.usiaFrom ? req.query.usiaFrom : '';
+        let usiaTo = req.query.usiaTo ? req.query.usiaTo : '';
+        let bobotFrom = req.query.bobotFrom ? req.query.bobotFrom : '';
+        let bobotTo = req.query.bobotTo ? req.query.bobotTo : '';
         let filter = {}
         let resultPeriode = [];
         if (city) {
@@ -91,7 +155,7 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
             sort = { createdAt: -1 }
         }
 
-        let countKandang = await Kandang.countDocuments(filter)
+        //let countKandang = await Kandang.countDocuments(filter)
         let dataKandang = await Kandang.find(filter).limit(limit).skip(offset).sort(sort);
         await Promise.map(dataKandang, async (dataItem, index) => {
             let filterPeriod = {};
@@ -115,6 +179,10 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
             if (kemitraan) {
                 filterPeriod.kemitraan = kemitraan
             }
+            let kemitraanId = req.user.kemitraanUser ? req.user.kemitraanUser._id : '';
+            if (role === "adminkemitraan") {
+                filterPeriod.kemitraan = kemitraanId
+            }
 
             const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 })
             if (periode && periode.kandang) {
@@ -127,212 +195,57 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
                 const getKegiatan = await KegiatanHarian.find({periode: periode.id}).sort({'tanggal': -1}).limit(1).select('-periode')
                 const latestWeight = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0) : 0
                 const latestSampling = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {populasi}) => a + populasi, 0) : 0
-                const avgLatestWeight = latestWeight/latestSampling
+                const totalAvgLatestWeight = latestWeight/latestSampling
+                const avgLatestWeight = totalAvgLatestWeight ? totalAvgLatestWeight : 0
 
-                if (usia && bobot) {
-                    if (usia === '14' && age <= 14 && bobot === '1000' && avgLatestWeight <= 1000) {
-                        resultPeriode.push({
-                            namaKandang: periode.kandang.kode,
-                            kota: periode.kandang.kota,
-                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                            bobot: avgLatestWeight,
-                            usia: age,
-                            populasi: periode.populasi,
-                            kemitraan: periode.kemitraan ? periode.kemitraan.name : ""
-                        });
-                    } else if (usia === '30' && age > 14 && age <= 30 && bobot === '1000' && avgLatestWeight <= 1000) {
-                        resultPeriode.push({
-                            namaKandang: periode.kandang.kode,
-                            kota: periode.kandang.kota,
-                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                            bobot: avgLatestWeight,
-                            usia: age,
-                            populasi: periode.populasi,
-                            kemitraan: periode.kemitraan ? periode.kemitraan.name : ""
-                        });
-                    } else if (usia === '31' && age > 30 && bobot === '1000' && avgLatestWeight <= 1000) {
-                        resultPeriode.push({
-                            namaKandang: periode.kandang.kode,
-                            kota: periode.kandang.kota,
-                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                            bobot: avgLatestWeight,
-                            usia: age,
-                            populasi: periode.populasi,
-                            kemitraan: periode.kemitraan ? periode.kemitraan.name : ""
-                        });
-                    } else if (usia === '14' && age <= 14 && bobot === '1500' && avgLatestWeight > 1000 && avgLatestWeight <= 1500) {
-                        resultPeriode.push({
-                            namaKandang: periode.kandang.kode,
-                            kota: periode.kandang.kota,
-                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                            bobot: avgLatestWeight,
-                            usia: age,
-                            populasi: periode.populasi,
-                            kemitraan: periode.kemitraan ? periode.kemitraan.name : ""
-                        });
-                    } else if (usia === '30' && age > 14 && age <= 30 && bobot === '1500' && avgLatestWeight > 1000 && avgLatestWeight <= 1500) {
-                        resultPeriode.push({
-                            namaKandang: periode.kandang.kode,
-                            kota: periode.kandang.kota,
-                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                            bobot: avgLatestWeight,
-                            usia: age,
-                            populasi: periode.populasi,
-                            kemitraan: periode.kemitraan ? periode.kemitraan.name : ""
-                        });
-                    } else if (usia === '31' && age > 30 && bobot === '1500' && avgLatestWeight > 1000 && avgLatestWeight <= 1500) {
-                        resultPeriode.push({
-                            namaKandang: periode.kandang.kode,
-                            kota: periode.kandang.kota,
-                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                            bobot: avgLatestWeight,
-                            usia: age,
-                            populasi: periode.populasi,
-                            kemitraan: periode.kemitraan ? periode.kemitraan.name : ""
-                        });
-                    } else if (usia === '14' && age <= 14 && bobot === '2000' && avgLatestWeight > 1500 && avgLatestWeight <= 2000) {
-                        resultPeriode.push({
-                            namaKandang: periode.kandang.kode,
-                            kota: periode.kandang.kota,
-                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                            bobot: avgLatestWeight,
-                            usia: age,
-                            populasi: periode.populasi,
-                            kemitraan: periode.kemitraan ? periode.kemitraan.name : ""
-                        });
-                    } else if (usia === '30' && age > 14 && age <= 30 && bobot === '2000' && avgLatestWeight > 1500 && avgLatestWeight <= 2000) {
-                        resultPeriode.push({
-                            namaKandang: periode.kandang.kode,
-                            kota: periode.kandang.kota,
-                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                            bobot: avgLatestWeight,
-                            usia: age,
-                            populasi: periode.populasi,
-                            kemitraan: periode.kemitraan ? periode.kemitraan.name : ""
-                        });
-                    } else if (usia === '31' && age > 30 && bobot === '2000' && avgLatestWeight > 1500 && avgLatestWeight <= 2000) {
-                        resultPeriode.push({
-                            namaKandang: periode.kandang.kode,
-                            kota: periode.kandang.kota,
-                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                            bobot: avgLatestWeight,
-                            usia: age,
-                            populasi: periode.populasi,
-                            kemitraan: periode.kemitraan ? periode.kemitraan.name : ""
-                        });
-                    } else if (usia === '14' && age <= 14 && bobot === '2001' && avgLatestWeight > 2000) {
-                        resultPeriode.push({
-                            namaKandang: periode.kandang.kode,
-                            kota: periode.kandang.kota,
-                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                            bobot: avgLatestWeight,
-                            usia: age,
-                            populasi: periode.populasi,
-                            kemitraan: periode.kemitraan ? periode.kemitraan.name : ""
-                        });
-                    } else if (usia === '30' && age > 14 && age <= 30 && bobot === '2001' && avgLatestWeight > 2000) {
-                        resultPeriode.push({
-                            namaKandang: periode.kandang.kode,
-                            kota: periode.kandang.kota,
-                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                            bobot: avgLatestWeight,
-                            usia: age,
-                            populasi: periode.populasi,
-                            kemitraan: periode.kemitraan ? periode.kemitraan.name : ""
-                        });
-                    } else if (usia === '31' && age > 30 && bobot === '2001' && avgLatestWeight > 2000) {
-                        resultPeriode.push({
-                            namaKandang: periode.kandang.kode,
-                            kota: periode.kandang.kota,
-                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                            bobot: avgLatestWeight,
-                            usia: age,
-                            populasi: periode.populasi,
-                            kemitraan: periode.kemitraan ? periode.kemitraan.name : ""
-                        });
-                    }
-                    return false;
-                }
-
-                if (usia) {
-                    if (usia === '14' && age <= 14) {
-                        resultPeriode.push({
-                            namaKandang: periode.kandang.kode,
-                            kota: periode.kandang.kota,
-                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                            bobot: avgLatestWeight,
-                            usia: age,
-                            populasi: periode.populasi,
-                            kemitraan: periode.kemitraan ? periode.kemitraan.name : ""
-                        });
-                    } else if (usia === '30' && age > 14 && age <= 30 ) {
-                        resultPeriode.push({
-                            namaKandang: periode.kandang.kode,
-                            kota: periode.kandang.kota,
-                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                            bobot: avgLatestWeight,
-                            usia: age,
-                            populasi: periode.populasi,
-                            kemitraan: periode.kemitraan ? periode.kemitraan.name : ""
-                        });
-                    } else if (usia === '31' && age > 30) {
-                        resultPeriode.push({
-                            namaKandang: periode.kandang.kode,
-                            kota: periode.kandang.kota,
-                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                            bobot: avgLatestWeight,
-                            usia: age,
-                            populasi: periode.populasi,
-                            kemitraan: periode.kemitraan ? periode.kemitraan.name : ""
-                        });
+                let pushData = false;
+                if (usiaFrom && usiaTo && bobotFrom && bobotTo) {
+                    if (age >= usiaFrom && age <= usiaTo && avgLatestWeight >= bobotFrom && avgLatestWeight <= bobotTo) {
+                        pushData = true;
                     }
                 }
 
-                if (bobot) {
-                    if (bobot === '1000' && avgLatestWeight <= 1000) {
-                        resultPeriode.push({
-                            namaKandang: periode.kandang.kode,
-                            kota: periode.kandang.kota,
-                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                            bobot: avgLatestWeight,
-                            usia: age,
-                            populasi: periode.populasi,
-                            kemitraan: periode.kemitraan ? periode.kemitraan.name : ""
-                        });
-                    } else if (bobot === '1500' && avgLatestWeight > 1000 && avgLatestWeight <= 1500) {
-                        resultPeriode.push({
-                            namaKandang: periode.kandang.kode,
-                            kota: periode.kandang.kota,
-                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                            bobot: avgLatestWeight,
-                            usia: age,
-                            populasi: periode.populasi,
-                            kemitraan: periode.kemitraan ? periode.kemitraan.name : ""
-                        });
-                    } else if (bobot === '2000' && avgLatestWeight > 1500 && avgLatestWeight <= 2000) {
-                        resultPeriode.push({
-                            namaKandang: periode.kandang.kode,
-                            kota: periode.kandang.kota,
-                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                            bobot: avgLatestWeight,
-                            usia: age,
-                            populasi: periode.populasi,
-                            kemitraan: periode.kemitraan ? periode.kemitraan.name : ""
-                        });
-                    } else if (bobot === '2001' && avgLatestWeight > 2000) {
-                        resultPeriode.push({
-                            namaKandang: periode.kandang.kode,
-                            kota: periode.kandang.kota,
-                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                            bobot: avgLatestWeight,
-                            usia: age,
-                            populasi: periode.populasi,
-                            kemitraan: periode.kemitraan ? periode.kemitraan.name : ""
-                        });
-                    } 
+                if (usiaFrom && !usiaTo && !bobotFrom && !bobotTo) {
+                    if (age >= usiaFrom) {
+                        pushData = true;
+                    }
                 }
 
-                if (usia === "" && bobot === "") {
+                if (!usiaFrom && usiaTo && !bobotFrom && !bobotTo) {
+                    if (age <= usiaTo) {
+                        pushData = true;
+                    }
+                }
+
+                if (usiaFrom && usiaTo && !bobotFrom && !bobotTo) {
+                    if (age >= usiaFrom && age <= usiaTo) {
+                        pushData = true;
+                    }
+                }
+
+                if (!usiaFrom && !usiaTo && bobotFrom && !bobotTo) {
+                    if (avgLatestWeight >= bobotFrom) {
+                        pushData = true;
+                    }
+                }
+
+                if (!usiaFrom && !usiaTo && !bobotFrom && bobotTo) {
+                    if (avgLatestWeight <= bobotTo) {
+                        pushData = true;
+                    }
+                }
+
+                if (!usiaFrom && !usiaTo && bobotFrom && bobotTo) {
+                    if (avgLatestWeight >= bobotFrom && avgLatestWeight <= bobotTo) {
+                        pushData = true;
+                    }
+                }
+
+                if (usiaFrom === "" && usiaTo === "" && bobotFrom === "" && bobotTo === "") {
+                    pushData = true;
+                }
+
+                if (pushData) {
                     resultPeriode.push({
                         namaKandang: periode.kandang.kode,
                         kota: periode.kandang.kota,
@@ -346,9 +259,18 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
             }
         });
 
+        let countPopulasi = resultPeriode.reduce((a, {populasi}) => a + populasi, 0);
+        let countUsia = (resultPeriode.reduce((a, {usia}) => a + usia, 0) / resultPeriode.length);
+        let countBobot = (resultPeriode.reduce((a, {bobot}) => a + bobot, 0) / resultPeriode.length);
+
         res.json({
-            //count: resultPeriode.length,
-            ketersediaan: resultPeriode
+            // count: resultPeriode.length,
+            ketersediaan: resultPeriode,
+            summary: {
+                totalPopulasi: Math.ceil(countPopulasi),
+                averageUsia: Math.ceil(countUsia),
+                averageBobot: Math.ceil(countBobot)
+            }
         })
     } catch (error) {
         next(error)
@@ -357,11 +279,14 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
 
 exports.dashboardSalesKetersediaan =  async (req, res, next) => {
     try {
+        let role = req.user.role ? req.user.role.name : '';
         let sort = handleQuerySort(req.query.sort)
         let {limit, offset} = parseQuery(req.query);
         let { city, populasi, kemitraan } = req.query;
-        let usia = req.query.usia ? req.query.usia : '';
-        let bobot = req.query.bobot ? req.query.bobot : '';
+        let usiaFrom = req.query.usiaFrom ? req.query.usiaFrom : '';
+        let usiaTo = req.query.usiaTo ? req.query.usiaTo : '';
+        let bobotFrom = req.query.bobotFrom ? req.query.bobotFrom : '';
+        let bobotTo = req.query.bobotTo ? req.query.bobotTo : '';
         let filter = {}
         let resultPeriode = [];
         if (city) {
@@ -373,7 +298,7 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
             sort = { createdAt: -1 }
         }
 
-        let countKandang = await Kandang.countDocuments(filter)
+        //let countKandang = await Kandang.countDocuments(filter)
         let dataKandang = await Kandang.find(filter).limit(limit).skip(offset).sort(sort);
         await Promise.map(dataKandang, async (dataItem, index) => {
             let filterPeriod = {};
@@ -397,6 +322,10 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
             if (kemitraan) {
                 filterPeriod.kemitraan = kemitraan
             }
+            let kemitraanId = req.user.kemitraanUser ? req.user.kemitraanUser._id : '';
+            if (role === "adminkemitraan") {
+                filterPeriod.kemitraan = kemitraanId
+            }
 
             const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 })
             if (periode && periode.kandang) {
@@ -409,212 +338,57 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
                 const getKegiatan = await KegiatanHarian.find({periode: periode.id}).sort({'tanggal': -1}).limit(1).select('-periode')
                 const latestWeight = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0) : 0
                 const latestSampling = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {populasi}) => a + populasi, 0) : 0
-                const avgLatestWeight = latestWeight/latestSampling
+                const totalAvgLatestWeight = latestWeight/latestSampling
+                const avgLatestWeight = totalAvgLatestWeight ? totalAvgLatestWeight : 0
 
-                if (usia && bobot) {
-                    if (usia === '14' && age <= 14 && bobot === '1000' && avgLatestWeight <= 1000) {
-                        resultPeriode.push({
-                            namaKandang: periode.kandang.kode,
-                            kota: periode.kandang.kota,
-                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                            bobot: avgLatestWeight,
-                            usia: age,
-                            populasi: periode.populasi,
-                            kemitraan: periode.kemitraan ? periode.kemitraan.name : ""
-                        });
-                    } else if (usia === '30' && age > 14 && age <= 30 && bobot === '1000' && avgLatestWeight <= 1000) {
-                        resultPeriode.push({
-                            namaKandang: periode.kandang.kode,
-                            kota: periode.kandang.kota,
-                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                            bobot: avgLatestWeight,
-                            usia: age,
-                            populasi: periode.populasi,
-                            kemitraan: periode.kemitraan ? periode.kemitraan.name : ""
-                        });
-                    } else if (usia === '31' && age > 30 && bobot === '1000' && avgLatestWeight <= 1000) {
-                        resultPeriode.push({
-                            namaKandang: periode.kandang.kode,
-                            kota: periode.kandang.kota,
-                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                            bobot: avgLatestWeight,
-                            usia: age,
-                            populasi: periode.populasi,
-                            kemitraan: periode.kemitraan ? periode.kemitraan.name : ""
-                        });
-                    } else if (usia === '14' && age <= 14 && bobot === '1500' && avgLatestWeight > 1000 && avgLatestWeight <= 1500) {
-                        resultPeriode.push({
-                            namaKandang: periode.kandang.kode,
-                            kota: periode.kandang.kota,
-                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                            bobot: avgLatestWeight,
-                            usia: age,
-                            populasi: periode.populasi,
-                            kemitraan: periode.kemitraan ? periode.kemitraan.name : ""
-                        });
-                    } else if (usia === '30' && age > 14 && age <= 30 && bobot === '1500' && avgLatestWeight > 1000 && avgLatestWeight <= 1500) {
-                        resultPeriode.push({
-                            namaKandang: periode.kandang.kode,
-                            kota: periode.kandang.kota,
-                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                            bobot: avgLatestWeight,
-                            usia: age,
-                            populasi: periode.populasi,
-                            kemitraan: periode.kemitraan ? periode.kemitraan.name : ""
-                        });
-                    } else if (usia === '31' && age > 30 && bobot === '1500' && avgLatestWeight > 1000 && avgLatestWeight <= 1500) {
-                        resultPeriode.push({
-                            namaKandang: periode.kandang.kode,
-                            kota: periode.kandang.kota,
-                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                            bobot: avgLatestWeight,
-                            usia: age,
-                            populasi: periode.populasi,
-                            kemitraan: periode.kemitraan ? periode.kemitraan.name : ""
-                        });
-                    } else if (usia === '14' && age <= 14 && bobot === '2000' && avgLatestWeight > 1500 && avgLatestWeight <= 2000) {
-                        resultPeriode.push({
-                            namaKandang: periode.kandang.kode,
-                            kota: periode.kandang.kota,
-                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                            bobot: avgLatestWeight,
-                            usia: age,
-                            populasi: periode.populasi,
-                            kemitraan: periode.kemitraan ? periode.kemitraan.name : ""
-                        });
-                    } else if (usia === '30' && age > 14 && age <= 30 && bobot === '2000' && avgLatestWeight > 1500 && avgLatestWeight <= 2000) {
-                        resultPeriode.push({
-                            namaKandang: periode.kandang.kode,
-                            kota: periode.kandang.kota,
-                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                            bobot: avgLatestWeight,
-                            usia: age,
-                            populasi: periode.populasi,
-                            kemitraan: periode.kemitraan ? periode.kemitraan.name : ""
-                        });
-                    } else if (usia === '31' && age > 30 && bobot === '2000' && avgLatestWeight > 1500 && avgLatestWeight <= 2000) {
-                        resultPeriode.push({
-                            namaKandang: periode.kandang.kode,
-                            kota: periode.kandang.kota,
-                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                            bobot: avgLatestWeight,
-                            usia: age,
-                            populasi: periode.populasi,
-                            kemitraan: periode.kemitraan ? periode.kemitraan.name : ""
-                        });
-                    } else if (usia === '14' && age <= 14 && bobot === '2001' && avgLatestWeight > 2000) {
-                        resultPeriode.push({
-                            namaKandang: periode.kandang.kode,
-                            kota: periode.kandang.kota,
-                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                            bobot: avgLatestWeight,
-                            usia: age,
-                            populasi: periode.populasi,
-                            kemitraan: periode.kemitraan ? periode.kemitraan.name : ""
-                        });
-                    } else if (usia === '30' && age > 14 && age <= 30 && bobot === '2001' && avgLatestWeight > 2000) {
-                        resultPeriode.push({
-                            namaKandang: periode.kandang.kode,
-                            kota: periode.kandang.kota,
-                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                            bobot: avgLatestWeight,
-                            usia: age,
-                            populasi: periode.populasi,
-                            kemitraan: periode.kemitraan ? periode.kemitraan.name : ""
-                        });
-                    } else if (usia === '31' && age > 30 && bobot === '2001' && avgLatestWeight > 2000) {
-                        resultPeriode.push({
-                            namaKandang: periode.kandang.kode,
-                            kota: periode.kandang.kota,
-                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                            bobot: avgLatestWeight,
-                            usia: age,
-                            populasi: periode.populasi,
-                            kemitraan: periode.kemitraan ? periode.kemitraan.name : ""
-                        });
-                    }
-                    return false;
-                }
-
-                if (usia) {
-                    if (usia === '14' && age <= 14) {
-                        resultPeriode.push({
-                            namaKandang: periode.kandang.kode,
-                            kota: periode.kandang.kota,
-                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                            bobot: avgLatestWeight,
-                            usia: age,
-                            populasi: periode.populasi,
-                            kemitraan: periode.kemitraan ? periode.kemitraan.name : ""
-                        });
-                    } else if (usia === '30' && age > 14 && age <= 30 ) {
-                        resultPeriode.push({
-                            namaKandang: periode.kandang.kode,
-                            kota: periode.kandang.kota,
-                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                            bobot: avgLatestWeight,
-                            usia: age,
-                            populasi: periode.populasi,
-                            kemitraan: periode.kemitraan ? periode.kemitraan.name : ""
-                        });
-                    } else if (usia === '31' && age > 30) {
-                        resultPeriode.push({
-                            namaKandang: periode.kandang.kode,
-                            kota: periode.kandang.kota,
-                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                            bobot: avgLatestWeight,
-                            usia: age,
-                            populasi: periode.populasi,
-                            kemitraan: periode.kemitraan ? periode.kemitraan.name : ""
-                        });
+                let pushData = false;
+                if (usiaFrom && usiaTo && bobotFrom && bobotTo) {
+                    if (age >= usiaFrom && age <= usiaTo && avgLatestWeight >= bobotFrom && avgLatestWeight <= bobotTo) {
+                        pushData = true;
                     }
                 }
 
-                if (bobot) {
-                    if (bobot === '1000' && avgLatestWeight <= 1000) {
-                        resultPeriode.push({
-                            namaKandang: periode.kandang.kode,
-                            kota: periode.kandang.kota,
-                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                            bobot: avgLatestWeight,
-                            usia: age,
-                            populasi: periode.populasi,
-                            kemitraan: periode.kemitraan ? periode.kemitraan.name : ""
-                        });
-                    } else if (bobot === '1500' && avgLatestWeight > 1000 && avgLatestWeight <= 1500) {
-                        resultPeriode.push({
-                            namaKandang: periode.kandang.kode,
-                            kota: periode.kandang.kota,
-                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                            bobot: avgLatestWeight,
-                            usia: age,
-                            populasi: periode.populasi,
-                            kemitraan: periode.kemitraan ? periode.kemitraan.name : ""
-                        });
-                    } else if (bobot === '2000' && avgLatestWeight > 1500 && avgLatestWeight <= 2000) {
-                        resultPeriode.push({
-                            namaKandang: periode.kandang.kode,
-                            kota: periode.kandang.kota,
-                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                            bobot: avgLatestWeight,
-                            usia: age,
-                            populasi: periode.populasi,
-                            kemitraan: periode.kemitraan ? periode.kemitraan.name : ""
-                        });
-                    } else if (bobot === '2001' && avgLatestWeight > 2000) {
-                        resultPeriode.push({
-                            namaKandang: periode.kandang.kode,
-                            kota: periode.kandang.kota,
-                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                            bobot: avgLatestWeight,
-                            usia: age,
-                            populasi: periode.populasi,
-                            kemitraan: periode.kemitraan ? periode.kemitraan.name : ""
-                        });
-                    } 
+                if (usiaFrom && !usiaTo && !bobotFrom && !bobotTo) {
+                    if (age >= usiaFrom) {
+                        pushData = true;
+                    }
                 }
 
-                if (usia === "" && bobot === "") {
+                if (!usiaFrom && usiaTo && !bobotFrom && !bobotTo) {
+                    if (age <= usiaTo) {
+                        pushData = true;
+                    }
+                }
+
+                if (usiaFrom && usiaTo && !bobotFrom && !bobotTo) {
+                    if (age >= usiaFrom && age <= usiaTo) {
+                        pushData = true;
+                    }
+                }
+
+                if (!usiaFrom && !usiaTo && bobotFrom && !bobotTo) {
+                    if (avgLatestWeight >= bobotFrom) {
+                        pushData = true;
+                    }
+                }
+
+                if (!usiaFrom && !usiaTo && !bobotFrom && bobotTo) {
+                    if (avgLatestWeight <= bobotTo) {
+                        pushData = true;
+                    }
+                }
+
+                if (!usiaFrom && !usiaTo && bobotFrom && bobotTo) {
+                    if (avgLatestWeight >= bobotFrom && avgLatestWeight <= bobotTo) {
+                        pushData = true;
+                    }
+                }
+
+                if (usiaFrom === "" && usiaTo === "" && bobotFrom === "" && bobotTo === "") {
+                    pushData = true;
+                }
+
+                if (pushData) {
                     resultPeriode.push({
                         namaKandang: periode.kandang.kode,
                         kota: periode.kandang.kota,
@@ -628,9 +402,18 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
             }
         });
 
+        let countPopulasi = resultPeriode.reduce((a, {populasi}) => a + populasi, 0);
+        let countUsia = (resultPeriode.reduce((a, {usia}) => a + usia, 0) / resultPeriode.length);
+        let countBobot = (resultPeriode.reduce((a, {bobot}) => a + bobot, 0) / resultPeriode.length);
+
         res.json({
-            //count: resultPeriode.length,
-            ketersediaan: resultPeriode
+            // count: resultPeriode.length,
+            ketersediaan: resultPeriode,
+            summary: {
+                totalPopulasi: Math.ceil(countPopulasi),
+                averageUsia: Math.ceil(countUsia),
+                averageBobot: Math.ceil(countBobot)
+            }
         })
     } catch (error) {
         next(error)
