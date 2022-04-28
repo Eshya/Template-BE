@@ -259,7 +259,7 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
             }
         });
 
-        let countPopulasi = (resultPeriode.reduce((a, {populasi}) => a + populasi, 0) / resultPeriode.length);
+        let countPopulasi = resultPeriode.reduce((a, {populasi}) => a + populasi, 0);
         let countUsia = (resultPeriode.reduce((a, {usia}) => a + usia, 0) / resultPeriode.length);
         let countBobot = (resultPeriode.reduce((a, {bobot}) => a + bobot, 0) / resultPeriode.length);
 
@@ -267,7 +267,7 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
             // count: resultPeriode.length,
             ketersediaan: resultPeriode,
             summary: {
-                averagePopulasi: Math.ceil(countPopulasi),
+                totalPopulasi: Math.ceil(countPopulasi),
                 averageUsia: Math.ceil(countUsia),
                 averageBobot: Math.ceil(countBobot)
             }
@@ -402,7 +402,7 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
             }
         });
 
-        let countPopulasi = (resultPeriode.reduce((a, {populasi}) => a + populasi, 0) / resultPeriode.length);
+        let countPopulasi = resultPeriode.reduce((a, {populasi}) => a + populasi, 0);
         let countUsia = (resultPeriode.reduce((a, {usia}) => a + usia, 0) / resultPeriode.length);
         let countBobot = (resultPeriode.reduce((a, {bobot}) => a + bobot, 0) / resultPeriode.length);
 
@@ -410,7 +410,7 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
             // count: resultPeriode.length,
             ketersediaan: resultPeriode,
             summary: {
-                averagePopulasi: Math.ceil(countPopulasi),
+                totalPopulasi: Math.ceil(countPopulasi),
                 averageUsia: Math.ceil(countUsia),
                 averageBobot: Math.ceil(countBobot)
             }
