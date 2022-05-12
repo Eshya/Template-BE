@@ -37,10 +37,12 @@ const scheme = new Schema({
     pakanPakai: [pakanPakaiSchema],
     ovkPakai: [ovkPakaiSchema],
     pemusnahan: {
-        type: Number
+        type: Number,
+        required: true
     },
     deplesi: {
-        type: Number
+        type: Number,
+        required: true
     },
     berat: [beratSchema],
     populasi: {
