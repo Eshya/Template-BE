@@ -62,7 +62,9 @@ exports.findAllDataPool =  async (req, res, next) => {
     try {
         const {limit, offset} = parseQuery(req.query);
         const { name, address, city, isActive } = req.query;
-        let sort = handleQuerySort(req.query.sort)
+        let sort = handleQuerySort(req.query.sort);
+        let role = req.user.role ? req.user.role.name : '';
+        let kemitraanId = req.user.kemitraanUser ? req.user.kemitraanUser._id : '';
         const filter = {}
         if (name) {
             filter.kode = new RegExp(name, 'i') 
@@ -87,10 +89,15 @@ exports.findAllDataPool =  async (req, res, next) => {
 
         let result = [];
         await Promise.map(data, async (dataItem, index) => {
-            const periode = await Periode.findOne({kandang: dataItem._id}).sort({ createdAt: -1 })
+            let filterPeriod = {};
+            filterPeriod.kandang = dataItem.id;
+            if (role === "adminkemitraan") {
+                filterPeriod.kemitraan = kemitraanId
+            }
+            const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 })
             if (periode && periode.kandang) {
                 // get periode ke
-                const kandang = await Periode.find({kandang: dataItem._id}).sort('tanggalMulai')
+                const kandang = await Periode.find(filterPeriod).sort('tanggalMulai')
                 let dataPeriode = [];
                 await Promise.map(kandang, async (itemKandang, index) => {
                     if (itemKandang._id.toString() === periode._id.toString()) {
@@ -568,7 +575,7 @@ exports.getKelola = async (req, res, next) => {
 
             // get periode
             let dataPeriode = [];
-            let periode = await Periode.find({kandang: item._id}).sort('updatedAt')
+            let periode = await Periode.find({kandang: item._id}).sort({'tanggalMulai': -1})
             await Promise.map(periode, async (itemPeriode) => {
                 // kalkulasi umur ayam
                 let oneDay = 24 * 60 * 60 * 1000;
