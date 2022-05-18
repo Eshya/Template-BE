@@ -20,11 +20,17 @@ const handleQuerySort = (query) => {
     }
 }
 
+function paginate(array, page_size, page_number) {
+    return array.slice((page_number - 1) * page_size, page_number * page_size);
+}
+
 exports.findAll =  async (req, res, next) => {
     try {
         const {limit, offset} = parseQuery(req.query);
         const { name, address, phoneNumber } = req.query;
         const sort = handleQuerySort(req.query.sort)
+        let role = req.user.role ? req.user.role.name : '';
+        let kemitraanId = req.user.kemitraanUser ? req.user.kemitraanUser._id : '';
         const filter = {}
         if (name) {
             filter.fullname = new RegExp(name, 'i') 
@@ -38,22 +44,61 @@ exports.findAll =  async (req, res, next) => {
         filter.role = "61d5608d4a7ba5b05c9c7ae4";
         filter.deleted = false;
 
-        const count = await Model.countDocuments(filter)
-        const data = await Model.find(filter).limit(limit).skip(offset).sort(sort)
-
+        let count;
         let result = [];
-        await Promise.map(data, async (dataItem) => {
-            const kandang = await Kandang.find({createdBy: dataItem._id, deleted: false})
-            result.push({
-                id: dataItem._id,
-                name: dataItem.fullname,
-                username: dataItem.username,
-                email: dataItem.email,
-                address: dataItem.address,
-                phoneNumber: dataItem.phoneNumber,
-                totalKapasitasKandang: kandang.reduce((a, {populasi}) => a + populasi, 0)
+        if (role === "adminkemitraan") {
+            const data = await Model.find(filter).sort(sort)
+            await Promise.map(data, async (dataItem) => {
+                const kandang = await Kandang.find({createdBy: dataItem._id, deleted: false})
+                await Promise.map(kandang, async (kandangItem, index) => {
+                    // check status peternak
+                    let status = false;
+                    if (kandangItem.isActive == true) {
+                        status = true;
+                    }
+                    let filterPeriod = {};
+                    filterPeriod.kandang = kandangItem.id;
+                    filterPeriod.kemitraan = kemitraanId
+                    const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 })
+                    if (periode && periode.kandang) {
+                        result.push({
+                            id: dataItem._id,
+                            name: dataItem.fullname,
+                            username: dataItem.username,
+                            email: dataItem.email,
+                            address: dataItem.address,
+                            phoneNumber: dataItem.phoneNumber,
+                            totalKapasitasKandang: kandang.reduce((a, {populasi}) => a + populasi, 0),
+                            status: status ? "Aktif" : "Non Aktif"
+                        });
+                    }
+                });
             });
-        });
+            count = result.length
+            result = paginate(result, limit, (offset + 1))
+        } else {
+            count = await Model.countDocuments(filter)
+            const data = await Model.find(filter).limit(limit).skip(offset).sort(sort)
+            await Promise.map(data, async (dataItem) => {
+                const kandang = await Kandang.find({createdBy: dataItem._id, deleted: false})
+                // check status peternak
+                let status = false;
+                if (kandang.some(e => e.isActive === true)) {
+                    status = true
+                }
+                result.push({
+                    id: dataItem._id,
+                    name: dataItem.fullname,
+                    username: dataItem.username,
+                    email: dataItem.email,
+                    address: dataItem.address,
+                    phoneNumber: dataItem.phoneNumber,
+                    totalKapasitasKandang: kandang.reduce((a, {populasi}) => a + populasi, 0),
+                    status: status ? "Aktif" : "Non Aktif"
+                });
+            });
+        }
+
         res.json({
             message: 'Ok',
             length: count,
