@@ -125,7 +125,13 @@ exports.findAllDataPool =  async (req, res, next) => {
                 }
             }
             count = result.length
-            result = paginate(result, limit, (offset + 1))
+            let offsetPaging;
+            if (offset == 0) {
+                offsetPaging = 1
+            } else {
+                offsetPaging = (offset / 10 + 1)
+            }
+            result = paginate(result, limit, offsetPaging)
         } else {
             count = await Model.countDocuments(filter)
             const data = await Model.find(filter).limit(limit).skip(offset).sort(sort)
