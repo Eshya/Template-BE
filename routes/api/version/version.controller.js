@@ -73,11 +73,8 @@ exports.checkVersion = async (req, res, next) => {
     let message
     try {
         const findVersion = await Model.findOne()
-        findVersion.app_version !== current && findVersion.is_mandatory === true ? message = "FORCE_UPDATE" : (findVersion.app_version !== current && findVersion.is_mandatory === false) ? message = "UPDATE_AVAILABLE" : message = "NO_NEED_UPDATE"
-        res.json({
-            data: message,
-            message: 'Ok'
-        })
+        findVersion.app_version === current && findVersion.is_mandatory === true ? message = "FORCE_UPDATE" : (findVersion.app_version !== current && findVersion.is_mandatory === false) ? message = "UPDATE_AVAILABLE" : message = "NO_NEED_UPDATE"
+        res.json(message)
     } catch (error) {
         next(error)
     }
