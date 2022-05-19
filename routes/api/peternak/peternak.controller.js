@@ -74,8 +74,14 @@ exports.findAll =  async (req, res, next) => {
                     }
                 });
             });
-            count = result.length
-            result = paginate(result, limit, (offset + 1))
+            const seen = new Set();
+            const filteredResult = result.filter(el => {
+                const duplicate = seen.has(el.id);
+                seen.add(el.id);
+                return !duplicate;
+            });
+            count = filteredResult.length
+            result = paginate(filteredResult, limit, (offset + 1))
         } else {
             count = await Model.countDocuments(filter)
             const data = await Model.find(filter).limit(limit).skip(offset).sort(sort)

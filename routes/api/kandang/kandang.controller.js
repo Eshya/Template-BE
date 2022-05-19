@@ -128,7 +128,7 @@ exports.findAllDataPool =  async (req, res, next) => {
             result = paginate(result, limit, (offset + 1))
         } else {
             count = await Model.countDocuments(filter)
-            const data = await Model.find(filter).limit(limit).skip(offset*10).sort(sort)
+            const data = await Model.find(filter).limit(limit).skip(offset).sort(sort)
             for (let i = 0; i < data.length; i++) {
                 let filterPeriod = {};
                 filterPeriod.kandang = data[i].id;
