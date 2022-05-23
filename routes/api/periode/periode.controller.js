@@ -293,13 +293,13 @@ exports.getBudidaya = async (req, res, next) => {
         const totalPembelianSapronak = pembelianPakan + pembelianOVK + pembelianDoc
 
         res.json({
-            data: {'penjualanAyamBesar': penjualanAyamBesar,
+            'penjualanAyamBesar': penjualanAyamBesar,
             'pembelianPakan': pembelianPakan,
             'pembelianOVK': pembelianOVK,
             'pembelianDOC': pembelianDoc,
             'pendapatanPeternak': pendapatanPeternak,
             'pendapatanPerEkor': pendapatanPerEkor,
-            'totalPembelianSapronak': totalPembelianSapronak},
+            'totalPembelianSapronak': totalPembelianSapronak,
             message: 'Ok'
         })
     } catch (error) {
