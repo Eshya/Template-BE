@@ -1,9 +1,9 @@
 const {parseQuery, createError} = require('../../helpers');
 const Model = require('./kegiatan-harian.model');
 const Sapronak = require('../sapronak/sapronak.model');
+const Penjualan = require('../penjualan/penjualan.model')
 const Periode = require('../periode/periode.model')
 const mongoose = require('mongoose');
-const { create } = require('./kegiatan-harian.model');
 const selectPublic = '-createdAt -updatedAt';
 
 const _find = async (req, isPublic = false) => {
@@ -109,7 +109,7 @@ exports.insert = async (req, res, next) => {
                 return dec
             }))
         }
-        const dataDeplesi = await KegiatanHarian.aggregate([
+        const dataDeplesi = await Model.aggregate([
             {$match: {periode: mongoose.Types.ObjectId(data.periode)}},
             {$group: {_id: '$_id', totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
         ])
@@ -125,7 +125,7 @@ exports.insert = async (req, res, next) => {
 
         const populasiAkhir = findPeriode.populasi - (allDeplesi + allKematian + allPenjualan)
 
-        if (data.deplesi + data.pemusnahan > populasiAkhir) return res.json({error: 1006, message: 'data deplesi melebihi populasi akhir'})
+        if (data.deplesi + data.pemusnahan > populasiAkhir) return res.json({error: 1008, message: 'data deplesi melebihi populasi akhir'})
 
         const results = await Model.create(data)
         res.json({
