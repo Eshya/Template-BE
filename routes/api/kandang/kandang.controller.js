@@ -565,45 +565,62 @@ exports.getKelola = async (req, res, next) => {
 
         let dataKelola = [];
         await Promise.map(kandang, async (item) => {
-
             // get periode
             let dataPeriode = [];
-            let periode = await Periode.find({kandang: item._id}).sort('updatedAt')
-            await Promise.map(periode, async (itemPeriode) => {
-                // kalkulasi umur ayam
-                let oneDay = 24 * 60 * 60 * 1000;
-                let now = new Date(Date.now());
-                let start = new Date(itemPeriode.tanggalMulai);
-                let umurAyam = Math.round(Math.abs((now - start) / oneDay))
+            let periode = await Periode.find({kandang: item._id}).sort({'tanggalMulai': -1})
+            for (let i = 0; i < periode.length; i++) {
 
-                // get kegiatan harian
-                const dataKegiatanHarian = await KegiatanHarian.aggregate([
-                    {$match: {periode: mongoose.Types.ObjectId(itemPeriode._id)}},
-                    {$unwind: {'path': '$pakanPakai', "preserveNullAndEmptyArrays": true}},
-                    {$unwind: '$berat'},
-                    {$group: {_id: '$_id', avgBerat: {$avg: '$berat.beratTimbang'}, tonase: {$sum: {$multiply: ['$berat.beratTimbang', '$berat.populasi']}}, totalPakan: {$sum: '$pakanPakai.beratPakan'}, totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
+                const penjualan = await Penjualan.aggregate([
+                    {$match: {periode: mongoose.Types.ObjectId(periode[i].id)}},
+                    {$group: {_id: '$_id', terjual: {$sum: '$qty'}}}
                 ])
 
-                const allTonase = dataKegiatanHarian.reduce((a, {tonase}) => a + tonase, 0)
-                const allDeplesi = dataKegiatanHarian.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
-                const allKematian = dataKegiatanHarian.reduce((a, {totalKematian}) => a + totalKematian, 0);
-                const allPakan = dataKegiatanHarian.reduce((a, {totalPakan})=>a + totalPakan, 0);
-                const avg = dataKegiatanHarian.reduce((a, {avgBerat}) => a + avgBerat, 0) / (dataKegiatanHarian.length);
-                const atas = (100 - (((itemPeriode.populasi - (allDeplesi + allKematian)) / itemPeriode.populasi) * 100)) * avg;
-                const bawah = (allPakan/allTonase) * umurAyam;
+                const dataPakan = await KegiatanHarian.aggregate([
+                    {$match: {periode: mongoose.Types.ObjectId(periode[i].id)}},
+                    {$unwind: {'path': '$pakanPakai', "preserveNullAndEmptyArrays": true}},
+                    {$group: {_id: '$_id', totalPakan: {$sum: '$pakanPakai.beratPakan'}}}
+                ])
+        
+                const dataDeplesi = await KegiatanHarian.aggregate([
+                    {$match: {periode: mongoose.Types.ObjectId(periode[i].id)}},
+                    {$group: {_id: '$_id', totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
+                ])
+        
+                const getKegiatan = await KegiatanHarian.find({periode: periode[i].id}).sort({'tanggal': -1}).limit(1).select('-periode')
+                const now = new Date(Date.now());
+                const start = new Date(periode[i].tanggalMulai);
+                const oneDay = 24 * 60 * 60 * 1000;
+                const umur = Math.round(Math.abs((now - start) / oneDay))
+
+                const latestWeight = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0) : 0
+                const latestSampling = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {populasi}) => a + populasi, 0) : 0
+                const avgLatestWeight = latestWeight/latestSampling
+
+                const allDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
+                const allKematian = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
+                const allPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
+                const allPakan = dataPakan.reduce((a, {totalPakan})=>a + totalPakan, 0);
+
+                const populasiAkhir = periode[i].populasi - (allDeplesi + allKematian + allPenjualan)
+                const deplesi = (periode[i].populasi - (periode[i].populasi - (allDeplesi + allKematian))) * 100 / periode[i].populasi
+                const presentaseAyamHidup = 100 - deplesi
+                const FCR = allPakan / (populasiAkhir * (avgLatestWeight/1000)) 
+                const atas = presentaseAyamHidup * (avgLatestWeight/1000)
+                const bawah = FCR*(dataPakan.length-1)
+                const IP = (atas / bawah) * 100
 
                 dataPeriode.push({
-                    idPeriode: itemPeriode._id,
-                    umurAyam: umurAyam,
-                    tanggalMulai: itemPeriode.tanggalMulai,
-                    tanggalAkhir: itemPeriode.tanggalAkhir,
-                    isEnd: itemPeriode.isEnd,
-                    hargaSatuan: itemPeriode.hargaSatuan,
-                    jenisDOC: itemPeriode.jenisDOC,
-                    populasi: itemPeriode.populasi,
-                    IP: bawah == 0 ? (atas/(bawah-1) * 100) : (atas / bawah) * 100,
+                    idPeriode: periode[i]._id,
+                    umurAyam: umur,
+                    tanggalMulai: periode[i].tanggalMulai,
+                    tanggalAkhir: periode[i].tanggalAkhir,
+                    isEnd: periode[i].isEnd,
+                    hargaSatuan: periode[i].hargaSatuan,
+                    jenisDOC: periode[i].jenisDOC,
+                    populasi: periode[i].populasi,
+                    IP: IP,
                 });
-            });
+            }
 
             //get flock
             let flock = [];
