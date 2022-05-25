@@ -58,11 +58,17 @@ exports.findAll = async (req, res, next) => {
     }
 }
 
+function paginate(array, page_size, page_number) {
+    return array.slice((page_number - 1) * page_size, page_number * page_size);
+}
+
 exports.findAllDataPool =  async (req, res, next) => {
     try {
         const {limit, offset} = parseQuery(req.query);
         const { name, address, city, isActive } = req.query;
-        let sort = handleQuerySort(req.query.sort)
+        let sort = handleQuerySort(req.query.sort);
+        let role = req.user.role ? req.user.role.name : '';
+        let kemitraanId = req.user.kemitraanUser ? req.user.kemitraanUser._id : '';
         const filter = {}
         if (name) {
             filter.kode = new RegExp(name, 'i') 
@@ -79,42 +85,99 @@ exports.findAllDataPool =  async (req, res, next) => {
         filter.deleted = false;
 
         if (!req.query.sort) {
-            sort = { createdAt: -1 }
+            sort = { updatedAt: -1 }
         }
 
-        const count = await Model.countDocuments(filter)
-        const data = await Model.find(filter).limit(limit).skip(offset).sort(sort)
-
+        let count;
         let result = [];
-        await Promise.map(data, async (dataItem, index) => {
-            const periode = await Periode.findOne({kandang: dataItem._id}).sort({ createdAt: -1 })
-            if (periode && periode.kandang) {
-                // get periode ke
-                const kandang = await Periode.find({kandang: dataItem._id}).sort('tanggalMulai')
-                let dataPeriode = [];
-                await Promise.map(kandang, async (itemKandang, index) => {
-                    if (itemKandang._id.toString() === periode._id.toString()) {
-                        dataPeriode.push(index + 1);
-                    }
-                });
-
-                // get usia
-                const now = new Date(Date.now());
-                const start = new Date(periode.tanggalMulai);
-                const usia = periode.isEnd ? Math.round(Math.abs((periode.tanggalAkhir - start) / ONE_DAY)) :  Math.round(Math.abs((now - start) / ONE_DAY))
-
-                result.push({
-                    idPemilik: periode.kandang.createdBy ? periode.kandang.createdBy._id : null,
-                    namaPemilik: periode.kandang.createdBy ? periode.kandang.createdBy.fullname : null,
-                    idKandang: periode.kandang._id,
-                    namaKandang: periode.kandang.kode,
-                    kota: periode.kandang.kota,
-                    isActive: periode.kandang.isActive ? "Aktif" : "Rehat",
-                    usia: usia,
-                    periodeKe: dataPeriode[0]
-                });
+        if (role === "adminkemitraan") {
+            const data = await Model.find(filter).sort(sort)
+            for (let i = 0; i < data.length; i++) {
+                let filterPeriod = {};
+                filterPeriod.kandang = data[i].id;
+                filterPeriod.kemitraan = kemitraanId
+                const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 })
+                if (periode && periode.kandang) {
+                    // get periode ke
+                    const kandang = await Periode.find(filterPeriod).sort('tanggalMulai')
+                    let dataPeriode = [];
+                    await Promise.map(kandang, async (itemKandang, index) => {
+                        if (itemKandang._id.toString() === periode._id.toString()) {
+                            dataPeriode.push(index + 1);
+                        }
+                    });
+    
+                    // get usia
+                    const now = new Date(Date.now());
+                    const start = new Date(periode.tanggalMulai);
+                    const usia = periode.isEnd ? Math.round(Math.abs((periode.tanggalAkhir - start) / ONE_DAY)) :  Math.round(Math.abs((now - start) / ONE_DAY))
+    
+                    result.push({
+                        idPemilik: data[i].createdBy ? data[i].createdBy._id : null,
+                        namaPemilik: data[i].createdBy ? data[i].createdBy.fullname : null,
+                        idKandang: data[i]._id,
+                        namaKandang: data[i].kode,
+                        kota: data[i].kota,
+                        isActive: data[i].isActive ? "Aktif" : "Rehat",
+                        usia: usia,
+                        periodeKe: dataPeriode[0]
+                    });
+                }
             }
-        });
+            count = result.length
+            let offsetPaging;
+            if (offset == 0) {
+                offsetPaging = 1
+            } else {
+                offsetPaging = (offset / 10 + 1)
+            }
+            result = paginate(result, limit, offsetPaging)
+        } else {
+            count = await Model.countDocuments(filter)
+            const data = await Model.find(filter).limit(limit).skip(offset).sort(sort)
+            for (let i = 0; i < data.length; i++) {
+                let filterPeriod = {};
+                filterPeriod.kandang = data[i].id;
+                const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 })
+                if (periode && periode.kandang) {
+                    // get periode ke
+                    const kandang = await Periode.find(filterPeriod).sort('tanggalMulai')
+                    let dataPeriode = [];
+                    await Promise.map(kandang, async (itemKandang, index) => {
+                        if (itemKandang._id.toString() === periode._id.toString()) {
+                            dataPeriode.push(index + 1);
+                        }
+                    });
+    
+                    // get usia
+                    const now = new Date(Date.now());
+                    const start = new Date(periode.tanggalMulai);
+                    const usia = periode.isEnd ? Math.round(Math.abs((periode.tanggalAkhir - start) / ONE_DAY)) :  Math.round(Math.abs((now - start) / ONE_DAY))
+    
+                    result.push({
+                        idPemilik: data[i].createdBy ? data[i].createdBy._id : null,
+                        namaPemilik: data[i].createdBy ? data[i].createdBy.fullname : null,
+                        idKandang: data[i]._id,
+                        namaKandang: data[i].kode,
+                        kota: data[i].kota,
+                        isActive: data[i].isActive ? "Aktif" : "Rehat",
+                        usia: usia,
+                        periodeKe: dataPeriode[0]
+                    });
+                } else {
+                    result.push({
+                        idPemilik: data[i].createdBy ? data[i].createdBy._id : null,
+                        namaPemilik: data[i].createdBy ? data[i].createdBy.fullname : null,
+                        idKandang: data[i]._id,
+                        namaKandang: data[i].kode,
+                        kota: data[i].kota,
+                        isActive: data[i].isActive ? "Aktif" : "Rehat",
+                        usia: 0,
+                        periodeKe: "Belum mulai Periode"
+                    });
+                }
+            }
+        }        
 
         res.json({
             message: 'Ok',
@@ -180,13 +243,15 @@ exports.findOneDataPool =  async (req, res, next) => {
 
             const deplesi = (periode.populasi - (periode.populasi - (allDeplesi + allKematian))) * 100 / periode.populasi
             const totalDeplesi = (allDeplesi + allKematian)
-            const batasDeplesi = ((5 / 100) * periode.populasi)
+            const batasDeplesi = ((2 / 100) * periode.populasi)
             const presentaseAyamHidup = 100 - deplesi
             const populasiAkhir = periode.populasi - (allDeplesi + allKematian + allPenjualan)
             const FCR = allPakan / (populasiAkhir * (avgLatestWeight/1000)) 
             const atas = presentaseAyamHidup * (avgLatestWeight/1000)
             const bawah = FCR*(dataPakan.length-1)
             const IP = (atas / bawah) * 100
+            const IPFixed = IP.toFixed(2)
+            const IPResult = isFinite(IPFixed) && IPFixed || 0
 
             // get total penjualan
             let harian = []
@@ -243,7 +308,7 @@ exports.findOneDataPool =  async (req, res, next) => {
                 idPeriode: periode._id,
                 periodeEnd: periode.isEnd,
                 periodeKe: dataPeriode[0],
-                IP: IP.toFixed(2),
+                IP: IPResult,
                 totalPenghasilanKandang: pendapatanPeternak,
                 DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
                 populasiAwal: periode.populasi,
@@ -261,21 +326,35 @@ exports.findOneDataPool =  async (req, res, next) => {
             }
 
             // get data harian
-            let kegiatanHarian = await KegiatanHarian.find({periode: periode.id}).select('-periode').sort({'tanggal': -1})
-            await Promise.map(kegiatanHarian, async (kegiatanHarian, index) => {
+            let kegiatanHarianResult = await KegiatanHarian.find({periode: periode.id}).select('-periode').sort({'tanggal': -1})
+            await Promise.map(kegiatanHarianResult, async (kegiatanHarian, index) => {
                 //find usia ayam
                 const tanggal = new Date(kegiatanHarian.tanggal)
                 let usiaAyam = Math.round(Math.abs((tanggal - start) / ONE_DAY))
 
-                const beratTimbang = kegiatanHarian ? kegiatanHarian.berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0) : 0
-                const populasi = kegiatanHarian ? kegiatanHarian.berat.reduce((a, {populasi}) => a + populasi, 0) : 0
+                // kalkulasi bobot
+                let totalBerat = [];
+                for (let i = 0; i < kegiatanHarian.berat.length; i++) {
+                    let populasi = 0;
+                    if (kegiatanHarian.berat[i].populasi == 0) {
+                        populasi = 1
+                    } else {
+                        populasi = kegiatanHarian.berat[i].populasi
+                    }
+                    totalBerat.push(kegiatanHarian.berat[i].beratTimbang / populasi)
+                }
+                let totalberatSum = totalBerat.reduce(function(acc, val) { return acc + val; }, 0)
+                let bobotResult = totalberatSum/kegiatanHarian.berat.length
+                let bobotFixed = Number.isInteger(bobotResult) ? bobotResult : bobotResult.toFixed(2);
+                let totalBobot = isFinite(bobotFixed) && bobotFixed || 0;
+
                 const beratPakan = kegiatanHarian ? kegiatanHarian.pakanPakai.reduce((a, {beratPakan}) => a + beratPakan, 0) : 0
 
                 dataHarian.push({
                     usiaAyam: usiaAyam,
                     tanggal: kegiatanHarian.tanggal,
-                    feedIntake: (beratPakan / populasi),
-                    bobot: (beratTimbang / populasi),
+                    feedIntake: beratPakan,
+                    bobot: totalBobot,
                     deplesi: (kegiatanHarian.deplesi + kegiatanHarian.pemusnahan)
                 });
             });
