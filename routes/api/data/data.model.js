@@ -35,6 +35,10 @@ const scheme = new Schema({
     deplesi: {
         type: Number,
         required: true
+    },
+    rgr: {
+        type: Number,
+        required: true
     }
 }, {versionKey: false, timestamps: true})
 module.exports = model('Data', scheme, 'data')
