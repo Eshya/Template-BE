@@ -5,9 +5,11 @@ const c = require('./data.controller');
 const { schema } = require('./data.validation');
 
 router.get('/', auth, queryCek, c.findAll);
+router.get('/data-pool', auth, queryCek, c.findAllDataPool);
 router.get('/day', auth, paramCek, c.findByDay);
 router.get('/:id', auth, paramCek, c.findById);
 router.post('/', auth, schemaCek(schema), after, c.insert);
+router.put('/data-pool', auth, c.updateDataPool);
 router.put('/:id', auth, paramCek, c.updateById);
 router.put('/', auth, c.updateWhere);
 router.delete('/', auth, c.remove);

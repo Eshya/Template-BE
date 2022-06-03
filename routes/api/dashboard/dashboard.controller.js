@@ -27,6 +27,10 @@ function sum( obj ) {
     return sum;
 }
 
+function paginate(array, page_size, page_number) {
+    return array.slice((page_number - 1) * page_size, page_number * page_size);
+}
+
 exports.dashboardKemitraan =  async (req, res, next) => {
     try {
         let role = req.user.role ? req.user.role.name : '';
@@ -139,7 +143,7 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
         let role = req.user.role ? req.user.role.name : '';
         let sort = handleQuerySort(req.query.sort)
         let {limit, offset} = parseQuery(req.query);
-        let { city, populasi, kemitraan } = req.query;
+        let { city, populasi, kemitraan, peternak } = req.query;
         let usiaFrom = req.query.usiaFrom ? req.query.usiaFrom : '';
         let usiaTo = req.query.usiaTo ? req.query.usiaTo : '';
         let bobotFrom = req.query.bobotFrom ? req.query.bobotFrom : '';
@@ -155,8 +159,7 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
             sort = { createdAt: -1 }
         }
 
-        //let countKandang = await Kandang.countDocuments(filter)
-        let dataKandang = await Kandang.find(filter).limit(limit).skip(offset).sort(sort);
+        let dataKandang = await Kandang.find(filter).sort(sort);
         await Promise.map(dataKandang, async (dataItem, index) => {
             let filterPeriod = {};
             filterPeriod.kandang = dataItem.id;
@@ -257,7 +260,7 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
                         IdKemitraan: periode.kemitraan ? periode.kemitraan.id : null,
                         namaKemitraan: periode.kemitraan ? periode.kemitraan.name : "",
                         idPemilik: periode.kandang.createdBy ? periode.kandang.createdBy._id : null,
-                        namaPemilik: periode.kandang.createdBy ? periode.kandang.createdBy.fullname : null,
+                        namaPemilik: periode.kandang.createdBy ? periode.kandang.createdBy.fullname : "",
                     });
                 }
             }
@@ -266,10 +269,23 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
         let countPopulasi = resultPeriode.reduce((a, {populasi}) => a + populasi, 0);
         let countUsia = (resultPeriode.reduce((a, {usia}) => a + usia, 0) / resultPeriode.length);
         let countBobot = (resultPeriode.reduce((a, {bobot}) => a + bobot, 0) / resultPeriode.length);
+        if (peternak) {
+            resultPeriode = resultPeriode.filter(item => item.namaPemilik.toLowerCase().indexOf(peternak) > -1);
+            countPopulasi = resultPeriode.reduce((a, {populasi}) => a + populasi, 0);
+            countUsia = (resultPeriode.reduce((a, {usia}) => a + usia, 0) / resultPeriode.length);
+            countBobot = (resultPeriode.reduce((a, {bobot}) => a + bobot, 0) / resultPeriode.length);
+        }
+
+        let offsetPaging;
+        if (offset == 0) {
+            offsetPaging = 1
+        } else {
+            offsetPaging = (offset / 10 + 1)
+        }
 
         res.json({
-            // count: resultPeriode.length,
-            ketersediaan: resultPeriode,
+            count: resultPeriode.length,
+            ketersediaan: paginate(resultPeriode, limit, offsetPaging),
             summary: {
                 totalPopulasi: Math.ceil(countPopulasi),
                 averageUsia: Math.ceil(countUsia),
@@ -286,7 +302,7 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
         let role = req.user.role ? req.user.role.name : '';
         let sort = handleQuerySort(req.query.sort)
         let {limit, offset} = parseQuery(req.query);
-        let { city, populasi, kemitraan } = req.query;
+        let { city, populasi, kemitraan, peternak } = req.query;
         let usiaFrom = req.query.usiaFrom ? req.query.usiaFrom : '';
         let usiaTo = req.query.usiaTo ? req.query.usiaTo : '';
         let bobotFrom = req.query.bobotFrom ? req.query.bobotFrom : '';
@@ -302,8 +318,7 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
             sort = { createdAt: -1 }
         }
 
-        //let countKandang = await Kandang.countDocuments(filter)
-        let dataKandang = await Kandang.find(filter).limit(limit).skip(offset).sort(sort);
+        let dataKandang = await Kandang.find(filter).sort(sort);
         await Promise.map(dataKandang, async (dataItem, index) => {
             let filterPeriod = {};
             filterPeriod.kandang = dataItem.id;
@@ -404,7 +419,7 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
                         IdKemitraan: periode.kemitraan ? periode.kemitraan.id : null,
                         namaKemitraan: periode.kemitraan ? periode.kemitraan.name : "",
                         idPemilik: periode.kandang.createdBy ? periode.kandang.createdBy._id : null,
-                        namaPemilik: periode.kandang.createdBy ? periode.kandang.createdBy.fullname : null,
+                        namaPemilik: periode.kandang.createdBy ? periode.kandang.createdBy.fullname : "",
                     });
                 }
             }
@@ -413,10 +428,23 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
         let countPopulasi = resultPeriode.reduce((a, {populasi}) => a + populasi, 0);
         let countUsia = (resultPeriode.reduce((a, {usia}) => a + usia, 0) / resultPeriode.length);
         let countBobot = (resultPeriode.reduce((a, {bobot}) => a + bobot, 0) / resultPeriode.length);
+        if (peternak) {
+            resultPeriode = resultPeriode.filter(item => item.namaPemilik.toLowerCase().indexOf(peternak) > -1);
+            countPopulasi = resultPeriode.reduce((a, {populasi}) => a + populasi, 0);
+            countUsia = (resultPeriode.reduce((a, {usia}) => a + usia, 0) / resultPeriode.length);
+            countBobot = (resultPeriode.reduce((a, {bobot}) => a + bobot, 0) / resultPeriode.length);
+        }
+
+        let offsetPaging;
+        if (offset == 0) {
+            offsetPaging = 1
+        } else {
+            offsetPaging = (offset / 10 + 1)
+        }
 
         res.json({
-            // count: resultPeriode.length,
-            ketersediaan: resultPeriode,
+            count: resultPeriode.length,
+            ketersediaan: paginate(resultPeriode, limit, offsetPaging),
             summary: {
                 totalPopulasi: Math.ceil(countPopulasi),
                 averageUsia: Math.ceil(countUsia),
