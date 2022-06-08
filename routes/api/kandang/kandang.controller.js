@@ -646,7 +646,7 @@ exports.getKelola = async (req, res, next) => {
         await Promise.map(kandang, async (item) => {
             // get periode
             let dataPeriode = [];
-            let periode = await Periode.find({kandang: item._id}).sort({'tanggalMulai': -1})
+            let periode = await Periode.find({kandang: item._id}).sort({'createdAt': -1})
             for (let i = 0; i < periode.length; i++) {
 
                 const penjualan = await Penjualan.aggregate([

@@ -1,5 +1,6 @@
 const Model = require('./data.model');
 const {parseQuery} = require('../../helpers')
+const Promise = require("bluebird");
 
 exports.findByDay = async (req, res, next) => {
     try {
@@ -119,4 +120,61 @@ exports.removeById = async (req, res, next) => {
     } catch (error) {
         next(error);
     }
+}
+
+exports.findAllDataPool = async (req, res, next) => {
+    const {limit, offset} = parseQuery(req.query);
+    const { type } = req.query;
+    try {
+        const count = await Model.countDocuments();
+        const data = await Model.find().limit(limit).skip(offset).sort({ day: 1 }).select('day ' + type);
+        res.json({
+            message: 'Ok',
+            length: count,
+            data: data
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
+exports.updateDataPool = async (req, res, next) => {
+    const {type} = req.query;
+    const data = req.body;
+
+    let results = []
+    await Promise.map(data, async (dataItem) => {
+        try {
+            const filter = { day: dataItem.day };
+            const update = {}
+            if (type == "bodyWeight") {
+                update.bodyWeight = dataItem.bodyWeight
+            }
+            if (type == "rgr") {
+                update.rgr = dataItem.rgr
+            }
+            if (type == "deplesi") {
+                update.deplesi = dataItem.deplesi
+            }
+            if (type == "dailyIntake") {
+                update.dailyIntake = dataItem.dailyIntake
+            }
+            if (type == "fcr") {
+                update.fcr = dataItem.fcr
+            }
+            if (type == "ip") {
+                update.ip = dataItem.ip
+            }
+
+            const result = await Model.findOneAndUpdate(filter, update, {new: true}).exec();
+            results.push(result)
+        } catch (error) {
+            next(error);
+        }
+    });
+
+    res.json({
+        data: results,
+        message: 'OK'
+    })
 }
