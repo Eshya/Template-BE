@@ -86,12 +86,12 @@ exports.findSisaAyam = async (req, res, next) => {
 exports.insert = async (req, res, next) => {
     const data = req.body
     try {
-        const findPeriode = await Periode.find({periode: data.periode})
+        const findPeriode = await Periode.findById(data.periode)
         if(data.ovkPakai){
             Promise.all(data.ovkPakai.map(async(x) => {
                 const foundSapronak = await Sapronak.findById(x.jenisOVK)
-                if (!foundSapronak) throw createError(400, 'sapronak not found')
-                if (foundSapronak.stockOVK - x.kuantitas < 0) throw createError(401, 'OVK tidak mencukupi')
+                if (!foundSapronak) return res.json({error: 1010, message: 'sapronak not found'})
+                if (foundSapronak.stockOVK - x.kuantitas < 0) return res.json({error:1011, message:'OVK tidak mencukupi'})
                 const dec = await Sapronak.updateMany({periode: data.periode, produk: foundSapronak.produk._id}, {$inc:{stockOVK: -x.kuantitas}})
                 console.log(dec)
                 return dec
@@ -102,8 +102,8 @@ exports.insert = async (req, res, next) => {
                 x.beratPakan = x.beratZak * 50
     
                 const foundSapronak = await Sapronak.findById(x.jenisPakan)
-                if(!foundSapronak) throw createError(401, 'sapronak not found')
-                if (foundSapronak.stock - x.beratPakan < 0) throw createError(400, 'pakan tidak mencukupi')
+                if(!foundSapronak) throw res.json({error:1010, message: 'sapronak not found'})
+                if (foundSapronak.stock - x.beratPakan < 0) return res.json({error:1011, message: 'pakan tidak mencukupi'})
                 const dec = await Sapronak.updateMany({periode: data.periode, produk: foundSapronak.produk._id}, {$inc:{stock: -x.beratPakan}})
                 console.log(dec)
                 return dec
@@ -126,7 +126,6 @@ exports.insert = async (req, res, next) => {
         const populasiAkhir = findPeriode.populasi - (allDeplesi + allKematian + allPenjualan)
 
         if (data.deplesi + data.pemusnahan > populasiAkhir) return res.json({error: 1008, message: 'data deplesi melebihi populasi akhir'})
-
         const results = await Model.create(data)
         res.json({
             data: results,
