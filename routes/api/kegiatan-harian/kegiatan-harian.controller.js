@@ -125,7 +125,7 @@ exports.insert = async (req, res, next) => {
 
         const populasiAkhir = findPeriode.populasi - (allDeplesi + allKematian + allPenjualan)
 
-        if (data.deplesi + data.pemusnahan > populasiAkhir) return res.json({error: 1008, message: 'data deplesi melebihi populasi akhir'})
+        // if (data.deplesi + data.pemusnahan > populasiAkhir) return res.json({error: 1008, message: 'data deplesi melebihi populasi akhir'})
         const results = await Model.create(data)
         res.json({
             data: results,
