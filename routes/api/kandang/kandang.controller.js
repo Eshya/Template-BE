@@ -14,6 +14,8 @@ const fetch = require('node-fetch')
 const Promise = require("bluebird");
 const reducer = (acc, value) => acc + value;
 const ONE_DAY = 24 * 60 * 60 * 1000;
+const moment = require('moment');
+const excelJS = require("exceljs");
 
 const handleQuerySort = (query) => {
     try{
@@ -444,6 +446,161 @@ exports.findOneDataPool =  async (req, res, next) => {
         })
     } catch (error) {
         next(error)
+    }
+}
+
+exports.exportDataPool =  async (req, res, next) => {
+    try {
+        let periode = await Periode.findOne({kandang: req.params.id}).sort({ createdAt: -1 })
+        let dataHarian = [];
+        let dataSapronak = [];
+        let merged = [];
+
+        let kegiatanHarianResult = await KegiatanHarian.find({periode: periode.id}).select('-periode').sort({'tanggal': 1})
+        for (let i = 0; i < kegiatanHarianResult.length; i++) {
+            //find usia ayam
+            const start = new Date(periode.tanggalMulai);
+            const tanggal = new Date(kegiatanHarianResult[i].tanggal)
+            let usiaAyam = Math.round(Math.abs((tanggal - start) / ONE_DAY))
+
+            // kalkulasi bobot
+            let totalBerat = [];
+            for (let x = 0; x < kegiatanHarianResult[i].berat.length; x++) {
+                let populasi = 0;
+                if (kegiatanHarianResult[i].berat[x].populasi == 0) {
+                    populasi = 1
+                } else {
+                    populasi = kegiatanHarianResult[i].berat[x].populasi
+                }
+                totalBerat.push(kegiatanHarianResult[i].berat[x].beratTimbang / populasi)
+            }
+            let totalberatSum = totalBerat.reduce(function(acc, val) { return acc + val; }, 0)
+            let bobotResult = totalberatSum/kegiatanHarianResult[i].berat.length
+            let bobotFixed = Number.isInteger(bobotResult) ? bobotResult : bobotResult.toFixed(2);
+            let totalBobot = isFinite(bobotFixed) && bobotFixed || 0;
+
+            const beratPakan = kegiatanHarianResult[i] ? kegiatanHarianResult[i].pakanPakai.reduce((a, {beratPakan}) => a + beratPakan, 0) : 0
+
+            //sisa populasi
+            let sisaPopulasi = await KegiatanHarian.find({periode: periode.id, tanggal: {$lte: kegiatanHarianResult[i].tanggal}}).select('-periode')
+            let totalCulling = sisaPopulasi.reduce((a, {pemusnahan}) => a + pemusnahan, 0);
+            let totalMortalitas = sisaPopulasi.reduce((a, {deplesi}) => a + deplesi, 0);
+
+            dataHarian.push({
+                usiaAyam: usiaAyam,
+                tanggal: moment(kegiatanHarianResult[i].tanggal).format("DD-MM-YYYY"),
+                feedIntake: beratPakan,
+                bobot: totalBobot,
+                mortalitas: kegiatanHarianResult[i].deplesi,
+                culling: kegiatanHarianResult[i].pemusnahan,
+                sisaPopulasi: periode.populasi - (totalCulling + totalMortalitas),
+                sisaSapronak: "",
+                FCR: "",
+                IP: ""
+            });
+        }
+
+        let sapronakResult = await Sapronak.find({periode: periode.id}).sort({'createdAt': 1})
+        var holder = {};
+        await Promise.map(sapronakResult, async (sapronakResult, index) => {
+            if (sapronakResult.produk && (sapronakResult.produk.jenis === 'PAKAN')) {
+                dataSapronak.push({
+                    tanggal: moment(sapronakResult.tanggal).format("DD-MM-YYYY"),
+                    jenis: sapronakResult.produk.jenis,
+                    produk: sapronakResult.produk.merk,
+                    quantity: sapronakResult.kuantitas,
+                });
+            } 
+        });
+
+        //sum quantity
+        var holder = {};
+        dataSapronak.forEach(function(d) {
+            if (holder.hasOwnProperty(d.tanggal)) {
+                holder[d.tanggal] = holder[d.tanggal] + d.quantity;
+            } else {
+                holder[d.tanggal] = d.quantity;
+            }
+        });
+
+        var objQuantity = [];
+        for (var prop in holder) {
+            objQuantity.push({ tanggal: prop, quantity: holder[prop] });
+        }
+
+        //list produk
+        var holderProduk = {};
+        dataSapronak.forEach(function(d) {
+            if (holderProduk.hasOwnProperty(d.tanggal)) {
+                holderProduk[d.tanggal] = holderProduk[d.tanggal] + ", " + d.produk;
+            } else {
+                holderProduk[d.tanggal] = d.produk;
+            }
+        });
+
+        var objProduk = [];
+        for (var propProduk in holderProduk) {
+            objProduk.push({ tanggal: propProduk, produk: holderProduk[propProduk] });
+        }
+
+        for(let i=0; i<objQuantity.length; i++) {
+            merged.push({
+                ...objQuantity[i],
+                ...objProduk[i]
+            });
+        }
+
+        const result = dataHarian.map(v => ({ ...v, ...merged.find(sp => sp.tanggal === v.tanggal) }));
+
+        // get periode ke
+        const kandang = await Periode.find({kandang: periode.kandang._id}).sort('tanggalMulai')
+        let dataPeriode = [];
+        await Promise.map(kandang, async (kandang, index) => {
+            if (kandang._id.toString() === periode._id.toString()) {
+                dataPeriode.push(index + 1);
+            }
+        });
+
+        //export excel
+        const workbook = new excelJS.Workbook();
+        const worksheet = workbook.addWorksheet("Recording");
+
+        worksheet.columns = [
+            { header: "Usia Ayam", key: "usiaAyam", width: 15 }, 
+            { header: "Tanggal", key: "tanggal", width: 15 },
+            { header: "Mati", key: "mortalitas", width: 10 },
+            { header: "Culling", key: "culling", width: 10 },
+            { header: "Sisa Populasi", key: "sisaPopulasi", width: 15 },
+            { header: "Feed Intake", key: "feedIntake", width: 15 },
+            { header: "Qty Sapronak", key: "quantity", width: 15 },
+            { header: "Nama Produk", key: "produk", width: 15 },
+            { header: "Sisa Sapronak", key: "sisaSapronak", width: 15 },
+            { header: "Bobot", key: "bobot", width: 10 },
+            { header: "FCR ACT", key: "fcr", width: 10 },
+            { header: "IP", key: "ip", width: 10 },
+        ];
+
+        result.forEach((resultItem) => {
+            worksheet.addRow(resultItem);
+        });
+
+        worksheet.getRow(1).eachCell((cell) => {
+            cell.font = { bold: true };
+        });
+
+        res.setHeader(
+            "Content-Type",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        );
+        res.setHeader(
+            "Content-Disposition",
+            "attachment; filename=" + periode.kandang.kode + " - Periode ke " + dataPeriode[0] + ".xlsx"
+        );
+        return workbook.xlsx.write(res).then(function () {
+            res.status(200).end();
+        });
+    } catch (error) {
+        next(error);
     }
 }
 
