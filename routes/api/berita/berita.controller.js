@@ -144,7 +144,7 @@ exports.getProduk = async (req, res, next) => {
 
 exports.getHarga = async (req, res, next) => {
     try {
-        const get = await axios.get(`https://chickin.id/blog/wp-json/wp/v2/posts/3199`);
+        const get = await axios.get(`https://chickin.id/blog/index.php/wp-json/wp/v2/update/3199`);
         const getImage = await axios.get(`https://chickin.id/blog/index.php/wp-json/wp/v2/media/` + get.data.featured_media)
         res.json({
             id: get.data.id,
