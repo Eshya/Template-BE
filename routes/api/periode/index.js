@@ -18,6 +18,8 @@ router.get('/sapronak/:id', auth, paramCek, c.findSapronak);
 router.get('/budidaya/:id', auth, paramCek, c.getBudidaya);
 router.get('/:id', auth, paramCek, c.findById);
 router.post('/', auth, schemaCek(schema), after, c.insert);
+router.put('/tambah/ppl/:id', auth, paramCek, c.tambahPPL)
+router.put('/hapus/ppl/:id', auth, paramCek, c.hapusPPL)
 router.put('/:id', auth, paramCek, c.updateById);
 router.put('/', auth, c.updateWhere);
 router.delete('/', auth, c.remove);

@@ -265,6 +265,7 @@ exports.getBudidaya = async (req, res, next) => {
         let pembelianPakan = 0
         let pembelianOVK = 0
         const doc = await Model.findById(id);
+        console.log(doc)
         const pembelianDoc = doc.populasi * doc.hargaSatuan
         const getSapronak = await Sapronak.find({periode: id});
         // const penjualanAyamBesar = await 
@@ -458,6 +459,35 @@ exports.performa = async (req, res, next) => {
             })
         }
         // console.log(tonase);
+    } catch (error) {
+        next(error)
+    }
+}
+
+exports.tambahPPL = async (req,res, next) => {
+    const id = req.params.id
+    const data = req.body
+    try {
+        const findPeriode = await Model.findById(id)
+        if (findPeriode.ppl !== null) return res.json({error: 1015, message: 'Kandang sedang dikelola!'})
+        const addPPL = await Model.findByIdAndUpdate(id, {ppl: data.ppl}, {new: true}).exec()
+        res.json({
+            data: addPPL,
+            message: 'Ok'
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
+exports.hapusPPL = async (req, res, next) => {
+    const id = req.params.id
+    try {
+        const result = await Model.findByIdAndUpdate(id, {ppl: null}, {new: true}).exec()
+        res.json({
+            data: result,
+            message: 'Ok'
+        })
     } catch (error) {
         next(error)
     }
