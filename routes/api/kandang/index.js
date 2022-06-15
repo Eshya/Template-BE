@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const c = require('./kandang.controller');
 const {schema} = require('./kandang.validation');
-const {auth, queryCek, schemaCek, paramCek, after} = require('../../helpers');
+const {auth, queryCek, schemaCek, paramCek, after, permition} = require('../../helpers');
 
 router.get('/', auth, queryCek, c.findAll);
 router.get('/data-pool', auth, queryCek, c.findAllDataPool);
@@ -10,6 +10,8 @@ router.get('/data-pool/:id', auth, queryCek, c.findOneDataPool);
 router.get('/data-pool/export/:id', auth, queryCek, c.exportDataPool);
 router.get('/active', auth, queryCek, c.findActive);
 router.get('/populasi/:id', auth, paramCek, c.countPopulasi);
+router.get('/kelola/peternak', auth, permition('superadmin', 'peternak'), paramCek, c.kelolaPeternak)
+router.get('/kelola/ppl', auth, permition('superadmin', 'ppl'), paramCek, c.kelolaPPL)
 // router.get('/public', queryCek, c.findPublic);
 router.get('/count', queryCek, c.count);
 router.get('/user', auth, queryCek, c.findByUser);
