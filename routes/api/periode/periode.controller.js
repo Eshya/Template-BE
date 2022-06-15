@@ -9,6 +9,7 @@ const Sapronak = require("../sapronak/sapronak.model");
 const Data = require('../data/data.model');
 const selectPublic = '-createdAt -updatedAt'
 const mongoose = require('mongoose')
+const fetch = require('node-fetch')
 
 const ONE_DAY = 24 * 60 * 60 * 1000;
 const reducer = (acc, value) => acc + value
@@ -468,8 +469,6 @@ exports.tambahPPL = async (req,res, next) => {
     const id = req.params.id
     const data = req.body
     try {
-        const findPeriode = await Model.findById(id)
-        if (findPeriode.ppl !== null) return res.json({error: 1015, message: 'Kandang sedang dikelola!'})
         const addPPL = await Model.findByIdAndUpdate(id, {ppl: data.ppl}, {new: true}).exec()
         res.json({
             data: addPPL,
@@ -489,6 +488,30 @@ exports.hapusPPL = async (req, res, next) => {
             message: 'Ok'
         })
     } catch (error) {
+        next(error)
+    }
+}
+
+exports.validateTambah = async (req,res, next) => {
+    const data = req.body
+    const token = req.headers['authorization']
+    try {
+        if(!mongoose.Types.ObjectId.isValid(data.periode)) return res.json({data: null, error: 1016, message: "kandang tidak ditemukan!"})
+        const results = await Model.findById(data.periode)
+        const getUserName = await fetch('https://auth.chickinindonesia.com/api/users/' + results.ppl, {
+            method: 'GET',
+            headers: {
+                'Authorization': token,
+                "Content-Type": "application/json" 
+            }
+        }).then(res => res.json()).then(data => data.data.fullname)
+        if (!results) return res.json({data: null, error: 1016, message: 'kandang tidak ditemukan!'})
+        if (results.ppl !== null) return res.json({error: 1015, data: getUserName,  message: "kandang sudah dikelola!"})
+        res.json({
+            data: results,
+            message: 'Ok'
+        })
+    } catch(error) {
         next(error)
     }
 }
