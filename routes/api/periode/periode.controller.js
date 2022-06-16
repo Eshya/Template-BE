@@ -498,15 +498,15 @@ exports.validateTambah = async (req,res, next) => {
     try {
         if(!mongoose.Types.ObjectId.isValid(data.periode)) return res.json({data: null, error: 1016, message: "kandang tidak ditemukan!"})
         const results = await Model.findById(data.periode)
+        if (!results) return res.json({data: null, error: 1016, message: 'kandang tidak ditemukan!'})
         const getUserName = await fetch('https://auth.chickinindonesia.com/api/users/' + results.ppl, {
             method: 'GET',
             headers: {
                 'Authorization': token,
                 "Content-Type": "application/json" 
             }
-        }).then(res => res.json()).then(data => data.data.fullname)
-        if (!results) return res.json({data: null, error: 1016, message: 'kandang tidak ditemukan!'})
-        if (results.ppl !== null) return res.json({error: 1015, data: getUserName,  message: "kandang sudah dikelola!"})
+        }).then(res => res.json()).then(data => data.data)
+        if (results.ppl !== null) return res.json({error: 1015, data: getUserName.fullname,  message: "kandang sudah dikelola!"})
         res.json({
             data: results,
             message: 'Ok'
