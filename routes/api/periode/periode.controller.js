@@ -508,7 +508,7 @@ exports.validateTambah = async (req,res, next) => {
                 "Content-Type": "application/json" 
             }
         }).then(res => res.json()).then(data => data.data)
-        if (results.ppl !== null) return res.json({error: 1015, data: results, name: getUserName.fullname, message: "kandang sudah dikelola!"})
+        if (results.ppl !== null) return res.json({error: 1015, data: results, error_data: getUserName.fullname, message: "kandang sudah dikelola!"})
         res.json({
             data: results,
             message: 'Ok'
