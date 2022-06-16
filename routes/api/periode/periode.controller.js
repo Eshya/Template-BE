@@ -495,11 +495,13 @@ exports.hapusPPL = async (req, res, next) => {
 exports.validateTambah = async (req,res, next) => {
     const data = req.body
     const token = req.headers['authorization']
+    var url
     try {
+        process.env.DB_NAME === "chckin" ? url = `https://auth.chickinindonesia.com/api/users/` : url = `https://stagging-auth.chickinindonesia.com/api/users/`
         if(!mongoose.Types.ObjectId.isValid(data.periode)) return res.json({data: null, error: 1016, message: "kandang tidak ditemukan!"})
         const results = await Model.findById(data.periode)
         if (!results) return res.json({data: null, error: 1016, message: 'kandang tidak ditemukan!'})
-        const getUserName = await fetch('https://auth.chickinindonesia.com/api/users/' + results.ppl, {
+        const getUserName = await fetch(url + results.ppl, {
             method: 'GET',
             headers: {
                 'Authorization': token,
