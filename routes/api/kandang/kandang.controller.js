@@ -921,15 +921,13 @@ const _findKandang = async (req, isActive = true) => {
     return map
 }
 
-exports.kelolaPeternak = async (req, res, next) => {
+exports.listKandangPeternak = async (req, res, next) => {
     try {
         const findActive = await _findKandang(req, true)
         const findUnactive = await _findKandang(req, false)
         
         res.json({
             data: {
-                kandangAktif: findActive.length,
-                kandangRehat: findUnactive.length,
                 kelolaAktif: findActive,
                 kelolaRehat: findUnactive
             },
@@ -940,15 +938,13 @@ exports.kelolaPeternak = async (req, res, next) => {
     }
 }
 
-exports.kelolaPPL = async (req, res, next) => {
+exports.listKandangPPL = async (req, res, next) => {
     try {
         const findActive = await _findKandang(req, true)
         const findUnactive = await _findKandang(req, false)
         
         res.json({
             data: {
-                kandangAktif: findActive.length,
-                kandangRehat: findUnactive.length,
                 kelolaAktif: findActive,
                 kelolaRehat: findUnactive
             },
