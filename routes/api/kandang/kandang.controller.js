@@ -899,7 +899,15 @@ const _findKandang = async (req, isActive = true) => {
     const map = await Promise.all(findKandang.map(async(x) => {
         const tmp = x
         isActive ? isEnd = false : isEnd = true
-        const findPeriode = await Periode.find({kandang: x._id, isEnd: isEnd}).sort({'tanggalMulai': -1}).limit(1).select('-kandang')
+        // const findPeriode = await Periode.countDocumnets({kandang: x._id, isEnd: isEnd}).sort({'tanggalMulai': -1}).limit(1).select('-kandang')
+        const urutan = await Periode.countDocuments({kandang: x._id, isEnd: isEnd})
+        const findPeriode = await Periode.aggregate([
+            {$match: {kandang: x._id, isEnd: isEnd}},
+            {$addFields: {urutanKe: urutan}},
+            {$sort: {tanggalMulai: -1}},
+            {$limit: 1}
+        ])
+
         if (findPeriode.length == 0) return {message: "tidak ada periode aktif"}
         const pembelianSapronak = await Sapronak.aggregate([
             {$match: {periode: findPeriode[0]._id}},
@@ -909,14 +917,14 @@ const _findKandang = async (req, isActive = true) => {
         ])
         const pembelianDoc = findPeriode[0].populasi * findPeriode[0].hargaSatuan
         const findPenjualan = await Penjualan.find({periode: findPeriode[0]._id})
-        if (findPenjualan.length == 0) return {...x.toObject(), periode: findPeriode[0].toObject(), estimasiPendapatan: 0}
+        if (findPenjualan.length == 0) return {...x.toObject(), periode: findPeriode[0], estimasiPendapatan: 0}
         const akumulasiPenjualan = await Penjualan.aggregate([
             {$match: {periode: findPeriode[0]._id}},
             {$project: {penjualan: {$multiply: ['$qty', '$harga', '$beratBadan']}}},
             {$group: {_id: '$periode', totalPenjualan: {$sum: '$penjualan'}}}
         ])
         const estimasi = akumulasiPenjualan[0].totalPenjualan - pembelianDoc - pembelianSapronak[0].totalSapronak
-        return {...tmp.toObject(), periode: findPeriode[0].toObject(), estimasiPendapatan: estimasi}
+        return {...tmp.toObject(), periode: findPeriode[0], estimasiPendapatan: estimasi}
     }))
     return map
 }
