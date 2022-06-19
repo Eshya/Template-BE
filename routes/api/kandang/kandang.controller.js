@@ -952,9 +952,8 @@ const _findPPL = async (req, isActive) => {
         {$match: {ppl: mongoose.Types.ObjectId(user), isEnd: isEnd}},
     ])
     const map = await Promise.all(findPeriode.map( async(x) => {
-        const findKandang = await Model.findById(x.kandang)
         const count = await Periode.countDocuments({kandang: x.kandang})
-        
+        const findKandang = await Model.findById(x.kandang)
         const pembelianSapronak = await Sapronak.aggregate([
             {$match: {periode: x._id}},
             {$unwind: '$produk'},
@@ -964,16 +963,17 @@ const _findPPL = async (req, isActive) => {
 
         const pembelianDoc = x.populasi * x.hargaSatuan
         const findPenjualan = await Penjualan.find({periode: x._id})
-        if (findPenjualan.length == 0) return {...findKandang.toObject(), periode: x, estimasiPendapatan: 0}
+        if (findPenjualan.length == 0) return {...findKandang.toObject(), urutanKe: count, periode: x, estimasiPendapatan: 0}
         const akumulasiPenjualan = await Penjualan.aggregate([
             {$match: {periode: x._id}},
             {$project: {penjualan: {$multiply: ['$qty', '$harga', '$beratBadan']}}},
             {$group: {_id: '$periode', totalPenjualan: {$sum: '$penjualan'}}}
         ])
         const estimasi = akumulasiPenjualan[0].totalPenjualan - pembelianDoc - pembelianSapronak[0].totalSapronak === null ? 0 : pembelianSapronak[0].totalSapronak
-
+        
         return {...findKandang.toObject(), periode: x, urutanKe: count, estimasiPendapatan: estimasi}
     }))
+    console.log(map)
     return map
 }
 
