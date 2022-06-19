@@ -892,7 +892,7 @@ exports.getKelola = async (req, res, next) => {
     }
 }
 
-const _findKandang = async (req, isActive = true) => {
+const _findPeternak = async (req, isActive) => {
     const user = req.user._id
     const findKandang = await Model.find({createdBy: user, isActive: isActive})
     if (findKandang.length === 0) return findKandang
@@ -900,14 +900,13 @@ const _findKandang = async (req, isActive = true) => {
         const tmp = x
         isActive ? isEnd = false : isEnd = true
         // const findPeriode = await Periode.countDocumnets({kandang: x._id, isEnd: isEnd}).sort({'tanggalMulai': -1}).limit(1).select('-kandang')
-        const urutan = await Periode.countDocuments({kandang: x._id, isEnd: isEnd})
+        const urutan = await Periode.countDocuments({kandang: x._id})
         const findPeriode = await Periode.aggregate([
             {$match: {kandang: x._id, isEnd: isEnd}},
             {$addFields: {urutanKe: urutan}},
             {$sort: {tanggalMulai: -1}},
             {$limit: 1}
         ])
-
         if (findPeriode.length == 0) return {message: "tidak ada periode aktif"}
         const pembelianSapronak = await Sapronak.aggregate([
             {$match: {periode: findPeriode[0]._id}},
@@ -923,7 +922,7 @@ const _findKandang = async (req, isActive = true) => {
             {$project: {penjualan: {$multiply: ['$qty', '$harga', '$beratBadan']}}},
             {$group: {_id: '$periode', totalPenjualan: {$sum: '$penjualan'}}}
         ])
-        const estimasi = akumulasiPenjualan[0].totalPenjualan - pembelianDoc - pembelianSapronak[0].totalSapronak
+        const estimasi = akumulasiPenjualan[0].totalPenjualan - pembelianDoc - pembelianSapronak[0].totalSapronak === null ? 0 : pembelianSapronak[0].totalSapronak
         return {...tmp.toObject(), periode: findPeriode[0], estimasiPendapatan: estimasi}
     }))
     return map
@@ -931,8 +930,8 @@ const _findKandang = async (req, isActive = true) => {
 
 exports.listKandangPeternak = async (req, res, next) => {
     try {
-        const findActive = await _findKandang(req, true)
-        const findUnactive = await _findKandang(req, false)
+        const findActive = await _findPeternak(req, true)
+        const findUnactive = await _findPeternak(req, false)
         
         res.json({
             data: {
@@ -946,10 +945,42 @@ exports.listKandangPeternak = async (req, res, next) => {
     }
 }
 
+const _findPPL = async (req, isActive) => {
+    const user = req.user._id
+    isActive ? isEnd = false : isEnd = true
+    const findPeriode = await Periode.aggregate([
+        {$match: {ppl: mongoose.Types.ObjectId(user), isEnd: isEnd}},
+    ])
+    const map = await Promise.all(findPeriode.map( async(x) => {
+        const findKandang = await Model.findById(x.kandang)
+        const count = await Periode.countDocuments({kandang: x.kandang})
+        
+        const pembelianSapronak = await Sapronak.aggregate([
+            {$match: {periode: x._id}},
+            {$unwind: '$produk'},
+            {$project: {pembelianSapronak: {$cond: {if: '$product.jenis' === 'PAKAN', then: {$multiply: ['$zak', '$hargaSatuan']}, else: {$multiply: ['$kuantitas', '$hargaSatuan']}}}}},
+            {$group: {_id: '$periode', totalSapronak: {$sum: '$pembelianSapronak'}}}
+        ])
+
+        const pembelianDoc = x.populasi * x.hargaSatuan
+        const findPenjualan = await Penjualan.find({periode: x._id})
+        if (findPenjualan.length == 0) return {...findKandang.toObject(), periode: x, estimasiPendapatan: 0}
+        const akumulasiPenjualan = await Penjualan.aggregate([
+            {$match: {periode: x._id}},
+            {$project: {penjualan: {$multiply: ['$qty', '$harga', '$beratBadan']}}},
+            {$group: {_id: '$periode', totalPenjualan: {$sum: '$penjualan'}}}
+        ])
+        const estimasi = akumulasiPenjualan[0].totalPenjualan - pembelianDoc - pembelianSapronak[0].totalSapronak === null ? 0 : pembelianSapronak[0].totalSapronak
+
+        return {...findKandang.toObject(), periode: x, urutanKe: count, estimasiPendapatan: estimasi}
+    }))
+    return map
+}
+
 exports.listKandangPPL = async (req, res, next) => {
     try {
-        const findActive = await _findKandang(req, true)
-        const findUnactive = await _findKandang(req, false)
+        const findActive = await _findPPL(req, true)
+        const findUnactive = await _findPPL(req, false)
         
         res.json({
             data: {
@@ -959,6 +990,14 @@ exports.listKandangPPL = async (req, res, next) => {
             message: 'Ok'
         })
     } catch(error){
+        next(error)
+    }
+}
+
+exports.kelolaPeternak = async (req, res, next) => {
+    try {
+        
+    } catch (error) {
         next(error)
     }
 }
