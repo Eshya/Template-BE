@@ -1131,12 +1131,15 @@ exports.kelolaPPL = async (req, res, next) => {
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
             }).then(res => res.json()).then(data => data.data)
-            console.log(suhu)
 
             return {...findKandang.toObject(), IP: IP, umur: umur, periode: x, suhu: suhu ? suhu[0].actualTemperature : 0}
         }))
         res.json({
-            data: map,
+            data: {
+                kandangAktif: map.length,
+                kandangRehat: 0,
+                kelola: map
+            },
             message: 'Ok'
         })
     } catch (error) {
