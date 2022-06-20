@@ -87,13 +87,13 @@ exports.findAllDataPool =  async (req, res, next) => {
         filter.deleted = false;
 
         if (!req.query.sort) {
-            sort = { updatedAt: -1 }
+            sort = { kode: 1 }
         }
 
         let count;
         let result = [];
         if (role === "adminkemitraan") {
-            const data = await Model.find(filter).sort(sort)
+            const data = await Model.find(filter).sort(sort).collation({ locale: "en", caseLevel: true })
             for (let i = 0; i < data.length; i++) {
                 let filterPeriod = {};
                 filterPeriod.kandang = data[i].id;
@@ -136,7 +136,7 @@ exports.findAllDataPool =  async (req, res, next) => {
             result = paginate(result, limit, offsetPaging)
         } else {
             count = await Model.countDocuments(filter)
-            const data = await Model.find(filter).limit(limit).skip(offset).sort(sort)
+            const data = await Model.find(filter).limit(limit).skip(offset).sort(sort).collation({ locale: "en", caseLevel: true })
             for (let i = 0; i < data.length; i++) {
                 let filterPeriod = {};
                 filterPeriod.kandang = data[i].id;
@@ -434,6 +434,38 @@ exports.findOneDataPool =  async (req, res, next) => {
                     pendapatan: ((penjualanResult.qty * penjualanResult.beratBadan) * penjualanResult.harga)
                 });
             });
+        } else {
+            let kandang = await Model.findOne({_id: req.params.id}).sort({ createdAt: -1 })
+            dataKandang = {
+                idPemilik: kandang.createdBy ? kandang.createdBy._id : null,
+                namaPemilik: kandang.createdBy ? kandang.createdBy.fullname : null,
+                phoneNumber: kandang.phoneNumber ? kandang.createdBy.phoneNumber : null,
+                idKandang: kandang._id,
+                namaKandang: kandang.kode,
+                alamat: kandang.alamat,
+                kota: kandang.kota,
+                isActive: kandang.isActive,
+                jenisKandang: kandang.tipe ? kandang.tipe.tipe : null,
+                kapasitas: kandang.populasi,
+                idPeriode: null,
+                periodeEnd: 0,
+                periodeKe: "Belum Mulai Periode",
+                IP: 0,
+                totalPenghasilanKandang: 0,
+                DOC: "",
+                populasiAwal: 0,
+                populasiAkhir: 0,
+                pakanAwal: 0,
+                pakanPakai: 0,
+                pakanSisa: 0,
+                usiaAyam: 0,
+                totalDeplesi: 0,
+                batasDeplesi: 0,
+                bobotACT: 0,
+                bobotSTD: 0,
+                feedIntakeACT: 0,
+                feedIntakeSTD:  0,
+            }
         }
 
         res.json({
