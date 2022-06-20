@@ -948,13 +948,14 @@ const _findPeternak = async (req, isActive) => {
         ])
         const pembelianDoc = findPeriode[0].populasi * findPeriode[0].hargaSatuan
         const findPenjualan = await Penjualan.find({periode: findPeriode[0]._id})
-        if (findPenjualan.length == 0) return {...x.toObject(), periode: findPeriode[0], estimasiPendapatan: 0}
         const akumulasiPenjualan = await Penjualan.aggregate([
             {$match: {periode: findPeriode[0]._id}},
             {$project: {penjualan: {$multiply: ['$qty', '$harga', '$beratBadan']}}},
             {$group: {_id: '$periode', totalPenjualan: {$sum: '$penjualan'}}}
         ])
-        const estimasi = akumulasiPenjualan[0].totalPenjualan - pembelianDoc - pembelianSapronak[0].totalSapronak === null ? 0 : pembelianSapronak[0].totalSapronak
+        const penjualan = findPenjualan.length == 0 ? 0 : akumulasiPenjualan[0].totalPenjualan
+        const sapronak = pembelianSapronak.length === 0 ? 0 : pembelianSapronak[0].totalSapronak
+        const estimasi = penjualan - pembelianDoc - sapronak 
         return {...tmp.toObject(), periode: findPeriode[0], estimasiPendapatan: estimasi}
     }))
     return map
@@ -995,13 +996,14 @@ const _findPPL = async (req, isActive) => {
 
         const pembelianDoc = x.populasi * x.hargaSatuan
         const findPenjualan = await Penjualan.find({periode: x._id})
-        if (findPenjualan.length == 0) return {...findKandang.toObject(), urutanKe: count, periode: x, estimasiPendapatan: 0}
         const akumulasiPenjualan = await Penjualan.aggregate([
             {$match: {periode: x._id}},
             {$project: {penjualan: {$multiply: ['$qty', '$harga', '$beratBadan']}}},
             {$group: {_id: '$periode', totalPenjualan: {$sum: '$penjualan'}}}
         ])
-        const estimasi = akumulasiPenjualan[0].totalPenjualan - pembelianDoc - pembelianSapronak[0].totalSapronak === null ? 0 : pembelianSapronak[0].totalSapronak
+        const penjualan = findPenjualan.length == 0 ? 0 : akumulasiPenjualan[0].totalPenjualan
+        const sapronak = pembelianSapronak.length === 0 ? 0 : pembelianSapronak[0].totalSapronak
+        const estimasi = penjualan - pembelianDoc - sapronak 
 
         return {...findKandang.toObject(), periode: x, urutanKe: count, estimasiPendapatan: estimasi}
     }))
@@ -1069,8 +1071,8 @@ exports.kelolaPeternak = async (req, res, next) => {
 
 exports.kelolaPPL = async (req, res, next) => {
     const user = req.user._id
+    const token = req.headers['authorization']
     try {
-        const token = req.headers['authorization']
         const findPeriode = await Periode.find({ppl: user})
         const map = await Promise.all(findPeriode.map(async(x) => {
             const now = new Date(Date.now())
@@ -1128,6 +1130,59 @@ exports.kelolaPPL = async (req, res, next) => {
                 kandangAktif: map.length,
                 kandangRehat: 0,
                 kelola: map
+            },
+            message: 'Ok'
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
+exports.detailKandang = async (req,res, next) => {
+    const id = req.params.id
+    const token = req.headers['authorization']
+    try {
+        const findPeriode = await Periode.find({kandang: id}).sort({isEnd: 1, tanggalMulai: -1})
+        
+        const map = await Promise.all(findPeriode.map(async(x) => {
+            const now = new Date(Date.now())
+            const start = new Date(x.tanggalMulai)
+            const umur = Math.round(Math.abs((now - start) / ONE_DAY))
+            const pembelianSapronak = await Sapronak.aggregate([
+                {$match: {periode: x._id}},
+                {$unwind: '$produk'},
+                {$project: {pembelianSapronak: {$cond: {if: '$product.jenis' === 'PAKAN', then: {$multiply: ['$zak', '$hargaSatuan']}, else: {$multiply: ['$kuantitas', '$hargaSatuan']}}}}},
+                {$group: {_id: '$periode', totalSapronak: {$sum: '$pembelianSapronak'}}}
+            ])
+            const pembelianDoc = x.populasi * x.hargaSatuan
+            const findPenjualan = await Penjualan.find({periode: x._id})
+            const akumulasiPenjualan = await Penjualan.aggregate([
+                {$match: {periode: x._id}},
+                {$project: {penjualan: {$multiply: ['$qty', '$harga', '$beratBadan']}}},
+                {$group: {_id: '$periode', totalPenjualan: {$sum: '$penjualan'}}}
+            ])
+            const penjualan = findPenjualan.length == 0 ? 0 : akumulasiPenjualan[0].totalPenjualan
+            const sapronak = pembelianSapronak.length === 0 ? 0 : pembelianSapronak[0].totalSapronak
+            const estimasi = penjualan - pembelianDoc - sapronak
+
+            return {...x.toObject(), umur: umur, estimasi: estimasi}
+        }))
+        const suhu = await fetch(`http://3.233.186.139:3104/api/flock/kandang/${id}`,{
+                method: 'GET',
+                headers: {'Authorization': token,
+                "Content-Type": "application/json"}
+            }).then(res => res.json()).then(data => data.data)
+        res.json({
+            data: {
+                informasiKandang: {
+                    nama: map[0].kandang.kode,
+                    lokasi: map[0].kandang.alamat,
+                    jenis: map[0].kandang.tipe.tipe,
+                    kapasitas: map[0].kandang.populasi,
+                    penghasilan: map[0].estimasi
+                },
+                iot: suhu,
+                budidaya: map
             },
             message: 'Ok'
         })

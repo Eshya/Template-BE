@@ -10,6 +10,7 @@ router.get('/data-pool/:id', auth, queryCek, c.findOneDataPool);
 router.get('/data-pool/export/:id', auth, queryCek, c.exportDataPool);
 router.get('/active', auth, queryCek, c.findActive);
 router.get('/populasi/:id', auth, paramCek, c.countPopulasi);
+router.get('/tentang/:id', auth, paramCek, c.detailKandang)
 router.get('/list/peternak', auth, permition('superadmin', 'peternak'), queryCek, c.listKandangPeternak)
 router.get('/list/ppl', auth, permition('superadmin', 'ppl'), queryCek, c.listKandangPPL)
 router.get('/kelola/peternak', auth, permition('superadmin', 'peternak'), queryCek, c.kelolaPeternak)
