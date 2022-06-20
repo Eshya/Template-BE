@@ -1039,8 +1039,7 @@ exports.kelolaPeternak = async (req, res, next) => {
         const results = await _kelolaPeternak(req)
         const countActive = results.aktif.length
         const countUnactive = results.rehat.length
-        if (countActive === 0) return res.json({error: 1017, message: "anda belum memiliki kandang"})
-        if (countActive === 0 && countUnactive > 0) return res.json({error: 1018, error_data: countUnactive, message: "ada kandang yang tidak aktif"})
+
         const mapAktif = await Promise.all(results.aktif.map(async(x) => {
             const tmp = x
             const findPeriode = await Periode.findOne({kandang: x._id, isEnd: false}).select('-kandang')
@@ -1078,17 +1077,7 @@ exports.kelolaPPL = async (req, res, next) => {
             const start = new Date(x.tanggalMulai)
             const umur = Math.round(Math.abs((now - start) / ONE_DAY))
             const getKegiatan = await KegiatanHarian.findOne({periode: x._id}).sort({'tanggal': -1})
-            const sapronak = await Sapronak.aggregate([
-                {$match: {periode: mongoose.Types.ObjectId(x.id)}},
-                {$lookup:  {
-                    "from": "produk",
-                    "localField": "produk",
-                    "foreignField": "_id",
-                    "as": "produk_info"
-                }},
-                {$unwind: '$produk_info'},
-                {$group: {_id: '$produk_info.jenis', pakan_masuk: {$sum: '$kuantitas'}}}
-            ])
+
             const dataDeplesi = await KegiatanHarian.aggregate([
                 {$match: {periode: mongoose.Types.ObjectId(x.id)}},
                 {$group: {_id: '$_id', totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
