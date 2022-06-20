@@ -13,6 +13,7 @@ router.get('/populasi/:id', auth, paramCek, c.countPopulasi);
 router.get('/list/peternak', auth, permition('superadmin', 'peternak'), queryCek, c.listKandangPeternak)
 router.get('/list/ppl', auth, permition('superadmin', 'ppl'), queryCek, c.listKandangPPL)
 router.get('/kelola/peternak', auth, permition('superadmin', 'peternak'), queryCek, c.kelolaPeternak)
+router.get('/kelola/ppl', auth, permition('superadmin', 'ppl'), queryCek, c.kelolaPPL)
 // router.get('/public', queryCek, c.findPublic);
 router.get('/count', queryCek, c.count);
 router.get('/user', auth, queryCek, c.findByUser);

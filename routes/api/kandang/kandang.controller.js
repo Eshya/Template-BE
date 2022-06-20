@@ -1036,7 +1036,6 @@ const _kelolaPeternak = async (req) => {
 exports.kelolaPeternak = async (req, res, next) => {
     try {
         const token = req.headers['authorization']
-        const ONE_DAY = 24 * 60 * 60 * 1000;
         const results = await _kelolaPeternak(req)
         const countActive = results.aktif.length
         const countUnactive = results.rehat.length
@@ -1069,11 +1068,77 @@ exports.kelolaPeternak = async (req, res, next) => {
     }
 }
 
-
-
 exports.kelolaPPL = async (req, res, next) => {
+    const user = req.user._id
     try {
-        
+        const token = req.headers['authorization']
+        const findPeriode = await Periode.find({ppl: user})
+        const map = await Promise.all(findPeriode.map(async(x) => {
+            const now = new Date(Date.now())
+            const start = new Date(x.tanggalMulai)
+            const umur = Math.round(Math.abs((now - start) / ONE_DAY))
+            const getKegiatan = await KegiatanHarian.findOne({periode: x._id}).sort({'tanggal': -1})
+            const sapronak = await Sapronak.aggregate([
+                {$match: {periode: mongoose.Types.ObjectId(x.id)}},
+                {$lookup:  {
+                    "from": "produk",
+                    "localField": "produk",
+                    "foreignField": "_id",
+                    "as": "produk_info"
+                }},
+                {$unwind: '$produk_info'},
+                {$group: {_id: '$produk_info.jenis', pakan_masuk: {$sum: '$kuantitas'}}}
+            ])
+            const dataDeplesi = await KegiatanHarian.aggregate([
+                {$match: {periode: mongoose.Types.ObjectId(x.id)}},
+                {$group: {_id: '$_id', totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
+            ])
+            const penjualan = await Penjualan.aggregate([
+                {$match: {periode: mongoose.Types.ObjectId(x.id)}},
+                {$group: {_id: '$_id', terjual: {$sum: '$qty'}}}
+            ])
+    
+            const dataPakan = await KegiatanHarian.aggregate([
+                {$match: {periode: mongoose.Types.ObjectId(x.id)}},
+                {$unwind: {'path': '$pakanPakai', "preserveNullAndEmptyArrays": true}},
+                {$group: {_id: '$_id', totalPakan: {$sum: '$pakanPakai.beratPakan'}}}
+            ])
+            
+            const cumDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
+            const cumKematian = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
+            const cumPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
+            const cumPakan = dataPakan.reduce((a, {totalPakan})=>a + totalPakan, 0);
+
+            const latestWeight = getKegiatan.berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0)
+            const latestSampling = getKegiatan.berat.reduce((a, {populasi}) => a + populasi, 0)
+
+            const avgLatestWeight = latestWeight == 0 ? 0 : latestWeight/latestSampling
+
+            const populasiAkhir = x.populasi - (cumDeplesi + cumKematian + cumPenjualan)
+            
+            const deplesi = (x.populasi - (x.populasi - (cumDeplesi + cumKematian))) * 100 / x.populasi
+            const presentaseAyamHidup = 100 - deplesi
+            const FCR = cumPakan / (populasiAkhir * (avgLatestWeight/1000))
+
+            const atas = presentaseAyamHidup * (avgLatestWeight/1000)
+            const bawah = FCR * (dataPakan.length-1)
+            const IP = (atas/bawah) * 100
+
+            const findKandang = await Model.findById(x.kandang)
+
+            const suhu = await fetch(`http://3.233.186.139:3104/api/flock/kandang/${x.kandang}`,{
+                method: 'GET',
+                headers: {'Authorization': token,
+                "Content-Type": "application/json"}
+            }).then(res => res.json()).then(data => data.data)
+            console.log(suhu)
+
+            return {...findKandang.toObject(), IP: IP, umur: umur, periode: x, suhu: suhu ? suhu[0].actualTemperature : 0}
+        }))
+        res.json({
+            data: map,
+            message: 'Ok'
+        })
     } catch (error) {
         next(error)
     }
