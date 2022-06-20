@@ -995,9 +995,10 @@ exports.listKandangPPL = async (req, res, next) => {
 
 const _kelolaPeternak = async (req) => {
     const user = req.user._id
-    const findAktif = await Model.find({createdBy: user, isActive: true})
-    const findRehat = await Model.find({createdBy: user, isActive: false})
-    return {aktif: findAktif, rehat: findRehat}
+    const findAktif = Model.find({createdBy: user, isActive: true})
+    const findRehat = Model.find({createdBy: user, isActive: false})
+    const results = await Promise.all([findAktif, findRehat])
+    return {aktif: results[0], rehat: results[1]}
 }
 
 exports.kelolaPeternak = async (req, res, next) => {
@@ -1007,8 +1008,8 @@ exports.kelolaPeternak = async (req, res, next) => {
         const results = await _kelolaPeternak(req)
         const countActive = results.aktif.length
         const countUnactive = results.rehat.length
-        if (countActive === 0) return res.json({error: 1016, message: "anda belum memiliki kandang"})
-        if (countActive === 0 && countUnactive > 0) return res.json({error: 1017, error_data: countUnactive, message: "ada kandang yang tidak aktif"})
+        if (countActive === 0) return res.json({error: 1017, message: "anda belum memiliki kandang"})
+        if (countActive === 0 && countUnactive > 0) return res.json({error: 1018, error_data: countUnactive, message: "ada kandang yang tidak aktif"})
         const mapAktif = await Promise.all(results.aktif.map(async(x) => {
             const tmp = x
             const findPeriode = await Periode.findOne({kandang: x._id, isEnd: false}).select('-kandang')
@@ -1031,6 +1032,16 @@ exports.kelolaPeternak = async (req, res, next) => {
             },
             message: 'Ok'
         })
+    } catch (error) {
+        next(error)
+    }
+}
+
+
+
+exports.kelolaPPL = async (req, res, next) => {
+    try {
+        
     } catch (error) {
         next(error)
     }
