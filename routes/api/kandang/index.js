@@ -10,8 +10,9 @@ router.get('/data-pool/:id', auth, queryCek, c.findOneDataPool);
 router.get('/data-pool/export/:id', auth, queryCek, c.exportDataPool);
 router.get('/active', auth, queryCek, c.findActive);
 router.get('/populasi/:id', auth, paramCek, c.countPopulasi);
-router.get('/list/peternak', auth, permition('superadmin', 'peternak'), paramCek, c.listKandangPeternak)
-router.get('/list/ppl', auth, permition('superadmin', 'ppl'), paramCek, c.listKandangPPL)
+router.get('/list/peternak', auth, permition('superadmin', 'peternak'), queryCek, c.listKandangPeternak)
+router.get('/list/ppl', auth, permition('superadmin', 'ppl'), queryCek, c.listKandangPPL)
+router.get('/kelola/peternak', auth, permition('superadmin', 'peternak'), queryCek, c.kelolaPeternak)
 // router.get('/public', queryCek, c.findPublic);
 router.get('/count', queryCek, c.count);
 router.get('/user', auth, queryCek, c.findByUser);

@@ -970,10 +970,9 @@ const _findPPL = async (req, isActive) => {
             {$group: {_id: '$periode', totalPenjualan: {$sum: '$penjualan'}}}
         ])
         const estimasi = akumulasiPenjualan[0].totalPenjualan - pembelianDoc - pembelianSapronak[0].totalSapronak === null ? 0 : pembelianSapronak[0].totalSapronak
-        
+
         return {...findKandang.toObject(), periode: x, urutanKe: count, estimasiPendapatan: estimasi}
     }))
-    console.log(map)
     return map
 }
 
@@ -994,9 +993,44 @@ exports.listKandangPPL = async (req, res, next) => {
     }
 }
 
+const _kelolaPeternak = async (req) => {
+    const user = req.user._id
+    const findAktif = await Model.find({createdBy: user, isActive: true})
+    const findRehat = await Model.find({createdBy: user, isActive: false})
+    return {aktif: findAktif, rehat: findRehat}
+}
+
 exports.kelolaPeternak = async (req, res, next) => {
     try {
-        
+        const token = req.headers['authorization']
+        const ONE_DAY = 24 * 60 * 60 * 1000;
+        const results = await _kelolaPeternak(req)
+        const countActive = results.aktif.length
+        const countUnactive = results.rehat.length
+        if (countActive === 0) return res.json({error: 1016, message: "anda belum memiliki kandang"})
+        if (countActive === 0 && countUnactive > 0) return res.json({error: 1017, error_data: countUnactive, message: "ada kandang yang tidak aktif"})
+        const mapAktif = await Promise.all(results.aktif.map(async(x) => {
+            const tmp = x
+            const findPeriode = await Periode.findOne({kandang: x._id, isEnd: false}).select('-kandang')
+            const now = new Date(Date.now())
+            const start = new Date(findPeriode.tanggalMulai)
+            const umur = Math.round(Math.abs((now - start) / ONE_DAY))
+
+            const suhu = await fetch(`http://3.233.186.139:3104/api/flock/kandang/${x._id}`,{
+                method: 'GET',
+                headers: {'Authorization': token,
+                "Content-Type": "application/json"}
+            }).then(res => res.json()).then(data => data.data)
+            return {...tmp.toObject(), umur: umur, periode: findPeriode, suhu: suhu[0].actualTemperature}
+        }))
+        res.json({
+            data: {
+                kandangAktif: countActive,
+                kandangRehat: countUnactive,
+                kelola: mapAktif
+            },
+            message: 'Ok'
+        })
     } catch (error) {
         next(error)
     }
