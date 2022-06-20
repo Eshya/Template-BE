@@ -28,7 +28,7 @@ exports.findAll =  async (req, res, next) => {
     try {
         const {limit, offset} = parseQuery(req.query);
         const { name, address, phoneNumber } = req.query;
-        const sort = handleQuerySort(req.query.sort)
+        let sort = handleQuerySort(req.query.sort)
         let role = req.user.role ? req.user.role.name : '';
         let kemitraanId = req.user.kemitraanUser ? req.user.kemitraanUser._id : '';
         const filter = {}
@@ -44,10 +44,14 @@ exports.findAll =  async (req, res, next) => {
         filter.role = "61d5608d4a7ba5b05c9c7ae4";
         filter.deleted = false;
 
+        if (!req.query.sort) {
+            sort = { fullname: 1 }
+        }
+
         let count;
         let result = [];
         if (role === "adminkemitraan") {
-            const data = await Model.find(filter).sort(sort)
+            const data = await Model.find(filter).sort(sort).collation({ locale: "en", caseLevel: true })
             await Promise.map(data, async (dataItem) => {
                 const kandang = await Kandang.find({createdBy: dataItem._id, deleted: false})
                 await Promise.map(kandang, async (kandangItem, index) => {
@@ -84,7 +88,7 @@ exports.findAll =  async (req, res, next) => {
             result = paginate(filteredResult, limit, (offset + 1))
         } else {
             count = await Model.countDocuments(filter)
-            const data = await Model.find(filter).limit(limit).skip(offset).sort(sort)
+            const data = await Model.find(filter).limit(limit).skip(offset).sort(sort).collation({ locale: "en", caseLevel: true })
             await Promise.map(data, async (dataItem) => {
                 const kandang = await Kandang.find({createdBy: dataItem._id, deleted: false})
                 // check status peternak

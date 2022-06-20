@@ -31,6 +31,18 @@ function paginate(array, page_size, page_number) {
     return array.slice((page_number - 1) * page_size, page_number * page_size);
 }
 
+function dynamicSort(property) {
+    var sortOrder = 1;
+    if(property[0] === "-") {
+        sortOrder = -1;
+        property = property.substr(1);
+    }
+    return function (a,b) {
+        var result = (a[property] < b[property]) ? -1 : (a[property] > b[property]) ? 1 : 0;
+        return result * sortOrder;
+    }
+}
+
 exports.dashboardKemitraan =  async (req, res, next) => {
     try {
         let role = req.user.role ? req.user.role.name : '';
@@ -188,7 +200,7 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
             }
 
             const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 })
-            if (periode && periode.kandang) {
+            if (periode && periode.kandang && periode.kemitraan && periode.kandang.createdBy) {
                 // get usia
                 let now = new Date(Date.now());
                 let start = new Date(periode.tanggalMulai);
@@ -283,9 +295,11 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
             offsetPaging = (offset / 10 + 1)
         }
 
+        let resultPeriodeSort = resultPeriode.sort(dynamicSort("namaPemilik"));
+
         res.json({
             count: resultPeriode.length,
-            ketersediaan: paginate(resultPeriode, limit, offsetPaging),
+            ketersediaan: paginate(resultPeriodeSort, limit, offsetPaging),
             summary: {
                 totalPopulasi: Math.ceil(countPopulasi),
                 averageUsia: Math.ceil(countUsia),
@@ -347,7 +361,7 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
             }
 
             const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 })
-            if (periode && periode.kandang) {
+            if (periode && periode.kandang && periode.kemitraan && periode.kandang.createdBy) {
                 // get usia
                 let now = new Date(Date.now());
                 let start = new Date(periode.tanggalMulai);
@@ -442,9 +456,11 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
             offsetPaging = (offset / 10 + 1)
         }
 
+        let resultPeriodeSort = resultPeriode.sort(dynamicSort("namaPemilik"));
+
         res.json({
             count: resultPeriode.length,
-            ketersediaan: paginate(resultPeriode, limit, offsetPaging),
+            ketersediaan: paginate(resultPeriodeSort, limit, offsetPaging),
             summary: {
                 totalPopulasi: Math.ceil(countPopulasi),
                 averageUsia: Math.ceil(countUsia),

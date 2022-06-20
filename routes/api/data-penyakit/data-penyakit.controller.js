@@ -16,7 +16,7 @@ exports.findAll = async (req, res, next) => {
     try {
         const {limit, offset} = parseQuery(req.query);
         const { name, code, description } = req.query;
-        const sort = handleQuerySort(req.query.sort)
+        let sort = handleQuerySort(req.query.sort)
         const filter = {}
         if (name) {
             filter.name = new RegExp(name, 'i')
@@ -27,8 +27,11 @@ exports.findAll = async (req, res, next) => {
         if (description) {
             filter.description = new RegExp(description, 'i')
         }
+        if (!req.query.sort) {
+            sort = { code: 1 }
+        }
         const count = await Model.countDocuments(filter)
-        const data = await Model.find(filter).limit(limit).skip(offset).sort(sort)
+        const data = await Model.find(filter).limit(limit).skip(offset).sort(sort).collation({ locale: "en", caseLevel: true })
         res.json({
             message: 'Ok',
             length: count,
