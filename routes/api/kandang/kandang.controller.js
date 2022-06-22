@@ -1142,8 +1142,9 @@ exports.detailKandang = async (req,res, next) => {
     const id = req.params.id
     const token = req.headers['authorization']
     try {
+        const findKandang = await Model.findById(id)        
         const findPeriode = await Periode.find({kandang: id}).sort({isEnd: 1, tanggalMulai: -1})
-        
+
         const map = await Promise.all(findPeriode.map(async(x) => {
             const now = new Date(Date.now())
             const start = new Date(x.tanggalMulai)
@@ -1172,14 +1173,15 @@ exports.detailKandang = async (req,res, next) => {
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
             }).then(res => res.json()).then(data => data.data)
+        
         res.json({
             data: {
                 informasiKandang: {
-                    nama: map[0].kandang.kode,
-                    lokasi: map[0].kandang.alamat,
-                    jenis: map[0].kandang.tipe.tipe,
-                    kapasitas: map[0].kandang.populasi,
-                    penghasilan: map[0].estimasi
+                    nama: !findPeriode.length ? findKandang.kode : map[0].kandang.kode,
+                    lokasi: !findPeriode.length ? findKandang.alamat : map[0].kandang.alamat,
+                    jenis: !findPeriode.length ? findKandang.tipe.tipe : map[0].kandang.tipe.tipe,
+                    kapasitas: !findPeriode.length ? findKandang.populasi : map[0].kandang.populasi,
+                    penghasilan: !findPeriode.length ? 0 : map[0].kandang.alamat,
                 },
                 iot: suhu,
                 budidaya: map
