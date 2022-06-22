@@ -939,7 +939,7 @@ const _findPeternak = async (req, isActive) => {
             {$sort: {tanggalMulai: -1}},
             {$limit: 1}
         ])
-        if (findPeriode.length == 0) return {message: "tidak ada periode aktif"}
+        if (findPeriode.length == 0) return {...tmp.toObject(), periode: {}, estimasiPendapatan: 0}
         const pembelianSapronak = await Sapronak.aggregate([
             {$match: {periode: findPeriode[0]._id}},
             {$unwind: '$produk'},
@@ -982,7 +982,7 @@ const _findPPL = async (req, isActive) => {
     const user = req.user._id
     isActive ? isEnd = false : isEnd = true
     const findPeriode = await Periode.aggregate([
-        {$match: {ppl: mongoose.Types.ObjectId(user), isEnd: isEnd}},
+        {$match: {ppl: mongoose.Types.ObjectId(user), isActivePPL: isActive}},
     ])
     const map = await Promise.all(findPeriode.map( async(x) => {
         const count = await Periode.countDocuments({kandang: x.kandang})
@@ -1001,7 +1001,7 @@ const _findPPL = async (req, isActive) => {
             {$project: {penjualan: {$multiply: ['$qty', '$harga', '$beratBadan']}}},
             {$group: {_id: '$periode', totalPenjualan: {$sum: '$penjualan'}}}
         ])
-        const penjualan = findPenjualan.length == 0 ? 0 : akumulasiPenjualan[0].totalPenjualan
+        const penjualan = findPenjualan.length === 0 ? 0 : akumulasiPenjualan[0].totalPenjualan
         const sapronak = pembelianSapronak.length === 0 ? 0 : pembelianSapronak[0].totalSapronak
         const estimasi = penjualan - pembelianDoc - sapronak 
 
@@ -1073,13 +1073,13 @@ exports.kelolaPPL = async (req, res, next) => {
     const user = req.user._id
     const token = req.headers['authorization']
     try {
-        const findPeriode = await Periode.find({ppl: user, isEnd: false})
+        const findPeriode = await Periode.find({ppl: user})
         const map = await Promise.all(findPeriode.map(async(x) => {
             const now = new Date(Date.now())
             const start = new Date(x.tanggalMulai)
             const umur = Math.round(Math.abs((now - start) / ONE_DAY))
             const getKegiatan = await KegiatanHarian.findOne({periode: x._id}).sort({'tanggal': -1})
-
+            
             const dataDeplesi = await KegiatanHarian.aggregate([
                 {$match: {periode: mongoose.Types.ObjectId(x.id)}},
                 {$group: {_id: '$_id', totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
@@ -1099,10 +1099,10 @@ exports.kelolaPPL = async (req, res, next) => {
             const cumKematian = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
             const cumPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
             const cumPakan = dataPakan.reduce((a, {totalPakan})=>a + totalPakan, 0);
-
-            const latestWeight = getKegiatan.berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0)
-            const latestSampling = getKegiatan.berat.reduce((a, {populasi}) => a + populasi, 0)
-
+            
+            const latestWeight = !getKegiatan ? 0 : getKegiatan.berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0)
+            const latestSampling = !getKegiatan ? 0 : getKegiatan.berat.reduce((a, {populasi}) => a + populasi, 0)
+            
             const avgLatestWeight = latestWeight == 0 ? 0 : latestWeight/latestSampling
 
             const populasiAkhir = x.populasi - (cumDeplesi + cumKematian + cumPenjualan)

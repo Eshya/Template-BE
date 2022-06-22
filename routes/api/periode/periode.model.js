@@ -42,7 +42,7 @@ const scheme = new Schema({
     },
     isActivePPL: {
         type: Boolean,
-        default: null
+        default: false
     }
 }, {versionKey: false, timestamps: true})
 scheme.plugin(require('mongoose-autopopulate'));
