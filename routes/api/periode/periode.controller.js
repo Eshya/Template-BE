@@ -206,7 +206,7 @@ exports.endPeriode = async (req, res, next) => {
         const findKandang = await Model.findById(req.params.id);
         if(!findKandang) return next(createError(404, 'Periode Not Found!'))
         const kandangActive = Kandang.findByIdAndUpdate(findKandang.kandang, {isActive: false}, {new: true, upsert: false, multi: false})
-        const periodeEnd = Model.findByIdAndUpdate(req.params.id, {isEnd: true, tanggalAkhir: moment().toDate()}, {new: true, upsert: false, multi: false})
+        const periodeEnd = Model.findByIdAndUpdate(req.params.id, {isActivePPL: false, isEnd: true, tanggalAkhir: moment().toDate()}, {new: true, upsert: false, multi: false})
         const results = await Promise.all([kandangActive, periodeEnd])
         res.json({
             data: results,
@@ -482,7 +482,7 @@ exports.tambahPPL = async (req,res, next) => {
 exports.hapusPPL = async (req, res, next) => {
     const id = req.params.id
     try {
-        const result = await Model.findByIdAndUpdate(id, {isActivePPL: false}, {new: true}).exec()
+        const result = await Model.findByIdAndUpdate(id, {isActivePPL: false, ppl: null}, {new: true}).exec()
         res.json({
             data: result,
             message: 'Ok'
