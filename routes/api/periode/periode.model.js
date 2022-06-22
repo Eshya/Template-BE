@@ -39,6 +39,10 @@ const scheme = new Schema({
     ppl: {
         type: Schema.Types.ObjectId,
         default: null
+    },
+    isActivePPL: {
+        type: Boolean,
+        default: null
     }
 }, {versionKey: false, timestamps: true})
 scheme.plugin(require('mongoose-autopopulate'));

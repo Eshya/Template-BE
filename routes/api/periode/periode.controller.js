@@ -469,7 +469,7 @@ exports.tambahPPL = async (req,res, next) => {
     const id = req.params.id
     const data = req.body
     try {
-        const addPPL = await Model.findByIdAndUpdate(id, {ppl: data.ppl}, {new: true}).exec()
+        const addPPL = await Model.findByIdAndUpdate(id, {ppl: data.ppl, isActivePPL: true}, {new: true}).exec()
         res.json({
             data: addPPL,
             message: 'Ok'
@@ -482,7 +482,7 @@ exports.tambahPPL = async (req,res, next) => {
 exports.hapusPPL = async (req, res, next) => {
     const id = req.params.id
     try {
-        const result = await Model.findByIdAndUpdate(id, {ppl: null}, {new: true}).exec()
+        const result = await Model.findByIdAndUpdate(id, {isActivePPL: false}, {new: true}).exec()
         res.json({
             data: result,
             message: 'Ok'

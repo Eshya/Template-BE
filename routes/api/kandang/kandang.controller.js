@@ -1073,7 +1073,7 @@ exports.kelolaPPL = async (req, res, next) => {
     const user = req.user._id
     const token = req.headers['authorization']
     try {
-        const findPeriode = await Periode.find({ppl: user})
+        const findPeriode = await Periode.find({ppl: user, isEnd: false})
         const map = await Promise.all(findPeriode.map(async(x) => {
             const now = new Date(Date.now())
             const start = new Date(x.tanggalMulai)
