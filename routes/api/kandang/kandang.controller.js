@@ -987,7 +987,7 @@ const _findPPL = async (req, isActive) => {
         {$group: {_id: '$_id', id: {$first: '$kandang'}}},
         {$group: {_id: '$id', periode: {$push: '$_id'},}}
     ])
-
+    
     const map = await Promise.all(findPeriode.map(async (x) => {
         const findPeriode = await Periode.findById(x.periode[0])
         const findKandang = await Model.findById(x._id)
@@ -1011,6 +1011,7 @@ const _findPPL = async (req, isActive) => {
         
         return {...findKandang.toObject(), periode: findPeriode, urutanKe: countPeriode, estimasiPendapatan: estimasi}
     }))
+    console.log(map.length)
     return map
 }
 
