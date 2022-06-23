@@ -983,18 +983,21 @@ const _findPPL = async (req, isActive) => {
     isActive ? isEnd = false : isEnd = true
     const findPeriode = await Periode.aggregate([
         {$match: {ppl: mongoose.Types.ObjectId(user), isActivePPL: isActive}},
+        {$sort: {'tanggalAkhir': -1}},
+        {$group: {_id: '$_id', id: {$first: '$kandang'}}},
+        {$group: {_id: '$_id', kandang: {$push: '$id'}}}
     ])
-    const map = await Promise.all(findPeriode.map( async(x) => {
-        const count = await Periode.countDocuments({kandang: x.kandang})
-        const findKandang = await Model.findById(x.kandang)
+    const map = await Promise.all(findPeriode.map(async (x) => {
+        const findPeriode = await Periode.findById(x._id)
+        const findKandang = await Model.findById(x.kandang[0])
+        const countPeriode = await Periode.countDocuments({kandang: x.kandang[0]})
         const pembelianSapronak = await Sapronak.aggregate([
-            {$match: {periode: x._id}},
-            {$unwind: '$produk'},
-            {$project: {pembelianSapronak: {$cond: {if: '$product.jenis' === 'PAKAN', then: {$multiply: ['$zak', '$hargaSatuan']}, else: {$multiply: ['$kuantitas', '$hargaSatuan']}}}}},
-            {$group: {_id: '$periode', totalSapronak: {$sum: '$pembelianSapronak'}}}
-        ])
-
-        const pembelianDoc = x.populasi * x.hargaSatuan
+                {$match: {periode: x._id}},
+                {$unwind: '$produk'},
+                {$project: {pembelianSapronak: {$cond: {if: '$product.jenis' === 'PAKAN', then: {$multiply: ['$zak', '$hargaSatuan']}, else: {$multiply: ['$kuantitas', '$hargaSatuan']}}}}},
+                {$group: {_id: '$periode', totalSapronak: {$sum: '$pembelianSapronak'}}}
+            ])
+        const pembelianDoc = findPeriode.populasi * findPeriode.hargaSatuan
         const findPenjualan = await Penjualan.find({periode: x._id})
         const akumulasiPenjualan = await Penjualan.aggregate([
             {$match: {periode: x._id}},
@@ -1003,9 +1006,9 @@ const _findPPL = async (req, isActive) => {
         ])
         const penjualan = findPenjualan.length === 0 ? 0 : akumulasiPenjualan[0].totalPenjualan
         const sapronak = pembelianSapronak.length === 0 ? 0 : pembelianSapronak[0].totalSapronak
-        const estimasi = penjualan - pembelianDoc - sapronak 
-
-        return {...findKandang.toObject(), periode: x, urutanKe: count, estimasiPendapatan: estimasi}
+        const estimasi = penjualan - pembelianDoc - sapronak
+        
+        return {...findKandang.toObject(), periode: findPeriode, urutanKe: countPeriode, estimasiPendapatan: estimasi}
     }))
     return map
 }
