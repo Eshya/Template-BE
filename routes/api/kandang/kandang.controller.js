@@ -987,7 +987,7 @@ const _findPPL = async (req, isActive) => {
         {$group: {_id: '$_id', id: {$first: '$kandang'}}},
         {$group: {_id: '$id', periode: {$push: '$_id'},}}
     ])
-    
+
     const map = await Promise.all(findPeriode.map(async (x) => {
         const findPeriode = await Periode.findById(x.periode[0])
         const findKandang = await Model.findById(x._id)
@@ -1186,7 +1186,7 @@ exports.detailKandang = async (req,res, next) => {
                     lokasi: !findPeriode.length ? findKandang.alamat : map[0].kandang.alamat,
                     jenis: !findPeriode.length ? findKandang.tipe.tipe : map[0].kandang.tipe.tipe,
                     kapasitas: !findPeriode.length ? findKandang.populasi : map[0].kandang.populasi,
-                    penghasilan: !findPeriode.length ? 0 : map[0].kandang.alamat,
+                    penghasilan: !findPeriode.length ? 0 : map[0].kandang.estimasi,
                 },
                 iot: suhu,
                 budidaya: map
