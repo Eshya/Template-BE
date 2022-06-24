@@ -1011,8 +1011,8 @@ const _findPPL = async (req, isActive) => {
         
         return {...findKandang.toObject(), periode: findPeriode, urutanKe: countPeriode, estimasiPendapatan: estimasi, isDeleted: "false"}
     }))
-    const filter = map.filter(x => x.isDeleted === "false")
-    return filter
+    // const filter = map.filter(x => x.isDeleted === "false")
+    return map
 }
 
 exports.listKandangPPL = async (req, res, next) => {
