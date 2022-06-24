@@ -990,7 +990,7 @@ const _findPPL = async (req, isActive) => {
     const map = await Promise.all(findPeriode.map(async (x) => {
         const findPeriode = await Periode.findById(x.periode[0])
         const findKandang = await Model.findById(x._id)
-        if(!findKandang) return {isDeleted: "true"}
+        // if(!findKandang) return {isDeleted: "true"}
         const countPeriode = await Periode.countDocuments({kandang: x._id})
         const pembelianSapronak = await Sapronak.aggregate([
                 {$match: {periode: x.periode[0]}},
