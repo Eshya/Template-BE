@@ -987,10 +987,10 @@ const _findPPL = async (req, isActive) => {
         {$group: {_id: '$_id', id: {$first: '$kandang'}}},
         {$group: {_id: '$id', periode: {$push: '$_id'},}}
     ])
-
     const map = await Promise.all(findPeriode.map(async (x) => {
         const findPeriode = await Periode.findById(x.periode[0])
         const findKandang = await Model.findById(x._id)
+        if(!findKandang) return {isDeleted: "true"}
         const countPeriode = await Periode.countDocuments({kandang: x._id})
         const pembelianSapronak = await Sapronak.aggregate([
                 {$match: {periode: x.periode[0]}},
@@ -1009,10 +1009,10 @@ const _findPPL = async (req, isActive) => {
         const sapronak = pembelianSapronak.length === 0 ? 0 : pembelianSapronak[0].totalSapronak
         const estimasi = penjualan - pembelianDoc - sapronak
         
-        return {...findKandang.toObject(), periode: findPeriode, urutanKe: countPeriode, estimasiPendapatan: estimasi}
+        return {...findKandang.toObject(), periode: findPeriode, urutanKe: countPeriode, estimasiPendapatan: estimasi, isDeleted: "false"}
     }))
-    console.log(map.length)
-    return map
+    const filter = map.filter(x => x.isDeleted === "false")
+    return filter
 }
 
 exports.listKandangPPL = async (req, res, next) => {
@@ -1080,6 +1080,8 @@ exports.kelolaPPL = async (req, res, next) => {
     try {
         const findPeriode = await Periode.find({ppl: user, isActivePPL: true})
         const map = await Promise.all(findPeriode.map(async(x) => {
+            const findKandang = await Model.findById(x.kandang)
+            if (!findKandang.deleted) return false
             const now = new Date(Date.now())
             const start = new Date(x.tanggalMulai)
             const umur = Math.round(Math.abs((now - start) / ONE_DAY))
@@ -1119,8 +1121,6 @@ exports.kelolaPPL = async (req, res, next) => {
             const atas = presentaseAyamHidup * (avgLatestWeight/1000)
             const bawah = FCR * (dataPakan.length-1)
             const IP = (atas/bawah) * 100
-
-            const findKandang = await Model.findById(x.kandang)
 
             const suhu = await fetch(`http://3.233.186.139:3104/api/flock/kandang/${x.kandang}`,{
                 method: 'GET',
@@ -1186,7 +1186,7 @@ exports.detailKandang = async (req,res, next) => {
                     lokasi: !findPeriode.length ? findKandang.alamat : map[0].kandang.alamat,
                     jenis: !findPeriode.length ? findKandang.tipe.tipe : map[0].kandang.tipe.tipe,
                     kapasitas: !findPeriode.length ? findKandang.populasi : map[0].kandang.populasi,
-                    penghasilan: !findPeriode.length ? 0 : map[0].kandang.estimasi,
+                    penghasilan: !findPeriode.length ? 0 : map[0].kandang,
                 },
                 iot: suhu,
                 budidaya: map
