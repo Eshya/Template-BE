@@ -1081,7 +1081,6 @@ exports.kelolaPPL = async (req, res, next) => {
         const findPeriode = await Periode.find({ppl: user, isActivePPL: true})
         const map = await Promise.all(findPeriode.map(async(x) => {
             const findKandang = await Model.findById(x.kandang)
-            if (!findKandang.deleted) return false
             const now = new Date(Date.now())
             const start = new Date(x.tanggalMulai)
             const umur = Math.round(Math.abs((now - start) / ONE_DAY))
