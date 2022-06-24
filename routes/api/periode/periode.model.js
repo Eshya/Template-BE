@@ -35,6 +35,14 @@ const scheme = new Schema({
         ref: 'Kemitraan', 
         require: false,
         autopopulate: {maxdepth: 1}
+    },
+    ppl: {
+        type: Schema.Types.ObjectId,
+        default: null
+    },
+    isActivePPL: {
+        type: Boolean,
+        default: false
     }
 }, {versionKey: false, timestamps: true})
 scheme.plugin(require('mongoose-autopopulate'));

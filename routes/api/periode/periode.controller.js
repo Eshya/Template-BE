@@ -9,6 +9,7 @@ const Sapronak = require("../sapronak/sapronak.model");
 const Data = require('../data/data.model');
 const selectPublic = '-createdAt -updatedAt'
 const mongoose = require('mongoose')
+const fetch = require('node-fetch')
 
 const ONE_DAY = 24 * 60 * 60 * 1000;
 const reducer = (acc, value) => acc + value
@@ -205,7 +206,7 @@ exports.endPeriode = async (req, res, next) => {
         const findKandang = await Model.findById(req.params.id);
         if(!findKandang) return next(createError(404, 'Periode Not Found!'))
         const kandangActive = Kandang.findByIdAndUpdate(findKandang.kandang, {isActive: false}, {new: true, upsert: false, multi: false})
-        const periodeEnd = Model.findByIdAndUpdate(req.params.id, {isEnd: true, tanggalAkhir: moment().toDate()}, {new: true, upsert: false, multi: false})
+        const periodeEnd = Model.findByIdAndUpdate(req.params.id, {isActivePPL: false, isEnd: true, tanggalAkhir: moment().toDate()}, {new: true, upsert: false, multi: false})
         const results = await Promise.all([kandangActive, periodeEnd])
         res.json({
             data: results,
@@ -265,6 +266,7 @@ exports.getBudidaya = async (req, res, next) => {
         let pembelianPakan = 0
         let pembelianOVK = 0
         const doc = await Model.findById(id);
+        console.log(doc)
         const pembelianDoc = doc.populasi * doc.hargaSatuan
         const getSapronak = await Sapronak.find({periode: id});
         // const penjualanAyamBesar = await 
@@ -459,6 +461,59 @@ exports.performa = async (req, res, next) => {
         }
         // console.log(tonase);
     } catch (error) {
+        next(error)
+    }
+}
+
+exports.tambahPPL = async (req,res, next) => {
+    const id = req.params.id
+    const data = req.body
+    try {
+        const addPPL = await Model.findByIdAndUpdate(id, {ppl: data.ppl, isActivePPL: true}, {new: true}).exec()
+        res.json({
+            data: addPPL,
+            message: 'Ok'
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
+exports.hapusPPL = async (req, res, next) => {
+    const id = req.params.id
+    try {
+        const result = await Model.findByIdAndUpdate(id, {isActivePPL: false, ppl: null}, {new: true}).exec()
+        res.json({
+            data: result,
+            message: 'Ok'
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
+exports.validateTambah = async (req,res, next) => {
+    const data = req.body
+    const token = req.headers['authorization']
+    var url
+    try {
+        process.env.DB_NAME === "chckin" ? url = `https://auth.chickinindonesia.com/api/users/` : url = `https://stagging-auth.chickinindonesia.com/api/users/`
+        if(!mongoose.Types.ObjectId.isValid(data.periode)) return res.json({data: null, error: 1016, message: "kandang tidak ditemukan!"})
+        const results = await Model.findById(data.periode)
+        if (!results) return res.json({data: null, error: 1016, message: 'kandang tidak ditemukan!'})
+        const getUserName = await fetch(url + results.ppl, {
+            method: 'GET',
+            headers: {
+                'Authorization': token,
+                "Content-Type": "application/json" 
+            }
+        }).then(res => res.json()).then(data => data.data)
+        if (results.ppl !== null) return res.json({error: 1015, data: results, error_data: getUserName.fullname, message: "kandang sudah dikelola!"})
+        res.json({
+            data: results,
+            message: 'Ok'
+        })
+    } catch(error) {
         next(error)
     }
 }

@@ -14,6 +14,8 @@ const fetch = require('node-fetch')
 const Promise = require("bluebird");
 const reducer = (acc, value) => acc + value;
 const ONE_DAY = 24 * 60 * 60 * 1000;
+const moment = require('moment');
+const excelJS = require("exceljs");
 
 const handleQuerySort = (query) => {
     try{
@@ -85,13 +87,13 @@ exports.findAllDataPool =  async (req, res, next) => {
         filter.deleted = false;
 
         if (!req.query.sort) {
-            sort = { updatedAt: -1 }
+            sort = { kode: 1 }
         }
 
         let count;
         let result = [];
         if (role === "adminkemitraan") {
-            const data = await Model.find(filter).sort(sort)
+            const data = await Model.find(filter).sort(sort).collation({ locale: "en", caseLevel: true })
             for (let i = 0; i < data.length; i++) {
                 let filterPeriod = {};
                 filterPeriod.kandang = data[i].id;
@@ -134,7 +136,7 @@ exports.findAllDataPool =  async (req, res, next) => {
             result = paginate(result, limit, offsetPaging)
         } else {
             count = await Model.countDocuments(filter)
-            const data = await Model.find(filter).limit(limit).skip(offset).sort(sort)
+            const data = await Model.find(filter).limit(limit).skip(offset).sort(sort).collation({ locale: "en", caseLevel: true })
             for (let i = 0; i < data.length; i++) {
                 let filterPeriod = {};
                 filterPeriod.kandang = data[i].id;
@@ -432,6 +434,38 @@ exports.findOneDataPool =  async (req, res, next) => {
                     pendapatan: ((penjualanResult.qty * penjualanResult.beratBadan) * penjualanResult.harga)
                 });
             });
+        } else {
+            let kandang = await Model.findOne({_id: req.params.id}).sort({ createdAt: -1 })
+            dataKandang = {
+                idPemilik: kandang.createdBy ? kandang.createdBy._id : null,
+                namaPemilik: kandang.createdBy ? kandang.createdBy.fullname : null,
+                phoneNumber: kandang.phoneNumber ? kandang.createdBy.phoneNumber : null,
+                idKandang: kandang._id,
+                namaKandang: kandang.kode,
+                alamat: kandang.alamat,
+                kota: kandang.kota,
+                isActive: kandang.isActive,
+                jenisKandang: kandang.tipe ? kandang.tipe.tipe : null,
+                kapasitas: kandang.populasi,
+                idPeriode: null,
+                periodeEnd: 0,
+                periodeKe: "Belum Mulai Periode",
+                IP: 0,
+                totalPenghasilanKandang: 0,
+                DOC: "",
+                populasiAwal: 0,
+                populasiAkhir: 0,
+                pakanAwal: 0,
+                pakanPakai: 0,
+                pakanSisa: 0,
+                usiaAyam: 0,
+                totalDeplesi: 0,
+                batasDeplesi: 0,
+                bobotACT: 0,
+                bobotSTD: 0,
+                feedIntakeACT: 0,
+                feedIntakeSTD:  0,
+            }
         }
 
         res.json({
@@ -444,6 +478,161 @@ exports.findOneDataPool =  async (req, res, next) => {
         })
     } catch (error) {
         next(error)
+    }
+}
+
+exports.exportDataPool =  async (req, res, next) => {
+    try {
+        let periode = await Periode.findOne({kandang: req.params.id}).sort({ createdAt: -1 })
+        let dataHarian = [];
+        let dataSapronak = [];
+        let merged = [];
+
+        let kegiatanHarianResult = await KegiatanHarian.find({periode: periode.id}).select('-periode').sort({'tanggal': 1})
+        for (let i = 0; i < kegiatanHarianResult.length; i++) {
+            //find usia ayam
+            const start = new Date(periode.tanggalMulai);
+            const tanggal = new Date(kegiatanHarianResult[i].tanggal)
+            let usiaAyam = Math.round(Math.abs((tanggal - start) / ONE_DAY))
+
+            // kalkulasi bobot
+            let totalBerat = [];
+            for (let x = 0; x < kegiatanHarianResult[i].berat.length; x++) {
+                let populasi = 0;
+                if (kegiatanHarianResult[i].berat[x].populasi == 0) {
+                    populasi = 1
+                } else {
+                    populasi = kegiatanHarianResult[i].berat[x].populasi
+                }
+                totalBerat.push(kegiatanHarianResult[i].berat[x].beratTimbang / populasi)
+            }
+            let totalberatSum = totalBerat.reduce(function(acc, val) { return acc + val; }, 0)
+            let bobotResult = totalberatSum/kegiatanHarianResult[i].berat.length
+            let bobotFixed = Number.isInteger(bobotResult) ? bobotResult : bobotResult.toFixed(2);
+            let totalBobot = isFinite(bobotFixed) && bobotFixed || 0;
+
+            const beratPakan = kegiatanHarianResult[i] ? kegiatanHarianResult[i].pakanPakai.reduce((a, {beratPakan}) => a + beratPakan, 0) : 0
+
+            //sisa populasi
+            let sisaPopulasi = await KegiatanHarian.find({periode: periode.id, tanggal: {$lte: kegiatanHarianResult[i].tanggal}}).select('-periode')
+            let totalCulling = sisaPopulasi.reduce((a, {pemusnahan}) => a + pemusnahan, 0);
+            let totalMortalitas = sisaPopulasi.reduce((a, {deplesi}) => a + deplesi, 0);
+
+            dataHarian.push({
+                usiaAyam: usiaAyam,
+                tanggal: moment(kegiatanHarianResult[i].tanggal).format("DD-MM-YYYY"),
+                feedIntake: beratPakan,
+                bobot: totalBobot,
+                mortalitas: kegiatanHarianResult[i].deplesi,
+                culling: kegiatanHarianResult[i].pemusnahan,
+                sisaPopulasi: periode.populasi - (totalCulling + totalMortalitas),
+                sisaSapronak: "",
+                FCR: "",
+                IP: ""
+            });
+        }
+
+        let sapronakResult = await Sapronak.find({periode: periode.id}).sort({'createdAt': 1})
+        var holder = {};
+        await Promise.map(sapronakResult, async (sapronakResult, index) => {
+            if (sapronakResult.produk && (sapronakResult.produk.jenis === 'PAKAN')) {
+                dataSapronak.push({
+                    tanggal: moment(sapronakResult.tanggal).format("DD-MM-YYYY"),
+                    jenis: sapronakResult.produk.jenis,
+                    produk: sapronakResult.produk.merk,
+                    quantity: sapronakResult.kuantitas,
+                });
+            } 
+        });
+
+        //sum quantity
+        var holder = {};
+        dataSapronak.forEach(function(d) {
+            if (holder.hasOwnProperty(d.tanggal)) {
+                holder[d.tanggal] = holder[d.tanggal] + d.quantity;
+            } else {
+                holder[d.tanggal] = d.quantity;
+            }
+        });
+
+        var objQuantity = [];
+        for (var prop in holder) {
+            objQuantity.push({ tanggal: prop, quantity: holder[prop] });
+        }
+
+        //list produk
+        var holderProduk = {};
+        dataSapronak.forEach(function(d) {
+            if (holderProduk.hasOwnProperty(d.tanggal)) {
+                holderProduk[d.tanggal] = holderProduk[d.tanggal] + ", " + d.produk;
+            } else {
+                holderProduk[d.tanggal] = d.produk;
+            }
+        });
+
+        var objProduk = [];
+        for (var propProduk in holderProduk) {
+            objProduk.push({ tanggal: propProduk, produk: holderProduk[propProduk] });
+        }
+
+        for(let i=0; i<objQuantity.length; i++) {
+            merged.push({
+                ...objQuantity[i],
+                ...objProduk[i]
+            });
+        }
+
+        const result = dataHarian.map(v => ({ ...v, ...merged.find(sp => sp.tanggal === v.tanggal) }));
+
+        // get periode ke
+        const kandang = await Periode.find({kandang: periode.kandang._id}).sort('tanggalMulai')
+        let dataPeriode = [];
+        await Promise.map(kandang, async (kandang, index) => {
+            if (kandang._id.toString() === periode._id.toString()) {
+                dataPeriode.push(index + 1);
+            }
+        });
+
+        //export excel
+        const workbook = new excelJS.Workbook();
+        const worksheet = workbook.addWorksheet("Recording");
+
+        worksheet.columns = [
+            { header: "Usia Ayam", key: "usiaAyam", width: 15 }, 
+            { header: "Tanggal", key: "tanggal", width: 15 },
+            { header: "Mati", key: "mortalitas", width: 10 },
+            { header: "Culling", key: "culling", width: 10 },
+            { header: "Sisa Populasi", key: "sisaPopulasi", width: 15 },
+            { header: "Feed Intake", key: "feedIntake", width: 15 },
+            { header: "Qty Sapronak", key: "quantity", width: 15 },
+            { header: "Nama Produk", key: "produk", width: 15 },
+            { header: "Sisa Sapronak", key: "sisaSapronak", width: 15 },
+            { header: "Bobot", key: "bobot", width: 10 },
+            { header: "FCR ACT", key: "fcr", width: 10 },
+            { header: "IP", key: "ip", width: 10 },
+        ];
+
+        result.forEach((resultItem) => {
+            worksheet.addRow(resultItem);
+        });
+
+        worksheet.getRow(1).eachCell((cell) => {
+            cell.font = { bold: true };
+        });
+
+        res.setHeader(
+            "Content-Type",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        );
+        res.setHeader(
+            "Content-Disposition",
+            "attachment; filename=" + periode.kandang.kode + " - Periode ke " + dataPeriode[0] + ".xlsx"
+        );
+        return workbook.xlsx.write(res).then(function () {
+            res.status(200).end();
+        });
+    } catch (error) {
+        next(error);
     }
 }
 
@@ -728,6 +917,279 @@ exports.getKelola = async (req, res, next) => {
 
         res.json({
             data: dataKelola,
+            message: 'Ok'
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
+const _findPeternak = async (req, isActive) => {
+    const user = req.user._id
+    const findKandang = await Model.find({createdBy: user, isActive: isActive})
+    if (findKandang.length === 0) return findKandang
+    const map = await Promise.all(findKandang.map(async(x) => {
+        const tmp = x
+        isActive ? isEnd = false : isEnd = true
+        // const findPeriode = await Periode.countDocumnets({kandang: x._id, isEnd: isEnd}).sort({'tanggalMulai': -1}).limit(1).select('-kandang')
+        const urutan = await Periode.countDocuments({kandang: x._id})
+        const findPeriode = await Periode.aggregate([
+            {$match: {kandang: x._id, isEnd: isEnd}},
+            {$addFields: {urutanKe: urutan}},
+            {$sort: {tanggalMulai: -1}},
+            {$limit: 1}
+        ])
+        if (findPeriode.length == 0) return {...tmp.toObject(), periode: {}, estimasiPendapatan: 0}
+        const pembelianSapronak = await Sapronak.aggregate([
+            {$match: {periode: findPeriode[0]._id}},
+            {$unwind: '$produk'},
+            {$project: {pembelianSapronak: {$cond: {if: '$product.jenis' === 'PAKAN', then: {$multiply: ['$zak', '$hargaSatuan']}, else: {$multiply: ['$kuantitas', '$hargaSatuan']}}}}},
+            {$group: {_id: '$periode', totalSapronak: {$sum: '$pembelianSapronak'}}}
+        ])
+        const pembelianDoc = findPeriode[0].populasi * findPeriode[0].hargaSatuan
+        const findPenjualan = await Penjualan.find({periode: findPeriode[0]._id})
+        const akumulasiPenjualan = await Penjualan.aggregate([
+            {$match: {periode: findPeriode[0]._id}},
+            {$project: {penjualan: {$multiply: ['$qty', '$harga', '$beratBadan']}}},
+            {$group: {_id: '$periode', totalPenjualan: {$sum: '$penjualan'}}}
+        ])
+        const penjualan = findPenjualan.length == 0 ? 0 : akumulasiPenjualan[0].totalPenjualan
+        const sapronak = pembelianSapronak.length === 0 ? 0 : pembelianSapronak[0].totalSapronak
+        const estimasi = penjualan - pembelianDoc - sapronak 
+        return {...tmp.toObject(), periode: findPeriode[0], estimasiPendapatan: estimasi}
+    }))
+    return map
+}
+
+exports.listKandangPeternak = async (req, res, next) => {
+    try {
+        const findActive = await _findPeternak(req, true)
+        const findUnactive = await _findPeternak(req, false)
+        
+        res.json({
+            data: {
+                kelolaAktif: findActive,
+                kelolaRehat: findUnactive
+            },
+            message: 'Ok'
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
+const _findPPL = async (req, isActive) => {
+    const user = req.user._id
+    isActive ? isEnd = false : isEnd = true
+    const findPeriode = await Periode.aggregate([
+        {$match: {ppl: mongoose.Types.ObjectId(user), isActivePPL: isActive}},
+        {$sort: {'tanggalAkhir': -1}},
+        {$group: {_id: '$_id', id: {$first: '$kandang'}}},
+        {$group: {_id: '$id', periode: {$push: '$_id'},}}
+    ])
+    const map = await Promise.all(findPeriode.map(async (x) => {
+        const findPeriode = await Periode.findById(x.periode[0])
+        const findKandang = await Model.findById(x._id)
+        // if(!findKandang) return {isDeleted: "true"}
+        const countPeriode = await Periode.countDocuments({kandang: x._id})
+        const pembelianSapronak = await Sapronak.aggregate([
+                {$match: {periode: x.periode[0]}},
+                {$unwind: '$produk'},
+                {$project: {pembelianSapronak: {$cond: {if: '$product.jenis' === 'PAKAN', then: {$multiply: ['$zak', '$hargaSatuan']}, else: {$multiply: ['$kuantitas', '$hargaSatuan']}}}}},
+                {$group: {_id: '$periode', totalSapronak: {$sum: '$pembelianSapronak'}}}
+            ])
+        const pembelianDoc = findPeriode.populasi * findPeriode.hargaSatuan
+        const findPenjualan = await Penjualan.find({periode: x.periode[0]})
+        const akumulasiPenjualan = await Penjualan.aggregate([
+            {$match: {periode: x.periode[0]}},
+            {$project: {penjualan: {$multiply: ['$qty', '$harga', '$beratBadan']}}},
+            {$group: {_id: '$periode', totalPenjualan: {$sum: '$penjualan'}}}
+        ])
+        const penjualan = findPenjualan.length === 0 ? 0 : akumulasiPenjualan[0].totalPenjualan
+        const sapronak = pembelianSapronak.length === 0 ? 0 : pembelianSapronak[0].totalSapronak
+        const estimasi = penjualan - pembelianDoc - sapronak
+        
+        return {...findKandang.toObject(), periode: findPeriode, urutanKe: countPeriode, estimasiPendapatan: estimasi, isDeleted: "false"}
+    }))
+    // const filter = map.filter(x => x.isDeleted === "false")
+    return map
+}
+
+exports.listKandangPPL = async (req, res, next) => {
+    try {
+        const findActive = await _findPPL(req, true)
+        const findUnactive = await _findPPL(req, false)
+        
+        res.json({
+            data: {
+                kelolaAktif: findActive,
+                kelolaRehat: findUnactive
+            },
+            message: 'Ok'
+        })
+    } catch(error){
+        next(error)
+    }
+}
+
+const _kelolaPeternak = async (req) => {
+    const user = req.user._id
+    const findAktif = Model.find({createdBy: user, isActive: true})
+    const findRehat = Model.find({createdBy: user, isActive: false})
+    const results = await Promise.all([findAktif, findRehat])
+    return {aktif: results[0], rehat: results[1]}
+}
+
+exports.kelolaPeternak = async (req, res, next) => {
+    try {
+        const token = req.headers['authorization']
+        const results = await _kelolaPeternak(req)
+        const countActive = results.aktif.length
+        const countUnactive = results.rehat.length
+
+        const mapAktif = await Promise.all(results.aktif.map(async(x) => {
+            const tmp = x
+            const findPeriode = await Periode.findOne({kandang: x._id, isEnd: false}).select('-kandang')
+            const now = new Date(Date.now())
+            const start = new Date(findPeriode.tanggalMulai)
+            const umur = Math.round(Math.abs((now - start) / ONE_DAY))
+
+            const suhu = await fetch(`http://3.233.186.139:3104/api/flock/kandang/${x._id}`,{
+                method: 'GET',
+                headers: {'Authorization': token,
+                "Content-Type": "application/json"}
+            }).then(res => res.json()).then(data => data.data)
+            return {...tmp.toObject(), umur: umur, periode: findPeriode, suhu: suhu[0].actualTemperature}
+        }))
+        res.json({
+            data: {
+                kandangAktif: countActive,
+                kandangRehat: countUnactive,
+                kelola: mapAktif
+            },
+            message: 'Ok'
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
+exports.kelolaPPL = async (req, res, next) => {
+    const user = req.user._id
+    const token = req.headers['authorization']
+    try {
+        const findPeriode = await Periode.find({ppl: user, isActivePPL: true})
+        const map = await Promise.all(findPeriode.map(async(x) => {
+            const findKandang = await Model.findById(x.kandang)
+            const now = new Date(Date.now())
+            const start = new Date(x.tanggalMulai)
+            const umur = Math.round(Math.abs((now - start) / ONE_DAY))
+            const getKegiatan = await KegiatanHarian.findOne({periode: x._id}).sort({'tanggal': -1})
+            
+            const dataDeplesi = await KegiatanHarian.aggregate([
+                {$match: {periode: mongoose.Types.ObjectId(x.id)}},
+                {$group: {_id: '$_id', totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
+            ])
+            const penjualan = await Penjualan.aggregate([
+                {$match: {periode: mongoose.Types.ObjectId(x.id)}},
+                {$group: {_id: '$_id', terjual: {$sum: '$qty'}}}
+            ])
+    
+            const dataPakan = await KegiatanHarian.aggregate([
+                {$match: {periode: mongoose.Types.ObjectId(x.id)}},
+                {$unwind: {'path': '$pakanPakai', "preserveNullAndEmptyArrays": true}},
+                {$group: {_id: '$_id', totalPakan: {$sum: '$pakanPakai.beratPakan'}}}
+            ])
+            
+            const cumDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
+            const cumKematian = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
+            const cumPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
+            const cumPakan = dataPakan.reduce((a, {totalPakan})=>a + totalPakan, 0);
+            
+            const latestWeight = !getKegiatan ? 0 : getKegiatan.berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0)
+            const latestSampling = !getKegiatan ? 0 : getKegiatan.berat.reduce((a, {populasi}) => a + populasi, 0)
+            
+            const avgLatestWeight = latestWeight == 0 ? 0 : latestWeight/latestSampling
+
+            const populasiAkhir = x.populasi - (cumDeplesi + cumKematian + cumPenjualan)
+            
+            const deplesi = (x.populasi - (x.populasi - (cumDeplesi + cumKematian))) * 100 / x.populasi
+            const presentaseAyamHidup = 100 - deplesi
+            const FCR = cumPakan / (populasiAkhir * (avgLatestWeight/1000))
+
+            const atas = presentaseAyamHidup * (avgLatestWeight/1000)
+            const bawah = FCR * (dataPakan.length-1)
+            const IP = (atas/bawah) * 100
+
+            const suhu = await fetch(`http://3.233.186.139:3104/api/flock/kandang/${x.kandang}`,{
+                method: 'GET',
+                headers: {'Authorization': token,
+                "Content-Type": "application/json"}
+            }).then(res => res.json()).then(data => data.data)
+
+            return {...findKandang.toObject(), IP: IP, umur: umur, periode: x, suhu: suhu ? suhu[0].actualTemperature : 0}
+        }))
+        res.json({
+            data: {
+                kandangAktif: map.length,
+                kandangRehat: 0,
+                kelola: map
+            },
+            message: 'Ok'
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
+exports.detailKandang = async (req,res, next) => {
+    const id = req.params.id
+    const token = req.headers['authorization']
+    try {
+        const findKandang = await Model.findById(id)        
+        const findPeriode = await Periode.find({kandang: id}).sort({isEnd: 1, tanggalMulai: -1})
+
+        const map = await Promise.all(findPeriode.map(async(x) => {
+            const now = new Date(Date.now())
+            const start = new Date(x.tanggalMulai)
+            const umur = Math.round(Math.abs((now - start) / ONE_DAY))
+            const pembelianSapronak = await Sapronak.aggregate([
+                {$match: {periode: x._id}},
+                {$unwind: '$produk'},
+                {$project: {pembelianSapronak: {$cond: {if: '$product.jenis' === 'PAKAN', then: {$multiply: ['$zak', '$hargaSatuan']}, else: {$multiply: ['$kuantitas', '$hargaSatuan']}}}}},
+                {$group: {_id: '$periode', totalSapronak: {$sum: '$pembelianSapronak'}}}
+            ])
+            const pembelianDoc = x.populasi * x.hargaSatuan
+            const findPenjualan = await Penjualan.find({periode: x._id})
+            const akumulasiPenjualan = await Penjualan.aggregate([
+                {$match: {periode: x._id}},
+                {$project: {penjualan: {$multiply: ['$qty', '$harga', '$beratBadan']}}},
+                {$group: {_id: '$periode', totalPenjualan: {$sum: '$penjualan'}}}
+            ])
+            const penjualan = findPenjualan.length == 0 ? 0 : akumulasiPenjualan[0].totalPenjualan
+            const sapronak = pembelianSapronak.length === 0 ? 0 : pembelianSapronak[0].totalSapronak
+            const estimasi = penjualan - pembelianDoc - sapronak
+
+            return {...x.toObject(), umur: umur, estimasi: estimasi}
+        }))
+        const suhu = await fetch(`http://3.233.186.139:3104/api/flock/kandang/${id}`,{
+                method: 'GET',
+                headers: {'Authorization': token,
+                "Content-Type": "application/json"}
+            }).then(res => res.json()).then(data => data.data)
+        
+        res.json({
+            data: {
+                informasiKandang: {
+                    nama: !findPeriode.length ? findKandang.kode : map[0].kandang.kode,
+                    lokasi: !findPeriode.length ? findKandang.alamat : map[0].kandang.alamat,
+                    jenis: !findPeriode.length ? findKandang.tipe.tipe : map[0].kandang.tipe.tipe,
+                    kapasitas: !findPeriode.length ? findKandang.populasi : map[0].kandang.populasi,
+                    penghasilan: !findPeriode.length ? 0 : map[0].kandang.estimasi,
+                },
+                iot: suhu,
+                budidaya: map
+            },
             message: 'Ok'
         })
     } catch (error) {

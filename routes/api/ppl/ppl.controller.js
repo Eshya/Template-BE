@@ -19,7 +19,7 @@ exports.findAll =  async (req, res, next) => {
     try {
         const {limit, offset} = parseQuery(req.query);
         const { name, address, phoneNumber, asalKemitraan } = req.query;
-        const sort = handleQuerySort(req.query.sort)
+        let sort = handleQuerySort(req.query.sort)
         const filter = {}
         if (name) {
             filter.fullname = new RegExp(name, 'i') 
@@ -36,8 +36,12 @@ exports.findAll =  async (req, res, next) => {
         filter.role = "61d5608d4a7ba5b05c9c7ae3";
         filter.deleted = false;
 
+        if (!req.query.sort) {
+            sort = { fullname: 1 }
+        }
+
         const count = await Model.countDocuments(filter)
-        const data = await Model.find(filter).limit(limit).skip(offset).sort(sort).select('avatar image noKTP address fullname username email phoneNumber asalKemitraan kemitraanUser')
+        const data = await Model.find(filter).limit(limit).skip(offset).sort(sort).select('avatar image noKTP address fullname username email phoneNumber asalKemitraan kemitraanUser').collation({ locale: "en", caseLevel: true })
 
         res.json({
             message: 'Ok',
