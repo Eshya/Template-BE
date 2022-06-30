@@ -261,6 +261,10 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
                 }
 
                 if (pushData) {
+                    let namaPemilik = periode.kandang.createdBy ? periode.kandang.createdBy.fullname : ""
+                    let namaPemilikSTR = namaPemilik.toLowerCase().replace(/\b[a-z]/g, function(letter) {
+                        return letter.toUpperCase();
+                    });
                     resultPeriode.push({
                         idKandang: periode.kandang.id,
                         namaKandang: periode.kandang.kode,
@@ -272,7 +276,7 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
                         IdKemitraan: periode.kemitraan ? periode.kemitraan.id : null,
                         namaKemitraan: periode.kemitraan ? periode.kemitraan.name : "",
                         idPemilik: periode.kandang.createdBy ? periode.kandang.createdBy._id : null,
-                        namaPemilik: periode.kandang.createdBy ? periode.kandang.createdBy.fullname : "",
+                        namaPemilik: namaPemilikSTR,
                     });
                 }
             }
@@ -422,6 +426,10 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
                 }
 
                 if (pushData) {
+                    let namaPemilik = periode.kandang.createdBy ? periode.kandang.createdBy.fullname : ""
+                    let namaPemilikSTR = namaPemilik.toLowerCase().replace(/\b[a-z]/g, function(letter) {
+                        return letter.toUpperCase();
+                    });
                     resultPeriode.push({
                         idKandang: periode.kandang.id,
                         namaKandang: periode.kandang.kode,
@@ -433,7 +441,7 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
                         IdKemitraan: periode.kemitraan ? periode.kemitraan.id : null,
                         namaKemitraan: periode.kemitraan ? periode.kemitraan.name : "",
                         idPemilik: periode.kandang.createdBy ? periode.kandang.createdBy._id : null,
-                        namaPemilik: periode.kandang.createdBy ? periode.kandang.createdBy.fullname : "",
+                        namaPemilik: namaPemilikSTR,
                     });
                 }
             }
