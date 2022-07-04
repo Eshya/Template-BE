@@ -87,6 +87,22 @@ exports.insert = async (req, res, next) => {
     const data = req.body
     try {
         const findPeriode = await Periode.findById(data.periode)
+        const dataDeplesi = await Model.aggregate([
+            {$match: {periode: mongoose.Types.ObjectId(data.periode)}},
+            {$group: {_id: '$_id', totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
+        ])
+
+        const penjualan = await Penjualan.aggregate([
+            {$match: {periode: mongoose.Types.ObjectId(data.periode)}},
+            {$group: {_id: '$_id', terjual: {$sum: '$qty'}}}
+        ])
+        const allDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
+        const allKematian = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
+        const allPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
+
+        const populasiAkhir = findPeriode.populasi - (allDeplesi + allKematian + allPenjualan)
+
+        if (data.deplesi + data.pemusnahan > populasiAkhir) return res.json({error: 1008, message: 'data deplesi melebihi populasi akhir'})
         if(data.ovkPakai){
             Promise.all(data.ovkPakai.map(async(x) => {
                 const foundSapronak = await Sapronak.findById(x.jenisOVK)
@@ -102,30 +118,14 @@ exports.insert = async (req, res, next) => {
                 x.beratPakan = x.beratZak * 50
     
                 const foundSapronak = await Sapronak.findById(x.jenisPakan)
-                if(!foundSapronak) throw res.json({error:1010, message: 'sapronak not found'})
+                if(!foundSapronak) return res.json({error:1010, message: 'sapronak not found'})
                 if (foundSapronak.stock - x.beratPakan < 0) return res.json({error:1011, message: 'pakan tidak mencukupi'})
                 const dec = await Sapronak.updateMany({periode: data.periode, produk: foundSapronak.produk._id}, {$inc:{stock: -x.beratPakan}})
                 console.log(dec)
                 return dec
             }))
         }
-        const dataDeplesi = await Model.aggregate([
-            {$match: {periode: mongoose.Types.ObjectId(data.periode)}},
-            {$group: {_id: '$_id', totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
-        ])
 
-        const penjualan = await Penjualan.aggregate([
-            {$match: {periode: mongoose.Types.ObjectId(data.periode)}},
-            {$group: {_id: '$_id', terjual: {$sum: '$qty'}}}
-        ])
-
-        const allDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
-        const allKematian = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
-        const allPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
-
-        const populasiAkhir = findPeriode.populasi - (allDeplesi + allKematian + allPenjualan)
-
-        if (data.deplesi + data.pemusnahan > populasiAkhir) return res.json({error: 1008, message: 'data deplesi melebihi populasi akhir'})
         const results = await Model.create(data)
         res.json({
             data: results,
