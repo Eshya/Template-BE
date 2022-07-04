@@ -43,6 +43,9 @@ const scheme = new Schema({
     isActivePPL: {
         type: Boolean,
         default: false
+    },
+    rhpp_path: {
+        type: String,
     }
 }, {versionKey: false, timestamps: true})
 scheme.plugin(require('mongoose-autopopulate'));

@@ -326,7 +326,8 @@ exports.findOneDataPool =  async (req, res, next) => {
                 feedIntakeACT: feedIntakeACT.toFixed(2),
                 feedIntakeSTD: STD ? STD.dailyIntake: 0,
                 fcrACT: FCR.toFixed(2),
-                fcrSTD: STD ? STD.fcr: 0
+                fcrSTD: STD ? STD.fcr: 0,
+                rhpp_path: periode.rhpp_path ? periode.rhpp_path : ""
             }
 
             // get data harian
@@ -468,7 +469,8 @@ exports.findOneDataPool =  async (req, res, next) => {
                 feedIntakeACT: 0,
                 feedIntakeSTD:  0,
                 fcrACT: 0,
-                fcrSTD: 0
+                fcrSTD: 0,
+                rhpp_path: ""
             }
         }
 
