@@ -50,9 +50,6 @@ deploy-stagging-shell:
     - chickin-stag
 
 
-
-
-
 deploy-stagging:
   stage: deploy
   image: alpine:latest
