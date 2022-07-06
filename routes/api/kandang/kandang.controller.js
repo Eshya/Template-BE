@@ -325,6 +325,9 @@ exports.findOneDataPool =  async (req, res, next) => {
                 bobotSTD: STD ? STD.bodyWeight: 0,
                 feedIntakeACT: feedIntakeACT.toFixed(2),
                 feedIntakeSTD: STD ? STD.dailyIntake: 0,
+                fcrACT: FCR.toFixed(2),
+                fcrSTD: STD ? STD.fcr: 0,
+                rhpp_path: periode.rhpp_path ? periode.rhpp_path : ""
             }
 
             // get data harian
@@ -465,6 +468,9 @@ exports.findOneDataPool =  async (req, res, next) => {
                 bobotSTD: 0,
                 feedIntakeACT: 0,
                 feedIntakeSTD:  0,
+                fcrACT: 0,
+                fcrSTD: 0,
+                rhpp_path: ""
             }
         }
 
@@ -520,7 +526,7 @@ exports.exportDataPool =  async (req, res, next) => {
 
             dataHarian.push({
                 usiaAyam: usiaAyam,
-                tanggal: moment(kegiatanHarianResult[i].tanggal).format("DD-MM-YYYY"),
+                tanggal: moment(kegiatanHarianResult[i].tanggal).add('hours', 7).format("DD-MM-YYYY"),
                 feedIntake: beratPakan,
                 bobot: totalBobot,
                 mortalitas: kegiatanHarianResult[i].deplesi,
@@ -537,7 +543,7 @@ exports.exportDataPool =  async (req, res, next) => {
         await Promise.map(sapronakResult, async (sapronakResult, index) => {
             if (sapronakResult.produk && (sapronakResult.produk.jenis === 'PAKAN')) {
                 dataSapronak.push({
-                    tanggal: moment(sapronakResult.tanggal).format("DD-MM-YYYY"),
+                    tanggal: moment(sapronakResult.tanggal).add('hours', 7).format("DD-MM-YYYY"),
                     jenis: sapronakResult.produk.jenis,
                     produk: sapronakResult.produk.merk,
                     quantity: sapronakResult.kuantitas,
@@ -618,6 +624,153 @@ exports.exportDataPool =  async (req, res, next) => {
 
         worksheet.getRow(1).eachCell((cell) => {
             cell.font = { bold: true };
+        });
+
+        worksheet.getCell('A1').border = {
+            top: {style:'thin'},
+            left: {style:'thin'},
+            bottom: {style:'thin'},
+            right: {style:'thin'}
+        };
+        worksheet.getCell('B1').border = {
+            top: {style:'thin'},
+            left: {style:'thin'},
+            bottom: {style:'thin'},
+            right: {style:'thin'}
+        };
+        worksheet.getCell('C1').border = {
+            top: {style:'thin'},
+            left: {style:'thin'},
+            bottom: {style:'thin'},
+            right: {style:'thin'}
+        };
+        worksheet.getCell('D1').border = {
+            top: {style:'thin'},
+            left: {style:'thin'},
+            bottom: {style:'thin'},
+            right: {style:'thin'}
+        };
+        worksheet.getCell('E1').border = {
+            top: {style:'thin'},
+            left: {style:'thin'},
+            bottom: {style:'thin'},
+            right: {style:'thin'}
+        };
+        worksheet.getCell('F1').border = {
+            top: {style:'thin'},
+            left: {style:'thin'},
+            bottom: {style:'thin'},
+            right: {style:'thin'}
+        };
+        worksheet.getCell('G1').border = {
+            top: {style:'thin'},
+            left: {style:'thin'},
+            bottom: {style:'thin'},
+            right: {style:'thin'}
+        };
+        worksheet.getCell('H1').border = {
+            top: {style:'thin'},
+            left: {style:'thin'},
+            bottom: {style:'thin'},
+            right: {style:'thin'}
+        };
+        worksheet.getCell('I1').border = {
+            top: {style:'thin'},
+            left: {style:'thin'},
+            bottom: {style:'thin'},
+            right: {style:'thin'}
+        };
+        worksheet.getCell('J1').border = {
+            top: {style:'thin'},
+            left: {style:'thin'},
+            bottom: {style:'thin'},
+            right: {style:'thin'}
+        };
+        worksheet.getCell('K1').border = {
+            top: {style:'thin'},
+            left: {style:'thin'},
+            bottom: {style:'thin'},
+            right: {style:'thin'}
+        };
+        worksheet.getCell('L1').border = {
+            top: {style:'thin'},
+            left: {style:'thin'},
+            bottom: {style:'thin'},
+            right: {style:'thin'}
+        };
+        result.forEach((row, index) => {
+            worksheet.getCell('A' + (index + 2)).border = {
+                top: {style:'thin'},
+                left: {style:'thin'},
+                bottom: {style:'thin'},
+                right: {style:'thin'}
+            };
+            worksheet.getCell('B' + (index + 2)).border = {
+                top: {style:'thin'},
+                left: {style:'thin'},
+                bottom: {style:'thin'},
+                right: {style:'thin'}
+            };
+            worksheet.getCell('C' + (index + 2)).border = {
+                top: {style:'thin'},
+                left: {style:'thin'},
+                bottom: {style:'thin'},
+                right: {style:'thin'}
+            };
+            worksheet.getCell('D' + (index + 2)).border = {
+                top: {style:'thin'},
+                left: {style:'thin'},
+                bottom: {style:'thin'},
+                right: {style:'thin'}
+            };
+            worksheet.getCell('E' + (index + 2)).border = {
+                top: {style:'thin'},
+                left: {style:'thin'},
+                bottom: {style:'thin'},
+                right: {style:'thin'}
+            };
+            worksheet.getCell('F' + (index + 2)).border = {
+                top: {style:'thin'},
+                left: {style:'thin'},
+                bottom: {style:'thin'},
+                right: {style:'thin'}
+            };
+            worksheet.getCell('G' + (index + 2)).border = {
+                top: {style:'thin'},
+                left: {style:'thin'},
+                bottom: {style:'thin'},
+                right: {style:'thin'}
+            };
+            worksheet.getCell('H' + (index + 2)).border = {
+                top: {style:'thin'},
+                left: {style:'thin'},
+                bottom: {style:'thin'},
+                right: {style:'thin'}
+            };
+            worksheet.getCell('I' + (index + 2)).border = {
+                top: {style:'thin'},
+                left: {style:'thin'},
+                bottom: {style:'thin'},
+                right: {style:'thin'}
+            };
+            worksheet.getCell('J' + (index + 2)).border = {
+                top: {style:'thin'},
+                left: {style:'thin'},
+                bottom: {style:'thin'},
+                right: {style:'thin'}
+            };
+            worksheet.getCell('K' + (index + 2)).border = {
+                top: {style:'thin'},
+                left: {style:'thin'},
+                bottom: {style:'thin'},
+                right: {style:'thin'}
+            };
+            worksheet.getCell('L' + (index + 2)).border = {
+                top: {style:'thin'},
+                left: {style:'thin'},
+                bottom: {style:'thin'},
+                right: {style:'thin'}
+            };
         });
 
         res.setHeader(
@@ -735,7 +888,7 @@ exports.insert = async (req, res, next) => {
             name: 'flock 1',
             kandang: results._id
         }
-        await fetch('http://3.233.186.139:3104/api/flock', {
+        await fetch('http://18.139.227.107:3104/api/flock', {
             method: 'post',
             body: JSON.stringify(body),
             headers: {
@@ -1054,7 +1207,7 @@ exports.kelolaPeternak = async (req, res, next) => {
             const start = new Date(findPeriode.tanggalMulai)
             const umur = Math.round(Math.abs((now - start) / ONE_DAY))
 
-            const suhu = await fetch(`http://3.233.186.139:3104/api/flock/kandang/${x._id}`,{
+            const suhu = await fetch(`http://18.139.227.107:3104/api/flock/kandang/${x._id}`,{
                 method: 'GET',
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
@@ -1121,7 +1274,7 @@ exports.kelolaPPL = async (req, res, next) => {
             const bawah = FCR * (dataPakan.length-1)
             const IP = (atas/bawah) * 100
 
-            const suhu = await fetch(`http://3.233.186.139:3104/api/flock/kandang/${x.kandang}`,{
+            const suhu = await fetch(`http://18.139.227.107:3104/api/flock/kandang/${x.kandang}`,{
                 method: 'GET',
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
@@ -1172,7 +1325,7 @@ exports.detailKandang = async (req,res, next) => {
 
             return {...x.toObject(), umur: umur, estimasi: estimasi}
         }))
-        const suhu = await fetch(`http://3.233.186.139:3104/api/flock/kandang/${id}`,{
+        const suhu = await fetch(`http://18.139.227.107:3104/api/flock/kandang/${id}`,{
                 method: 'GET',
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
