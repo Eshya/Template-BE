@@ -37,6 +37,8 @@ docker-build-shell:
 deploy-stagging-shell:
   stage: deploy
   script:
+    - export APP_IMAGE_STG=$AWS_ECR_REPOSITORY
+    - export APP_IMAGE_STG_TAG=$CI_PROJECT_NAME
     - docker-compose -f docker-compose.stg.yml pull
     - docker-compose -f docker-compose.stg.yml up -d
   environment:
