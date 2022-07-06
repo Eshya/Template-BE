@@ -37,8 +37,8 @@ docker-build-shell:
 deploy-stagging-shell:
   stage: deploy
   script:
-    - docker-compose -f docker-compose.prod.yml pull
-    - docker-compose -f docker-compose.prod.yml up -d
+    - docker-compose -f docker-compose.stg.yml pull
+    - docker-compose -f docker-compose.stg.yml up -d
   environment:
     name: stagging
   only:
