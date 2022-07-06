@@ -34,6 +34,22 @@ docker-build-shell:
   tags:
     - chickin-stag
 
+deploy-stagging-shell:
+  stage: deploy
+  script:
+    - docker-compose -f docker-compose.prod.yml pull
+    - docker-compose -f docker-compose.prod.yml up -d
+  environment:
+    name: stagging
+  only:
+    - gitlab-test
+  tags:
+    - chickin-stag
+
+
+
+
+
 deploy-stagging:
   stage: deploy
   image: alpine:latest
