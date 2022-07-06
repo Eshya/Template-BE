@@ -30,7 +30,7 @@ docker-build-shell:
     - docker build -t "${AWS_ECR_REPOSITORY}/${CI_PROJECT_NAME}:latest" -t "${AWS_ECR_REPOSITORY}/${CI_PROJECT_NAME}:$TAG_IMAGE" .
     - docker push "${AWS_ECR_REPOSITORY}/${CI_PROJECT_NAME}" --all-tags
   only:
-    - gitlab-test
+    - stagging
   tags:
     - chickin-stag
 
@@ -45,7 +45,7 @@ deploy-stagging-shell:
   environment:
     name: stagging
   only:
-    - gitlab-test
+    - stagging
   tags:
     - chickin-stag
 
