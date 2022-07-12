@@ -17,6 +17,8 @@ const ONE_DAY = 24 * 60 * 60 * 1000;
 const moment = require('moment');
 const excelJS = require("exceljs");
 
+var urlIOT = process.env.DB_NAME === "chckin" ? `iot.chickinindonesia.com` : `staging-iot.chickinindonesia.com`
+
 const handleQuerySort = (query) => {
     try{
       const toJSONString = ("{" + query + "}").replace(/(\w+:)|(\w+ :)/g, (matched => {
@@ -880,7 +882,7 @@ exports.insert = async (req, res, next) => {
     const token = req.headers['authorization']
     const {kode, alamat, tipe, isMandiri, kota, populasi} = req.body;
     const createdBy = req.user._id
-    const flock = []
+    const flock = [] 
     try {
         const results = await Model.create({kode, alamat, tipe, isMandiri, kota, createdBy, populasi});
         // console.log(results._id)
@@ -888,7 +890,7 @@ exports.insert = async (req, res, next) => {
             name: 'flock 1',
             kandang: results._id
         }
-        await fetch('http://18.139.227.107:3104/api/flock', {
+        await fetch(`https://${urlIOT}/api/flock`, {
             method: 'post',
             body: JSON.stringify(body),
             headers: {
@@ -1207,7 +1209,7 @@ exports.kelolaPeternak = async (req, res, next) => {
             const start = new Date(findPeriode.tanggalMulai)
             const umur = Math.round(Math.abs((now - start) / ONE_DAY))
 
-            const suhu = await fetch(`http://18.139.227.107:3104/api/flock/kandang/${x._id}`,{
+            const suhu = await fetch(`https://${urlIOT}/api/flock/kandang/${x._id}`,{
                 method: 'GET',
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
@@ -1274,7 +1276,7 @@ exports.kelolaPPL = async (req, res, next) => {
             const bawah = FCR * (dataPakan.length-1)
             const IP = (atas/bawah) * 100
 
-            const suhu = await fetch(`http://18.139.227.107:3104/api/flock/kandang/${x.kandang}`,{
+            const suhu = await fetch(`https://${urlIOT}/api/flock/kandang/${x.kandang}`,{
                 method: 'GET',
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
@@ -1299,6 +1301,7 @@ exports.detailKandang = async (req,res, next) => {
     const id = req.params.id
     const token = req.headers['authorization']
     try {
+        console.log(process.env.DB_NAME)
         const findKandang = await Model.findById(id)        
         const findPeriode = await Periode.find({kandang: id}).sort({isEnd: 1, tanggalMulai: -1})
 
@@ -1325,12 +1328,12 @@ exports.detailKandang = async (req,res, next) => {
 
             return {...x.toObject(), umur: umur, estimasi: estimasi}
         }))
-        const suhu = await fetch(`http://18.139.227.107:3104/api/flock/kandang/${id}`,{
+        const suhu = await fetch(`https://${urlIOT}/api/flock/kandang/${id}`,{
                 method: 'GET',
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
             }).then(res => res.json()).then(data => data.data)
-        
+        console.log(suhu)
         res.json({
             data: {
                 informasiKandang: {
