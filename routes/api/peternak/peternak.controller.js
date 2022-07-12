@@ -51,7 +51,7 @@ exports.findAll =  async (req, res, next) => {
         let count;
         let result = [];
         if (role === "adminkemitraan") {
-            const data = await Model.find(filter).sort(sort).collation({ locale: "en", caseLevel: true })
+            const data = await Model.find(filter).sort(sort)
             await Promise.map(data, async (dataItem) => {
                 const kandang = await Kandang.find({createdBy: dataItem._id, deleted: false})
                 await Promise.map(kandang, async (kandangItem, index) => {
@@ -88,7 +88,7 @@ exports.findAll =  async (req, res, next) => {
             result = paginate(filteredResult, limit, (offset + 1))
         } else {
             count = await Model.countDocuments(filter)
-            const data = await Model.find(filter).limit(limit).skip(offset).sort(sort).collation({ locale: "en", caseLevel: true })
+            const data = await Model.find(filter).limit(limit).skip(offset).sort(sort)
             await Promise.map(data, async (dataItem) => {
                 const kandang = await Kandang.find({createdBy: dataItem._id, deleted: false})
                 // check status peternak
