@@ -3,7 +3,16 @@ const {parseQuery} = require('../../helpers');
 
 exports.findAll = async (req, res, next) => {
     const {where, limit, offset, sort} = parseQuery(req.query);
+    const search = req.query.search
     try {
+        if(search) {
+            where['$or'] = [{
+                merk: {'$regex': search, '$options': 'i'}
+            },{
+                jenis: {'$regex': search, '$options': 'i'}
+            }]
+    
+        }
         const count = Model.countDocuments(where);
         const data = Model.find(where).limit(limit).skip(offset).sort(sort);
         const results = await Promise.all([count, data]);
