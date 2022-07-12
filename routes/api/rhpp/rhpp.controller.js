@@ -50,13 +50,14 @@ exports.findAll =  async (req, res, next) => {
         }
 
         let result = [];
-        const data = await Kandang.find(filter).sort(sort).collation({ locale: "en", caseLevel: true })
+        const data = await Kandang.find(filter).sort(sort)
         for (let i = 0; i < data.length; i++) {
             let filterPeriod = {};
             filterPeriod.kandang = data[i].id;
             if (role === "adminkemitraan") {
                 filterPeriod.kemitraan = kemitraanId
             }
+            filterPeriod.rhpp_path = [ null, "" ]
             if (rhpp) {
                 filterPeriod.rhpp_path = { "$nin": [ null, "" ] }
             }
@@ -64,7 +65,7 @@ exports.findAll =  async (req, res, next) => {
             const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 })
             if (periode && periode.kandang) {
                 // get periode ke
-                const kandang = await Periode.find(filterPeriod).sort('tanggalMulai')
+                const kandang = await Periode.find({kandang: data[i].id}).sort('tanggalMulai')
                 let dataPeriode = [];
                 await Promise.map(kandang, async (itemKandang, index) => {
                     if (itemKandang._id.toString() === periode._id.toString()) {
@@ -72,7 +73,7 @@ exports.findAll =  async (req, res, next) => {
                     }
                 });
 
-                let namaPemilik = data[i].createdBy ? data[i].createdBy.fullname : ""
+                let namaPemilik = data[i].createdBy ? "" : ""
                 let namaPemilikSTR = namaPemilik.toLowerCase().replace(/\b[a-z]/g, function(letter) {
                     return letter.toUpperCase();
                 });

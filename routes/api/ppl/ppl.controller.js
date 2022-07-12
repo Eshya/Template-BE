@@ -41,7 +41,7 @@ exports.findAll =  async (req, res, next) => {
         }
 
         const count = await Model.countDocuments(filter)
-        const data = await Model.find(filter).limit(limit).skip(offset).sort(sort).select('avatar image noKTP address fullname username email phoneNumber asalKemitraan kemitraanUser').collation({ locale: "en", caseLevel: true })
+        const data = await Model.find(filter).limit(limit).skip(offset).sort(sort).select('avatar image noKTP address fullname username email phoneNumber asalKemitraan kemitraanUser')
 
         res.json({
             message: 'Ok',

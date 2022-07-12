@@ -31,7 +31,7 @@ exports.findAll = async (req, res, next) => {
             sort = { code: 1 }
         }
         const count = await Model.countDocuments(filter)
-        const data = await Model.find(filter).limit(limit).skip(offset).sort(sort).collation({ locale: "en", caseLevel: true })
+        const data = await Model.find(filter).limit(limit).skip(offset).sort(sort)
         res.json({
             message: 'Ok',
             length: count,
