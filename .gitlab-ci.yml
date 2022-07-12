@@ -30,22 +30,23 @@ docker-build-shell:
     - docker build -t "${AWS_ECR_REPOSITORY}/${CI_PROJECT_NAME}:latest" -t "${AWS_ECR_REPOSITORY}/${CI_PROJECT_NAME}:$TAG_IMAGE" .
     - docker push "${AWS_ECR_REPOSITORY}/${CI_PROJECT_NAME}" --all-tags
   only:
-    - stagging
+    - staging
   tags:
     - chickin-stag
 
-deploy-stagging-shell:
+deploy-staging-shell:
   stage: deploy
   script:
     - aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin $AWS_ECR_REPOSITORY
     - export APP_IMAGE_STG="${AWS_ECR_REPOSITORY}/${CI_PROJECT_NAME}"
     - export APP_IMAGE_STG_TAG="${TAG_IMAGE}"
+    - env
     - docker-compose -f docker-compose.stg.yml pull
     - docker-compose -f docker-compose.stg.yml up -d
   environment:
-    name: stagging
+    name: staging
   only:
-    - stagging
+    - staging
   tags:
     - chickin-stag
 

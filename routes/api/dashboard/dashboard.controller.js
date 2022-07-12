@@ -261,7 +261,7 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
                 }
 
                 if (pushData) {
-                    let namaPemilik = periode.kandang.createdBy ? periode.kandang.createdBy.fullname : ""
+                    let namaPemilik = periode.kandang.createdBy ? "" : ""
                     let namaPemilikSTR = namaPemilik.toLowerCase().replace(/\b[a-z]/g, function(letter) {
                         return letter.toUpperCase();
                     });
@@ -426,7 +426,7 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
                 }
 
                 if (pushData) {
-                    let namaPemilik = periode.kandang.createdBy ? periode.kandang.createdBy.fullname : ""
+                    let namaPemilik = periode.kandang.createdBy ? "" : ""
                     let namaPemilikSTR = namaPemilik.toLowerCase().replace(/\b[a-z]/g, function(letter) {
                         return letter.toUpperCase();
                     });
