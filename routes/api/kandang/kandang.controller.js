@@ -93,7 +93,7 @@ exports.findAllDataPool =  async (req, res, next) => {
         let count;
         let result = [];
         if (role === "adminkemitraan") {
-            const data = await Model.find(filter).sort(sort).collation({ locale: "en", caseLevel: true })
+            const data = await Model.find(filter).sort(sort)
             for (let i = 0; i < data.length; i++) {
                 let filterPeriod = {};
                 filterPeriod.kandang = data[i].id;
@@ -136,7 +136,7 @@ exports.findAllDataPool =  async (req, res, next) => {
             result = paginate(result, limit, offsetPaging)
         } else {
             count = await Model.countDocuments(filter)
-            const data = await Model.find(filter).limit(limit).skip(offset).sort(sort).collation({ locale: "en", caseLevel: true })
+            const data = await Model.find(filter).limit(limit).skip(offset).sort(sort)
             for (let i = 0; i < data.length; i++) {
                 let filterPeriod = {};
                 filterPeriod.kandang = data[i].id;
