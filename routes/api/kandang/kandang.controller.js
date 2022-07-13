@@ -1214,7 +1214,7 @@ exports.kelolaPeternak = async (req, res, next) => {
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
             }).then(res => res.json()).then(data => data.data)
-            return {...tmp.toObject(), umur: umur, periode: findPeriode, suhu: suhu[0].actualTemperature}
+            return {...tmp.toObject(), umur: umur, periode: findPeriode, suhu: suhu[0] ? suhu[0].actualTemperature : 0}
         }))
         res.json({
             data: {
