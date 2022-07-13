@@ -1142,9 +1142,11 @@ const _findPPL = async (req, isActive) => {
         {$group: {_id: '$_id', id: {$first: '$kandang'}}},
         {$group: {_id: '$id', periode: {$push: '$_id'},}}
     ])
+    console.log(findPeriode)
     const map = await Promise.all(findPeriode.map(async (x) => {
         const findPeriode = await Periode.findById(x.periode[0])
-        const findKandang = await Model.findById(x._id)
+        const findKandang = await Model.findOneWithDeleted({_id: x._id})
+        console.log(findKandang)
         // if(!findKandang) return {isDeleted: "true"}
         const countPeriode = await Periode.countDocuments({kandang: x._id})
         const pembelianSapronak = await Sapronak.aggregate([
