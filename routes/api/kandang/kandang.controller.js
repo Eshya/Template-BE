@@ -18,7 +18,7 @@ const moment = require('moment');
 const excelJS = require("exceljs");
 
 var urlIOT = process.env.DB_NAME === "chckin" ? `iot.chickinindonesia.com` : `staging-iot.chickinindonesia.com`
-
+var urlAuth = process.env.DB_NAME === "chckin" ? `auth.chickinindonesia.com` : `staging-auth.chickinindonesia.com`
 const handleQuerySort = (query) => {
     try{
       const toJSONString = ("{" + query + "}").replace(/(\w+:)|(\w+ :)/g, (matched => {
@@ -1085,6 +1085,11 @@ const _findPeternak = async (req, isActive) => {
     if (findKandang.length === 0) return findKandang
     const map = await Promise.all(findKandang.map(async(x) => {
         const tmp = x
+        const findUser = await fetch(`https://${urlAuth}/api/users/${x.createdBy}`, {
+            method: 'GET',
+            headers: {'Authorization': token,
+            "Content-Type": "application/json"}
+        }).then(res => res.json()).then(data => data.data)
         isActive ? isEnd = false : isEnd = true
         // const findPeriode = await Periode.countDocumnets({kandang: x._id, isEnd: isEnd}).sort({'tanggalMulai': -1}).limit(1).select('-kandang')
         const urutan = await Periode.countDocuments({kandang: x._id})
@@ -1111,7 +1116,7 @@ const _findPeternak = async (req, isActive) => {
         const penjualan = findPenjualan.length == 0 ? 0 : akumulasiPenjualan[0].totalPenjualan
         const sapronak = pembelianSapronak.length === 0 ? 0 : pembelianSapronak[0].totalSapronak
         const estimasi = penjualan - pembelianDoc - sapronak 
-        return {...tmp.toObject(), periode: findPeriode[0], estimasiPendapatan: estimasi}
+        return {...tmp.toObject(), user: findUser, periode: findPeriode[0], estimasiPendapatan: estimasi}
     }))
     return map
 }
@@ -1142,12 +1147,14 @@ const _findPPL = async (req, isActive) => {
         {$group: {_id: '$_id', id: {$first: '$kandang'}}},
         {$group: {_id: '$id', periode: {$push: '$_id'},}}
     ])
-    console.log(findPeriode)
     const map = await Promise.all(findPeriode.map(async (x) => {
         const findPeriode = await Periode.findById(x.periode[0])
         const findKandang = await Model.findOneWithDeleted({_id: x._id})
-        console.log(findKandang)
-        // if(!findKandang) return {isDeleted: "true"}
+        const findUser = await fetch(`https://${urlAuth}/api/users/${findKandang.createdBy}`, {
+            method: 'GET',
+            headers: {'Authorization': token,
+            "Content-Type": "application/json"}
+        }).then(res => res.json()).then(data => data.data)
         const countPeriode = await Periode.countDocuments({kandang: x._id})
         const pembelianSapronak = await Sapronak.aggregate([
                 {$match: {periode: x.periode[0]}},
@@ -1166,7 +1173,7 @@ const _findPPL = async (req, isActive) => {
         const sapronak = pembelianSapronak.length === 0 ? 0 : pembelianSapronak[0].totalSapronak
         const estimasi = penjualan - pembelianDoc - sapronak
         
-        return {...findKandang.toObject(), periode: findPeriode, urutanKe: countPeriode, estimasiPendapatan: estimasi, isDeleted: "false"}
+        return {...findKandang.toObject(), user: findUser, periode: findPeriode, urutanKe: countPeriode, estimasiPendapatan: estimasi, isDeleted: "false"}
     }))
     // const filter = map.filter(x => x.isDeleted === "false")
     return map
@@ -1206,6 +1213,12 @@ exports.kelolaPeternak = async (req, res, next) => {
 
         const mapAktif = await Promise.all(results.aktif.map(async(x) => {
             const tmp = x
+            const findUser = await fetch(`https://${urlAuth}/api/users/${x.createdBy}`, {
+                method: 'GET',
+                headers: {'Authorization': token,
+                "Content-Type": "application/json"}
+            }).then(res => res.json()).then(data => data.data)
+            console.log(findUser)
             const findPeriode = await Periode.findOne({kandang: x._id, isEnd: false}).select('-kandang')
             const now = new Date(Date.now())
             const start = new Date(findPeriode.tanggalMulai)
@@ -1216,7 +1229,7 @@ exports.kelolaPeternak = async (req, res, next) => {
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
             }).then(res => res.json()).then(data => data.data)
-            return {...tmp.toObject(), umur: umur, periode: findPeriode, suhu: suhu[0] ? suhu[0].actualTemperature : 0}
+            return {...tmp.toObject(), user: findUser, umur: umur, periode: findPeriode, suhu: suhu[0] ? suhu[0].actualTemperature : 0}
         }))
         res.json({
             data: {
@@ -1238,6 +1251,12 @@ exports.kelolaPPL = async (req, res, next) => {
         const findPeriode = await Periode.find({ppl: user, isActivePPL: true})
         const map = await Promise.all(findPeriode.map(async(x) => {
             const findKandang = await Model.findById(x.kandang)
+            const findUser = await fetch(`https://${urlAuth}/api/users/${findKandang.createdBy}`, {
+                method: 'GET',
+                headers: {'Authorization': token,
+                "Content-Type": "application/json"}
+            }).then(res => res.json()).then(data => data.data)
+            console.log(findUser)
             const now = new Date(Date.now())
             const start = new Date(x.tanggalMulai)
             const umur = Math.round(Math.abs((now - start) / ONE_DAY))
@@ -1284,7 +1303,7 @@ exports.kelolaPPL = async (req, res, next) => {
                 "Content-Type": "application/json"}
             }).then(res => res.json()).then(data => data.data)
 
-            return {...findKandang.toObject(), IP: IP, umur: umur, periode: x, suhu: suhu ? suhu[0].actualTemperature : 0}
+            return {...findKandang.toObject(), user: findUser, IP: IP, umur: umur, periode: x, suhu: suhu ? suhu[0].actualTemperature : 0}
         }))
         res.json({
             data: {
@@ -1303,11 +1322,15 @@ exports.detailKandang = async (req,res, next) => {
     const id = req.params.id
     const token = req.headers['authorization']
     try {
-        console.log(process.env.DB_NAME)
         const findKandang = await Model.findById(id)        
         const findPeriode = await Periode.find({kandang: id}).sort({isEnd: 1, tanggalMulai: -1})
 
         const map = await Promise.all(findPeriode.map(async(x) => {
+            const findUser = await fetch(`https://${urlAuth}/api/users/${x.createdBy}`, {
+                method: 'GET',
+                headers: {'Authorization': token,
+                "Content-Type": "application/json"}
+            }).then(res => res.json()).then(data => data.data)
             const now = new Date(Date.now())
             const start = new Date(x.tanggalMulai)
             const umur = Math.round(Math.abs((now - start) / ONE_DAY))
@@ -1328,14 +1351,13 @@ exports.detailKandang = async (req,res, next) => {
             const sapronak = pembelianSapronak.length === 0 ? 0 : pembelianSapronak[0].totalSapronak
             const estimasi = penjualan - pembelianDoc - sapronak
 
-            return {...x.toObject(), umur: umur, estimasi: estimasi}
+            return {...x.toObject(), umur: umur, estimasi: estimasi, user: findUser}
         }))
         const suhu = await fetch(`https://${urlIOT}/api/flock/kandang/${id}`,{
                 method: 'GET',
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
             }).then(res => res.json()).then(data => data.data)
-        console.log(suhu)
         res.json({
             data: {
                 informasiKandang: {
