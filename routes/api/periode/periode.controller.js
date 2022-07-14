@@ -497,9 +497,10 @@ exports.validateTambah = async (req,res, next) => {
     const token = req.headers['authorization']
     var url
     try {
-        process.env.DB_NAME === "chckin" ? url = `https://auth.chickinindonesia.com/api/users/` : url = `https://staging-auth.chickinindonesia.com/api/users/`
+        process.env.DB_NAME === "chckin" ? url = `https://auth.chickinindonesia.com/api/users/` : url = `https://stagging-auth.chickinindonesia.com/api/users/`
         if(!mongoose.Types.ObjectId.isValid(data.periode)) return res.json({data: null, error: 1016, message: "kandang tidak ditemukan!"})
         const results = await Model.findById(data.periode)
+        const tmp = results
         if (!results) return res.json({data: null, error: 1016, message: 'kandang tidak ditemukan!'})
         const getUserName = await fetch(url + results.ppl, {
             method: 'GET',
@@ -508,9 +509,16 @@ exports.validateTambah = async (req,res, next) => {
                 "Content-Type": "application/json" 
             }
         }).then(res => res.json()).then(data => data.data)
+        const getUser = await fetch(url + results.kandang.createdBy, {
+            method: 'GET',
+            headers: {
+                'Authorization': token,
+                "Content-Type": "application/json" 
+            }
+        }).then(res => res.json()).then(data => data.data)
         if (results.ppl !== null) return res.json({error: 1015, data: results, error_data: getUserName.fullname, message: "kandang sudah dikelola!"})
         res.json({
-            data: results,
+            data: {results, user: getUser},
             message: 'Ok'
         })
     } catch(error) {
