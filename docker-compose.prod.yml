@@ -5,14 +5,15 @@ services:
     container_name: smartfarm-production
     environment:
       SERVER_PORT: 3101
-      DB_HOST: mongodb
+      NODE_ENV: production
+      DB_HOST: $DB_HOST_PROD
       DB_PORT: 27017
-      DB_USER: chickindb
-      DB_PASS: IniDBch1ck1n
+      DB_USER: $DB_USER
+      DB_PASS: $DB_PASS
       DB_NAME: chckin
       DB_NAME_AUTH: chickin-auth
     volumes:
-      - /home/chickin/projects/smartfarm/upload-prod:/app/uploads
+      - /sites/apps/smartfarm/uploads:/app/uploads
     networks:
       - chickinnetwork
     ports:
