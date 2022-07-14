@@ -1081,6 +1081,7 @@ exports.getKelola = async (req, res, next) => {
 
 const _findPeternak = async (req, isActive) => {
     const user = req.user._id
+    const token = req.headers['authorization']
     const findKandang = await Model.find({createdBy: user, isActive: isActive})
     if (findKandang.length === 0) return findKandang
     const map = await Promise.all(findKandang.map(async(x) => {
@@ -1140,6 +1141,7 @@ exports.listKandangPeternak = async (req, res, next) => {
 
 const _findPPL = async (req, isActive) => {
     const user = req.user._id
+    const token = req.headers['authorization']
     isActive ? isEnd = false : isEnd = true
     const findPeriode = await Periode.aggregate([
         {$match: {ppl: mongoose.Types.ObjectId(user), isActivePPL: isActive}},
