@@ -838,6 +838,7 @@ exports.findFlock = async (req, res, next) => {
 
 exports.findPeriode = async (req, res, next) => {
     const id = req.params.id
+    const token = req.headers['authorization']
     try {
         const results = await Periode.find({kandang: id}).sort('updatedAt')
         if (results.length > 0){
@@ -847,9 +848,16 @@ exports.findPeriode = async (req, res, next) => {
             // console.log(start);
             const umurAyam = Math.round(Math.abs((now - start) / oneDay))
             // console.log(umurAyam);
+            const tmp = results[results.length - 1]
+            const findUser = await fetch(`https://${urlAuth}/api/users/${tmp.ppl}`, {
+                method: 'GET',
+                headers: {'Authorization': token,
+                "Content-Type": "application/json"}
+            }).then(res => res.json()).then(data => data.data)
+
             res.json({
                 age: umurAyam,
-                dataLuar: results[results.length - 1],
+                dataLuar: {...tmp.toObject(), userPPL: findUser ? findUser : null},
                 data: results,
                 message: 'Ok'
             })
