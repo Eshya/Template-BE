@@ -5,6 +5,8 @@ const KegiatanHarian = require('../kegiatan-harian/kegiatan-harian.model')
 const User = require('../peternak/peternak.model')
 const Promise = require("bluebird");
 const ONE_DAY = 24 * 60 * 60 * 1000;
+const fetch = require('node-fetch')
+var urlAuth = process.env.DB_NAME === "chckin" ? `auth.chickinindonesia.com` : `staging-auth.chickinindonesia.com`
 
 const handleQuerySort = (query) => {
     try{
@@ -152,6 +154,7 @@ exports.dashboardKemitraanPopulasi =  async (req, res, next) => {
 
 exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
     try {
+        const token = req.headers['authorization']
         let role = req.user.role ? req.user.role.name : '';
         let sort = handleQuerySort(req.query.sort)
         let {limit, offset} = parseQuery(req.query);
@@ -261,23 +264,32 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
                 }
 
                 if (pushData) {
-                    let namaPemilik = periode.kandang.createdBy ? "" : ""
+                    //find detail peternak
+                    const findUser = await fetch(`https://${urlAuth}/api/users/${periode.kandang.createdBy}`, {
+                        method: 'GET',
+                        headers: {'Authorization': token,
+                        "Content-Type": "application/json"}
+                    }).then(res => res.json()).then(data => data.data)
+
+                    let namaPemilik = findUser ? findUser.fullname : ""
                     let namaPemilikSTR = namaPemilik.toLowerCase().replace(/\b[a-z]/g, function(letter) {
                         return letter.toUpperCase();
                     });
-                    resultPeriode.push({
-                        idKandang: periode.kandang.id,
-                        namaKandang: periode.kandang.kode,
-                        kota: periode.kandang.kota,
-                        DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                        bobot: avgLatestWeight,
-                        usia: age,
-                        populasi: periode.populasi,
-                        IdKemitraan: periode.kemitraan ? periode.kemitraan.id : null,
-                        namaKemitraan: periode.kemitraan ? periode.kemitraan.name : "",
-                        idPemilik: periode.kandang.createdBy ? periode.kandang.createdBy._id : null,
-                        namaPemilik: namaPemilikSTR,
-                    });
+                    if (namaPemilik !== "") {
+                        resultPeriode.push({
+                            idKandang: periode.kandang.id,
+                            namaKandang: periode.kandang.kode,
+                            kota: periode.kandang.kota,
+                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
+                            bobot: avgLatestWeight,
+                            usia: age,
+                            populasi: periode.populasi,
+                            IdKemitraan: periode.kemitraan ? periode.kemitraan.id : null,
+                            namaKemitraan: periode.kemitraan ? periode.kemitraan.name : "",
+                            idPemilik: periode.kandang.createdBy ? periode.kandang.createdBy._id : null,
+                            namaPemilik: namaPemilikSTR,
+                        });
+                    }
                 }
             }
         });
@@ -317,6 +329,7 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
 
 exports.dashboardSalesKetersediaan =  async (req, res, next) => {
     try {
+        const token = req.headers['authorization']
         let role = req.user.role ? req.user.role.name : '';
         let sort = handleQuerySort(req.query.sort)
         let {limit, offset} = parseQuery(req.query);
@@ -426,23 +439,32 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
                 }
 
                 if (pushData) {
-                    let namaPemilik = periode.kandang.createdBy ? "" : ""
+                    //find detail peternak
+                    const findUser = await fetch(`https://${urlAuth}/api/users/${periode.kandang.createdBy}`, {
+                        method: 'GET',
+                        headers: {'Authorization': token,
+                        "Content-Type": "application/json"}
+                    }).then(res => res.json()).then(data => data.data)
+
+                    let namaPemilik = findUser ? findUser.fullname : ""
                     let namaPemilikSTR = namaPemilik.toLowerCase().replace(/\b[a-z]/g, function(letter) {
                         return letter.toUpperCase();
                     });
-                    resultPeriode.push({
-                        idKandang: periode.kandang.id,
-                        namaKandang: periode.kandang.kode,
-                        kota: periode.kandang.kota,
-                        DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                        bobot: avgLatestWeight,
-                        usia: age,
-                        populasi: periode.populasi,
-                        IdKemitraan: periode.kemitraan ? periode.kemitraan.id : null,
-                        namaKemitraan: periode.kemitraan ? periode.kemitraan.name : "",
-                        idPemilik: periode.kandang.createdBy ? periode.kandang.createdBy._id : null,
-                        namaPemilik: namaPemilikSTR,
-                    });
+                    if (namaPemilik !== "") {
+                        resultPeriode.push({
+                            idKandang: periode.kandang.id,
+                            namaKandang: periode.kandang.kode,
+                            kota: periode.kandang.kota,
+                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
+                            bobot: avgLatestWeight,
+                            usia: age,
+                            populasi: periode.populasi,
+                            IdKemitraan: periode.kemitraan ? periode.kemitraan.id : null,
+                            namaKemitraan: periode.kemitraan ? periode.kemitraan.name : "",
+                            idPemilik: periode.kandang.createdBy ? periode.kandang.createdBy._id : null,
+                            namaPemilik: namaPemilikSTR,
+                        });
+                    }
                 }
             }
         });
