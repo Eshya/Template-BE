@@ -5,5 +5,6 @@ const {auth, queryCek, schemaCek, paramCek, after} = require('../../helpers');
 
 router.get('/', auth, queryCek, c.findAll)
 router.get('/:id', auth, queryCek, c.findById);
+router.put('/remove/:id', auth, after, c.removePPLById)
 
 module.exports = router;

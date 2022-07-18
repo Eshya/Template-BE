@@ -41,6 +41,18 @@ const _find = async (req, isPublic = false) => {
     return {length: results[0], data: results[1]};
 }
 
+function dynamicSort(property) {
+    var sortOrder = 1;
+    if(property[0] === "-") {
+        sortOrder = -1;
+        property = property.substr(1);
+    }
+    return function (a,b) {
+        var result = (a[property] < b[property]) ? -1 : (a[property] > b[property]) ? 1 : 0;
+        return result * sortOrder;
+    }
+}
+
 exports.countPopulasi = async (req, res, next) => {
     const id = req.params.id
     try {
@@ -68,6 +80,7 @@ function paginate(array, page_size, page_number) {
 
 exports.findAllDataPool =  async (req, res, next) => {
     try {
+        const token = req.headers['authorization']
         const {limit, offset} = parseQuery(req.query);
         const { name, address, city, isActive } = req.query;
         let sort = handleQuerySort(req.query.sort);
@@ -115,17 +128,33 @@ exports.findAllDataPool =  async (req, res, next) => {
                     const now = new Date(Date.now());
                     const start = new Date(periode.tanggalMulai);
                     const usia = periode.isEnd ? Math.round(Math.abs((periode.tanggalAkhir - start) / ONE_DAY)) :  Math.round(Math.abs((now - start) / ONE_DAY))
-    
-                    result.push({
-                        idPemilik: data[i].createdBy ? data[i].createdBy._id : null,
-                        namaPemilik: data[i].createdBy ? data[i].createdBy.fullname : null,
-                        idKandang: data[i]._id,
-                        namaKandang: data[i].kode,
-                        kota: data[i].kota,
-                        isActive: data[i].isActive ? "Aktif" : "Rehat",
-                        usia: usia,
-                        periodeKe: dataPeriode[0]
+
+                    //find detail peternak
+                    const findUser = await fetch(`https://${urlAuth}/api/users/${data[i].createdBy}`, {
+                        method: 'GET',
+                        headers: {'Authorization': token,
+                        "Content-Type": "application/json"}
+                    }).then(res => res.json()).then(data => data.data)
+                    let namaPemilik = findUser ? findUser.fullname : ""
+
+                    // sort by nama kandang
+                    let namaKandang = data[i].kode ? data[i].kode : ""
+                    let namaKandangSTR = namaKandang.toLowerCase().replace(/\b[a-z]/g, function(letter) {
+                        return letter.toUpperCase();
                     });
+
+                    if (namaPemilik !== "") {
+                        result.push({
+                            idPemilik: data[i].createdBy ? data[i].createdBy._id : null,
+                            namaPemilik: namaPemilik,
+                            idKandang: data[i]._id,
+                            namaKandang: namaKandangSTR,
+                            kota: data[i].kota,
+                            isActive: data[i].isActive ? "Aktif" : "Rehat",
+                            usia: usia,
+                            periodeKe: dataPeriode[0]
+                        });
+                    }
                 }
             }
             count = result.length
@@ -135,7 +164,8 @@ exports.findAllDataPool =  async (req, res, next) => {
             } else {
                 offsetPaging = (offset / 10 + 1)
             }
-            result = paginate(result, limit, offsetPaging)
+            let resultSort = result.sort(dynamicSort("namaKandang"));
+            result = paginate(resultSort, limit, offsetPaging)
         } else {
             count = await Model.countDocuments(filter)
             const data = await Model.find(filter).limit(limit).skip(offset).sort(sort)
@@ -157,31 +187,64 @@ exports.findAllDataPool =  async (req, res, next) => {
                     const now = new Date(Date.now());
                     const start = new Date(periode.tanggalMulai);
                     const usia = periode.isEnd ? Math.round(Math.abs((periode.tanggalAkhir - start) / ONE_DAY)) :  Math.round(Math.abs((now - start) / ONE_DAY))
+
+                    //find detail peternak
+                    const findUser = await fetch(`https://${urlAuth}/api/users/${data[i].createdBy}`, {
+                        method: 'GET',
+                        headers: {'Authorization': token,
+                        "Content-Type": "application/json"}
+                    }).then(res => res.json()).then(data => data.data)
+                    let namaPemilik = findUser ? findUser.fullname : ""
+
+                    // sort by nama kandang
+                    let namaKandang = data[i].kode ? data[i].kode : ""
+                    let namaKandangSTR = namaKandang.toLowerCase().replace(/\b[a-z]/g, function(letter) {
+                        return letter.toUpperCase();
+                    });
     
-                    result.push({
-                        idPemilik: data[i].createdBy ? data[i].createdBy._id : null,
-                        namaPemilik: data[i].createdBy ? data[i].createdBy.fullname : null,
-                        idKandang: data[i]._id,
-                        namaKandang: data[i].kode,
-                        kota: data[i].kota,
-                        isActive: data[i].isActive ? "Aktif" : "Rehat",
-                        usia: usia,
-                        periodeKe: dataPeriode[0]
-                    });
+                    if (namaPemilik !== "") {
+                        result.push({
+                            idPemilik: data[i].createdBy ? data[i].createdBy._id : null,
+                            namaPemilik: namaPemilik,
+                            idKandang: data[i]._id,
+                            namaKandang: namaKandangSTR,
+                            kota: data[i].kota,
+                            isActive: data[i].isActive ? "Aktif" : "Rehat",
+                            usia: usia,
+                            periodeKe: dataPeriode[0]
+                        });
+                    }
                 } else {
-                    result.push({
-                        idPemilik: data[i].createdBy ? data[i].createdBy._id : null,
-                        namaPemilik: data[i].createdBy ? data[i].createdBy.fullname : null,
-                        idKandang: data[i]._id,
-                        namaKandang: data[i].kode,
-                        kota: data[i].kota,
-                        isActive: data[i].isActive ? "Aktif" : "Rehat",
-                        usia: 0,
-                        periodeKe: "Belum mulai Periode"
+                    //find detail peternak
+                    const findUser = await fetch(`https://${urlAuth}/api/users/${data[i].createdBy}`, {
+                        method: 'GET',
+                        headers: {'Authorization': token,
+                        "Content-Type": "application/json"}
+                    }).then(res => res.json()).then(data => data.data)
+                    let namaPemilik = findUser ? findUser.fullname : ""
+
+                    // sort by nama kandang
+                    let namaKandang = data[i].kode ? data[i].kode : ""
+                    let namaKandangSTR = namaKandang.toLowerCase().replace(/\b[a-z]/g, function(letter) {
+                        return letter.toUpperCase();
                     });
+
+                    if (namaPemilik !== "") {
+                        result.push({
+                            idPemilik: data[i].createdBy ? data[i].createdBy._id : null,
+                            namaPemilik: namaPemilik,
+                            idKandang: data[i]._id,
+                            namaKandang: namaKandangSTR,
+                            kota: data[i].kota,
+                            isActive: data[i].isActive ? "Aktif" : "Rehat",
+                            usia: 0,
+                            periodeKe: "Belum mulai Periode"
+                        });
+                    }
                 }
             }
-        }        
+            result.sort(dynamicSort("namaKandang"));
+        }
 
         res.json({
             message: 'Ok',
