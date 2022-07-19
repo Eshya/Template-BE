@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const c = require('./produk.controller');
 const {schema} = require('./produk.validation')
-const {auth, queryCek, schemaCek, paramCek, after} = require('../../helpers')
+const {auth, queryCek, schemaCek, paramCek, after, permition, permitionPPL} = require('../../helpers')
 
 const all = permition('superadmin', 'ppl', 'peternak', 'adminsales', 'adminkemitraan', 'adminiot')
 
