@@ -925,7 +925,7 @@ exports.findPeriode = async (req, res, next) => {
 
             res.json({
                 age: umurAyam,
-                dataLuar: {...tmp.toObject(), userPPL: findUser ? findUser : null, namaPemilik: findPemilik.fullname},
+                dataLuar: {...tmp.toObject(), userPPL: findUser ? findUser : null, userPemilik: findPemilik},
                 data: results,
                 message: 'Ok'
             })
