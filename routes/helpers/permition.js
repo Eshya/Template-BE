@@ -5,9 +5,7 @@ exports.permit = (...role) => {
         if(user && role.includes(user.role.name)){
             next()
         } else {
-            res.status(403).json({
-                message: "forbidden"
-            })
+            res.json({error: 1018, message: "forbidden"})
         }
     }
 }
