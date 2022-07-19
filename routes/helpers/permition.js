@@ -1,3 +1,5 @@
+const fetch = require('node-fetch')
+
 exports.permit = (...role) => {
     return (req, res, next) => {
         const { user } = req
@@ -12,12 +14,14 @@ exports.permit = (...role) => {
 
 exports.permitPPL = async (req, res, next) => {
     const {user} = req
+    const token = req.headers['authorization']
     var urlAuth = process.env.DB_NAME === "chckin" ? `auth.chickinindonesia.com` : `staging-auth.chickinindonesia.com`
     const findUser = await fetch(`https://${urlAuth}/api/users/${user._id}`, {
                 method: 'GET',
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
             }).then(res => res.json()).then(data => data.data)
+            console.log(findUser)
     if (user.role.name == "ppl" && findUser.isPPLActive === false) {
         res.json({error: 1017, message: "you have no permition!"})
     } else{
