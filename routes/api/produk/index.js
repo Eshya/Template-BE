@@ -4,7 +4,9 @@ const c = require('./produk.controller');
 const {schema} = require('./produk.validation')
 const {auth, queryCek, schemaCek, paramCek, after} = require('../../helpers')
 
-router.get('/', auth, queryCek, c.findAll);
+const all = permition('superadmin', 'ppl', 'peternak', 'adminsales', 'adminkemitraan', 'adminiot')
+
+router.get('/', auth, all, permitionPPL, queryCek, c.findAll);
 router.get('/:id', auth, paramCek, c.findById);
 router.post('/', auth, schemaCek(schema), after, c.insert);
 router.put('/:id', auth, paramCek, c.updateById);
