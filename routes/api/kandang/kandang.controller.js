@@ -18,7 +18,7 @@ const moment = require('moment');
 const excelJS = require("exceljs");
 
 var urlIOT = process.env.DB_NAME === "chckin" ? `iot.chickinindonesia.com` : `staging-iot.chickinindonesia.com`
-var urlAuth = process.env.DB_NAME === "chckin" ? `auth.chickinindonesia.com` : `staging-auth.chickinindonesia.com`
+var urlAuth = process.env.DB_NAME === "chckin" ? `auth.chickinindonesia.com` : `stagging-auth.chickinindonesia.com`
 const handleQuerySort = (query) => {
     try{
       const toJSONString = ("{" + query + "}").replace(/(\w+:)|(\w+ :)/g, (matched => {
@@ -904,13 +904,12 @@ exports.findPeriode = async (req, res, next) => {
     const token = req.headers['authorization']
     try {
         const results = await Periode.find({kandang: id}).sort('updatedAt')
+        const kandang = await Model.findById(id)
         if (results.length > 0){
             const oneDay = 24 * 60 * 60 * 1000;
             const now = new Date(Date.now());
             const start = new Date(results[results.length - 1].tanggalMulai);
-            // console.log(start);
             const umurAyam = Math.round(Math.abs((now - start) / oneDay))
-            // console.log(umurAyam);
             const tmp = results[results.length - 1]
             const findUser = await fetch(`https://${urlAuth}/api/users/${tmp.ppl}`, {
                 method: 'GET',
@@ -918,9 +917,15 @@ exports.findPeriode = async (req, res, next) => {
                 "Content-Type": "application/json"}
             }).then(res => res.json()).then(data => data.data)
 
+            const findPemilik = await fetch(`https://${urlAuth}/api/users/${kandang.createdBy}`, {
+                method: 'GET',
+                headers: {'Authorization': token,
+                "Content-Type": "application/json"}
+            }).then(res => res.json()).then(data => data.data)
+
             res.json({
                 age: umurAyam,
-                dataLuar: {...tmp.toObject(), userPPL: findUser ? findUser : null},
+                dataLuar: {...tmp.toObject(), userPPL: findUser ? findUser : null, namaPemilik: findPemilik.fullname},
                 data: results,
                 message: 'Ok'
             })
@@ -1329,7 +1334,6 @@ exports.kelolaPPL = async (req, res, next) => {
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
             }).then(res => res.json()).then(data => data.data)
-            console.log(findUser)
             const now = new Date(Date.now())
             const start = new Date(x.tanggalMulai)
             const umur = Math.round(Math.abs((now - start) / ONE_DAY))
