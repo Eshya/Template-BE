@@ -12,6 +12,7 @@ exports.permit = (...role) => {
 
 exports.permitPPL = async (req, res, next) => {
     const {user} = req
+    var urlAuth = process.env.DB_NAME === "chckin" ? `auth.chickinindonesia.com` : `staging-auth.chickinindonesia.com`
     const findUser = await fetch(`https://${urlAuth}/api/users/${user._id}`, {
                 method: 'GET',
                 headers: {'Authorization': token,

@@ -18,7 +18,7 @@ const moment = require('moment');
 const excelJS = require("exceljs");
 
 var urlIOT = process.env.DB_NAME === "chckin" ? `iot.chickinindonesia.com` : `staging-iot.chickinindonesia.com`
-var urlAuth = process.env.DB_NAME === "chckin" ? `auth.chickinindonesia.com` : `stagging-auth.chickinindonesia.com`
+var urlAuth = process.env.DB_NAME === "chckin" ? `auth.chickinindonesia.com` : `staging-auth.chickinindonesia.com`
 const handleQuerySort = (query) => {
     try{
       const toJSONString = ("{" + query + "}").replace(/(\w+:)|(\w+ :)/g, (matched => {
