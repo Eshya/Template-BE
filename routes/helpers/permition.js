@@ -11,3 +11,13 @@ exports.permit = (...role) => {
         }
     }
 }
+
+exports.permitPPL = (req, res, next) => {
+    const {user} = req
+    console.log(user)
+    if (user.role.name == "ppl" && user.isPPLActive === false) {
+        res.json({error: 1017, message: "you have no permition!"})
+    } else{
+        next()
+    }
+}
