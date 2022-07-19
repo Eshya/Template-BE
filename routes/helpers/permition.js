@@ -10,10 +10,14 @@ exports.permit = (...role) => {
     }
 }
 
-exports.permitPPL = (req, res, next) => {
+exports.permitPPL = async (req, res, next) => {
     const {user} = req
-    console.log(user)
-    if (user.role.name == "ppl" && user.isPPLActive === false) {
+    const findUser = await fetch(`https://${urlAuth}/api/users/${user._id}`, {
+                method: 'GET',
+                headers: {'Authorization': token,
+                "Content-Type": "application/json"}
+            }).then(res => res.json()).then(data => data.data)
+    if (user.role.name == "ppl" && findUser.isPPLActive === false) {
         res.json({error: 1017, message: "you have no permition!"})
     } else{
         next()
