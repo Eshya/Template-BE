@@ -1300,7 +1300,7 @@ exports.kelolaPeternak = async (req, res, next) => {
             const findPeriode = await Periode.aggregate([
                 {$match: {kandang: x._id, isEnd: false}},
                 {$addFields: {urutanKe: urutan}},
-                {$sort: {tanggalMulai: -1}},
+                {$sort: {createdAt: -1}},
                 {$limit: 1}
             ])
             const now = new Date(Date.now())
