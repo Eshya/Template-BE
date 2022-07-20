@@ -47,6 +47,7 @@ exports.findAll =  async (req, res, next) => {
         let kemitraanId = req.user.kemitraanUser ? req.user.kemitraanUser._id : '';
         const filter = {}
         filter.deleted = false;
+        filter.isActive = false;
 
         if (!req.query.sort) {
             sort = { createdAt: -1 }
