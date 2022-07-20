@@ -45,9 +45,15 @@ function dynamicSort(property) {
     }
 }
 
+function removeDuplicatesData(array) {
+    return [...new Set(array)];
+}
+
 exports.dashboardKemitraan =  async (req, res, next) => {
     try {
+        const token = req.headers['authorization']
         let role = req.user.role ? req.user.role.name : '';
+        let kemitraanId = req.user.kemitraanUser ? req.user.kemitraanUser._id : '';
         let { kemitraan } = req.query;
         let filter = {}
         let resultKandangActive = [];
@@ -62,40 +68,54 @@ exports.dashboardKemitraan =  async (req, res, next) => {
             if (kemitraan) {
                 filterPeriod.kemitraan = kemitraan
             }
-            let kemitraanId = req.user.kemitraanUser ? req.user.kemitraanUser._id : '';
             if (role === "adminkemitraan") {
                 filterPeriod.kemitraan = kemitraanId
             }
 
             let periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 })
-            if (periode && periode.kandang) {
-                if (periode.kandang.createdBy) {
-                    resultPeternak.push(periode.kandang.createdBy._id);
-                }
+            if (periode && periode.kandang && periode.kemitraan && periode.kandang.createdBy) {
+                //find detail peternak
+                const findUser = await fetch(`https://${urlAuth}/api/users/${periode.kandang.createdBy}`, {
+                    method: 'GET',
+                    headers: {'Authorization': token,
+                    "Content-Type": "application/json"}
+                }).then(res => res.json()).then(data => data.data)
 
-                if (periode.kandang.isActive === true) {
-                    resultKandangActive.push({
-                        periodeId: periode.id,
-                        kandangId: periode.kandang.id,
-                        user: periode.kandang.createdBy
-                    });
+                resultPeternak.push(periode.kandang.createdBy);
+
+                let namaPemilik = findUser ? findUser.fullname : ""
+                //let idPemilik = findUser ? findUser._id : ""
+                if (namaPemilik !== "") {
+                    if (periode.kandang.isActive === true) {
+                        //resultPeternak.push(idPemilik);
+                        resultKandangActive.push({
+                            periodeId: periode.id,
+                            kandangId: periode.kandang.id,
+                            user: periode.kandang.createdBy
+                        });
+                    }
                 }
             }
         });
 
         // get total peternak
-        let countPeternak = {};
-        resultPeternak.forEach(element => {
-            countPeternak[element] = (countPeternak[element] || 0) + 1;
-        });
-        var totalPeternak = sum( countPeternak );
+        let totalPeternak = removeDuplicatesData(resultPeternak)
 
         // get total PPL
-        let totalPPl = await User.countDocuments({'role': '61d5608d4a7ba5b05c9c7ae3'}).exec();
+        let filterPPL = {};
+        filterPPL.role = '61d5608d4a7ba5b05c9c7ae3';
+        filterPPL.deleted = false;
+        if (kemitraan) {
+            filterPPL.kemitraanUser = kemitraan
+        }
+        if (role === "adminkemitraan") {
+            filterPPL.kemitraanUser = kemitraanId
+        }
+        let totalPPl = await User.countDocuments(filterPPL).exec();
         res.json({
             totalKandangActive: resultKandangActive.length,
-            totalPPL: role === "superadmin" && !kemitraan ? totalPPl : 0,
-            totalPeternak: totalPeternak,
+            totalPPL: totalPPl,
+            totalPeternak: totalPeternak.length,
         })
     } catch (error) {
         next(error)
@@ -104,6 +124,7 @@ exports.dashboardKemitraan =  async (req, res, next) => {
 
 exports.dashboardKemitraanPopulasi =  async (req, res, next) => {
     try {
+        const token = req.headers['authorization']
         let role = req.user.role ? req.user.role.name : '';
         let { city, kemitraan } = req.query;
         let filter = {}
@@ -128,16 +149,26 @@ exports.dashboardKemitraanPopulasi =  async (req, res, next) => {
             }
 
             let periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 })
-            if (periode && periode.kandang) {
+            if (periode && periode.kandang && periode.kemitraan && periode.kandang.createdBy) {
                 // get usia
                 let now = new Date(Date.now());
                 let start = new Date(periode.tanggalMulai);
                 let usia = Math.round(Math.abs((now - start) / ONE_DAY))
 
-                resultPeriode.push({
-                    usia: usia,
-                    populasi: periode.populasi,
-                });
+                //find detail peternak
+                const findUser = await fetch(`https://${urlAuth}/api/users/${periode.kandang.createdBy}`, {
+                    method: 'GET',
+                    headers: {'Authorization': token,
+                    "Content-Type": "application/json"}
+                }).then(res => res.json()).then(data => data.data)
+
+                let namaPemilik = findUser ? findUser.fullname : ""
+                if (namaPemilik !== "") {
+                    resultPeriode.push({
+                        usia: usia,
+                        populasi: periode.populasi,
+                    });
+                }
             }
         });
 

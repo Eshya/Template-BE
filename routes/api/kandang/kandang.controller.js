@@ -202,7 +202,7 @@ exports.findAllDataPool =  async (req, res, next) => {
                         return letter.toUpperCase();
                     });
     
-                    if (namaPemilik !== "") {
+                    // if (namaPemilik !== "") {
                         result.push({
                             idPemilik: data[i].createdBy ? data[i].createdBy._id : null,
                             namaPemilik: namaPemilik,
@@ -213,7 +213,7 @@ exports.findAllDataPool =  async (req, res, next) => {
                             usia: usia,
                             periodeKe: dataPeriode[0]
                         });
-                    }
+                    // }
                 } else {
                     //find detail peternak
                     const findUser = await fetch(`https://${urlAuth}/api/users/${data[i].createdBy}`, {
@@ -229,7 +229,7 @@ exports.findAllDataPool =  async (req, res, next) => {
                         return letter.toUpperCase();
                     });
 
-                    if (namaPemilik !== "") {
+                    // if (namaPemilik !== "") {
                         result.push({
                             idPemilik: data[i].createdBy ? data[i].createdBy._id : null,
                             namaPemilik: namaPemilik,
@@ -240,7 +240,7 @@ exports.findAllDataPool =  async (req, res, next) => {
                             usia: 0,
                             periodeKe: "Belum mulai Periode"
                         });
-                    }
+                    // }
                 }
             }
             result.sort(dynamicSort("namaKandang"));
