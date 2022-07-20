@@ -81,13 +81,11 @@ exports.dashboardKemitraan =  async (req, res, next) => {
                     "Content-Type": "application/json"}
                 }).then(res => res.json()).then(data => data.data)
 
-                resultPeternak.push(periode.kandang.createdBy);
-
                 let namaPemilik = findUser ? findUser.fullname : ""
-                //let idPemilik = findUser ? findUser._id : ""
+                let idPemilik = findUser ? findUser._id : ""
                 if (namaPemilik !== "") {
                     if (periode.kandang.isActive === true) {
-                        //resultPeternak.push(idPemilik);
+                        resultPeternak.push(idPemilik);
                         resultKandangActive.push({
                             periodeId: periode.id,
                             kandangId: periode.kandang.id,
