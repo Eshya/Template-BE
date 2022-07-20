@@ -1296,10 +1296,16 @@ exports.kelolaPeternak = async (req, res, next) => {
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
             }).then(res => res.json()).then(data => data.data)
-            console.log(findUser)
-            const findPeriode = await Periode.findOne({kandang: x._id, isEnd: false}).select('-kandang')
+            const urutan = await Periode.countDocuments({kandang: x._id})
+            const findPeriode = await Periode.aggregate([
+                {$match: {kandang: x._id, isEnd: false}},
+                {$addFields: {urutanKe: urutan}},
+                {$sort: {tanggalMulai: -1}},
+                {$limit: 1}
+            ])
             const now = new Date(Date.now())
-            const start = new Date(findPeriode.tanggalMulai)
+            const start = new Date(findPeriode[0].tanggalMulai)
+            console.log(findPeriode)
             const umur = Math.round(Math.abs((now - start) / ONE_DAY))
 
             const suhu = await fetch(`https://${urlIOT}/api/flock/kandang/${x._id}`,{
@@ -1307,7 +1313,7 @@ exports.kelolaPeternak = async (req, res, next) => {
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
             }).then(res => res.json()).then(data => data.data)
-            return {...tmp.toObject(), user: findUser, umur: umur, periode: findPeriode, suhu: suhu[0] ? suhu[0].actualTemperature : 0}
+            return {...tmp.toObject(), user: findUser, umur: umur, periode: findPeriode[0], suhu: suhu[0] ? suhu[0].actualTemperature : 0}
         }))
         res.json({
             data: {
@@ -1380,7 +1386,9 @@ exports.kelolaPPL = async (req, res, next) => {
                 "Content-Type": "application/json"}
             }).then(res => res.json()).then(data => data.data)
 
-            return {...findKandang.toObject(), user: findUser, IP: IP, umur: umur, periode: x, suhu: suhu ? suhu[0].actualTemperature : 0}
+            const countPeriode = await Periode.countDocuments({kandang: x.kandang})
+
+            return {...findKandang.toObject(), user: findUser, IP: IP, umur: umur, periode: x, urutanKe: countPeriode,  suhu: suhu ? suhu[0].actualTemperature : 0}
         }))
         res.json({
             data: {
