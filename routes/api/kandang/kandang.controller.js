@@ -17,6 +17,8 @@ const ONE_DAY = 24 * 60 * 60 * 1000;
 const moment = require('moment');
 const excelJS = require("exceljs");
 
+var urlIOT = process.env.DB_NAME === "chckin" ? `iot.chickinindonesia.com` : `staging-iot.chickinindonesia.com`
+var urlAuth = process.env.DB_NAME === "chckin" ? `auth.chickinindonesia.com` : `staging-auth.chickinindonesia.com`
 const handleQuerySort = (query) => {
     try{
       const toJSONString = ("{" + query + "}").replace(/(\w+:)|(\w+ :)/g, (matched => {
@@ -37,6 +39,18 @@ const _find = async (req, isPublic = false) => {
     }
     const results = await Promise.all([count, data]);
     return {length: results[0], data: results[1]};
+}
+
+function dynamicSort(property) {
+    var sortOrder = 1;
+    if(property[0] === "-") {
+        sortOrder = -1;
+        property = property.substr(1);
+    }
+    return function (a,b) {
+        var result = (a[property] < b[property]) ? -1 : (a[property] > b[property]) ? 1 : 0;
+        return result * sortOrder;
+    }
 }
 
 exports.countPopulasi = async (req, res, next) => {
@@ -66,6 +80,7 @@ function paginate(array, page_size, page_number) {
 
 exports.findAllDataPool =  async (req, res, next) => {
     try {
+        const token = req.headers['authorization']
         const {limit, offset} = parseQuery(req.query);
         const { name, address, city, isActive } = req.query;
         let sort = handleQuerySort(req.query.sort);
@@ -93,7 +108,7 @@ exports.findAllDataPool =  async (req, res, next) => {
         let count;
         let result = [];
         if (role === "adminkemitraan") {
-            const data = await Model.find(filter).sort(sort).collation({ locale: "en", caseLevel: true })
+            const data = await Model.find(filter).sort(sort)
             for (let i = 0; i < data.length; i++) {
                 let filterPeriod = {};
                 filterPeriod.kandang = data[i].id;
@@ -113,17 +128,33 @@ exports.findAllDataPool =  async (req, res, next) => {
                     const now = new Date(Date.now());
                     const start = new Date(periode.tanggalMulai);
                     const usia = periode.isEnd ? Math.round(Math.abs((periode.tanggalAkhir - start) / ONE_DAY)) :  Math.round(Math.abs((now - start) / ONE_DAY))
-    
-                    result.push({
-                        idPemilik: data[i].createdBy ? data[i].createdBy._id : null,
-                        namaPemilik: data[i].createdBy ? data[i].createdBy.fullname : null,
-                        idKandang: data[i]._id,
-                        namaKandang: data[i].kode,
-                        kota: data[i].kota,
-                        isActive: data[i].isActive ? "Aktif" : "Rehat",
-                        usia: usia,
-                        periodeKe: dataPeriode[0]
+
+                    //find detail peternak
+                    const findUser = await fetch(`https://${urlAuth}/api/users/${data[i].createdBy}`, {
+                        method: 'GET',
+                        headers: {'Authorization': token,
+                        "Content-Type": "application/json"}
+                    }).then(res => res.json()).then(data => data.data)
+                    let namaPemilik = findUser ? findUser.fullname : ""
+
+                    // sort by nama kandang
+                    let namaKandang = data[i].kode ? data[i].kode : ""
+                    let namaKandangSTR = namaKandang.toLowerCase().replace(/\b[a-z]/g, function(letter) {
+                        return letter.toUpperCase();
                     });
+
+                    if (namaPemilik !== "") {
+                        result.push({
+                            idPemilik: data[i].createdBy ? data[i].createdBy._id : null,
+                            namaPemilik: namaPemilik,
+                            idKandang: data[i]._id,
+                            namaKandang: namaKandangSTR,
+                            kota: data[i].kota,
+                            isActive: data[i].isActive ? "Aktif" : "Rehat",
+                            usia: usia,
+                            periodeKe: dataPeriode[0]
+                        });
+                    }
                 }
             }
             count = result.length
@@ -133,10 +164,11 @@ exports.findAllDataPool =  async (req, res, next) => {
             } else {
                 offsetPaging = (offset / 10 + 1)
             }
-            result = paginate(result, limit, offsetPaging)
+            let resultSort = result.sort(dynamicSort("namaKandang"));
+            result = paginate(resultSort, limit, offsetPaging)
         } else {
             count = await Model.countDocuments(filter)
-            const data = await Model.find(filter).limit(limit).skip(offset).sort(sort).collation({ locale: "en", caseLevel: true })
+            const data = await Model.find(filter).limit(limit).skip(offset).sort(sort)
             for (let i = 0; i < data.length; i++) {
                 let filterPeriod = {};
                 filterPeriod.kandang = data[i].id;
@@ -155,31 +187,64 @@ exports.findAllDataPool =  async (req, res, next) => {
                     const now = new Date(Date.now());
                     const start = new Date(periode.tanggalMulai);
                     const usia = periode.isEnd ? Math.round(Math.abs((periode.tanggalAkhir - start) / ONE_DAY)) :  Math.round(Math.abs((now - start) / ONE_DAY))
+
+                    //find detail peternak
+                    const findUser = await fetch(`https://${urlAuth}/api/users/${data[i].createdBy}`, {
+                        method: 'GET',
+                        headers: {'Authorization': token,
+                        "Content-Type": "application/json"}
+                    }).then(res => res.json()).then(data => data.data)
+                    let namaPemilik = findUser ? findUser.fullname : ""
+
+                    // sort by nama kandang
+                    let namaKandang = data[i].kode ? data[i].kode : ""
+                    let namaKandangSTR = namaKandang.toLowerCase().replace(/\b[a-z]/g, function(letter) {
+                        return letter.toUpperCase();
+                    });
     
-                    result.push({
-                        idPemilik: data[i].createdBy ? data[i].createdBy._id : null,
-                        namaPemilik: data[i].createdBy ? data[i].createdBy.fullname : null,
-                        idKandang: data[i]._id,
-                        namaKandang: data[i].kode,
-                        kota: data[i].kota,
-                        isActive: data[i].isActive ? "Aktif" : "Rehat",
-                        usia: usia,
-                        periodeKe: dataPeriode[0]
-                    });
+                    // if (namaPemilik !== "") {
+                        result.push({
+                            idPemilik: data[i].createdBy ? data[i].createdBy._id : null,
+                            namaPemilik: namaPemilik,
+                            idKandang: data[i]._id,
+                            namaKandang: namaKandangSTR,
+                            kota: data[i].kota,
+                            isActive: data[i].isActive ? "Aktif" : "Rehat",
+                            usia: usia,
+                            periodeKe: dataPeriode[0]
+                        });
+                    // }
                 } else {
-                    result.push({
-                        idPemilik: data[i].createdBy ? data[i].createdBy._id : null,
-                        namaPemilik: data[i].createdBy ? data[i].createdBy.fullname : null,
-                        idKandang: data[i]._id,
-                        namaKandang: data[i].kode,
-                        kota: data[i].kota,
-                        isActive: data[i].isActive ? "Aktif" : "Rehat",
-                        usia: 0,
-                        periodeKe: "Belum mulai Periode"
+                    //find detail peternak
+                    const findUser = await fetch(`https://${urlAuth}/api/users/${data[i].createdBy}`, {
+                        method: 'GET',
+                        headers: {'Authorization': token,
+                        "Content-Type": "application/json"}
+                    }).then(res => res.json()).then(data => data.data)
+                    let namaPemilik = findUser ? findUser.fullname : ""
+
+                    // sort by nama kandang
+                    let namaKandang = data[i].kode ? data[i].kode : ""
+                    let namaKandangSTR = namaKandang.toLowerCase().replace(/\b[a-z]/g, function(letter) {
+                        return letter.toUpperCase();
                     });
+
+                    // if (namaPemilik !== "") {
+                        result.push({
+                            idPemilik: data[i].createdBy ? data[i].createdBy._id : null,
+                            namaPemilik: namaPemilik,
+                            idKandang: data[i]._id,
+                            namaKandang: namaKandangSTR,
+                            kota: data[i].kota,
+                            isActive: data[i].isActive ? "Aktif" : "Rehat",
+                            usia: 0,
+                            periodeKe: "Belum mulai Periode"
+                        });
+                    // }
                 }
             }
-        }        
+            result.sort(dynamicSort("namaKandang"));
+        }
 
         res.json({
             message: 'Ok',
@@ -836,18 +901,31 @@ exports.findFlock = async (req, res, next) => {
 
 exports.findPeriode = async (req, res, next) => {
     const id = req.params.id
+    const token = req.headers['authorization']
     try {
         const results = await Periode.find({kandang: id}).sort('updatedAt')
+        const kandang = await Model.findById(id)
         if (results.length > 0){
             const oneDay = 24 * 60 * 60 * 1000;
             const now = new Date(Date.now());
             const start = new Date(results[results.length - 1].tanggalMulai);
-            // console.log(start);
             const umurAyam = Math.round(Math.abs((now - start) / oneDay))
-            // console.log(umurAyam);
+            const tmp = results[results.length - 1]
+            const findUser = await fetch(`https://${urlAuth}/api/users/${tmp.ppl}`, {
+                method: 'GET',
+                headers: {'Authorization': token,
+                "Content-Type": "application/json"}
+            }).then(res => res.json()).then(data => data.data)
+
+            const findPemilik = await fetch(`https://${urlAuth}/api/users/${kandang.createdBy}`, {
+                method: 'GET',
+                headers: {'Authorization': token,
+                "Content-Type": "application/json"}
+            }).then(res => res.json()).then(data => data.data)
+
             res.json({
                 age: umurAyam,
-                dataLuar: results[results.length - 1],
+                dataLuar: {...tmp.toObject(), userPPL: findUser ? findUser : null, userPemilik: findPemilik},
                 data: results,
                 message: 'Ok'
             })
@@ -880,7 +958,7 @@ exports.insert = async (req, res, next) => {
     const token = req.headers['authorization']
     const {kode, alamat, tipe, isMandiri, kota, populasi} = req.body;
     const createdBy = req.user._id
-    const flock = []
+    const flock = [] 
     try {
         const results = await Model.create({kode, alamat, tipe, isMandiri, kota, createdBy, populasi});
         // console.log(results._id)
@@ -888,7 +966,7 @@ exports.insert = async (req, res, next) => {
             name: 'flock 1',
             kandang: results._id
         }
-        await fetch('http://18.139.227.107:3104/api/flock', {
+        await fetch(`https://${urlIOT}/api/flock`, {
             method: 'post',
             body: JSON.stringify(body),
             headers: {
@@ -1079,10 +1157,16 @@ exports.getKelola = async (req, res, next) => {
 
 const _findPeternak = async (req, isActive) => {
     const user = req.user._id
+    const token = req.headers['authorization']
     const findKandang = await Model.find({createdBy: user, isActive: isActive})
     if (findKandang.length === 0) return findKandang
     const map = await Promise.all(findKandang.map(async(x) => {
         const tmp = x
+        const findUser = await fetch(`https://${urlAuth}/api/users/${x.createdBy}`, {
+            method: 'GET',
+            headers: {'Authorization': token,
+            "Content-Type": "application/json"}
+        }).then(res => res.json()).then(data => data.data)
         isActive ? isEnd = false : isEnd = true
         // const findPeriode = await Periode.countDocumnets({kandang: x._id, isEnd: isEnd}).sort({'tanggalMulai': -1}).limit(1).select('-kandang')
         const urutan = await Periode.countDocuments({kandang: x._id})
@@ -1109,7 +1193,7 @@ const _findPeternak = async (req, isActive) => {
         const penjualan = findPenjualan.length == 0 ? 0 : akumulasiPenjualan[0].totalPenjualan
         const sapronak = pembelianSapronak.length === 0 ? 0 : pembelianSapronak[0].totalSapronak
         const estimasi = penjualan - pembelianDoc - sapronak 
-        return {...tmp.toObject(), periode: findPeriode[0], estimasiPendapatan: estimasi}
+        return {...tmp.toObject(), user: findUser, periode: findPeriode[0], estimasiPendapatan: estimasi}
     }))
     return map
 }
@@ -1133,6 +1217,7 @@ exports.listKandangPeternak = async (req, res, next) => {
 
 const _findPPL = async (req, isActive) => {
     const user = req.user._id
+    const token = req.headers['authorization']
     isActive ? isEnd = false : isEnd = true
     const findPeriode = await Periode.aggregate([
         {$match: {ppl: mongoose.Types.ObjectId(user), isActivePPL: isActive}},
@@ -1142,8 +1227,12 @@ const _findPPL = async (req, isActive) => {
     ])
     const map = await Promise.all(findPeriode.map(async (x) => {
         const findPeriode = await Periode.findById(x.periode[0])
-        const findKandang = await Model.findById(x._id)
-        // if(!findKandang) return {isDeleted: "true"}
+        const findKandang = await Model.findOneWithDeleted({_id: x._id})
+        const findUser = await fetch(`https://${urlAuth}/api/users/${findKandang.createdBy}`, {
+            method: 'GET',
+            headers: {'Authorization': token,
+            "Content-Type": "application/json"}
+        }).then(res => res.json()).then(data => data.data)
         const countPeriode = await Periode.countDocuments({kandang: x._id})
         const pembelianSapronak = await Sapronak.aggregate([
                 {$match: {periode: x.periode[0]}},
@@ -1162,7 +1251,7 @@ const _findPPL = async (req, isActive) => {
         const sapronak = pembelianSapronak.length === 0 ? 0 : pembelianSapronak[0].totalSapronak
         const estimasi = penjualan - pembelianDoc - sapronak
         
-        return {...findKandang.toObject(), periode: findPeriode, urutanKe: countPeriode, estimasiPendapatan: estimasi, isDeleted: "false"}
+        return {...findKandang.toObject(), user: findUser, periode: findPeriode, urutanKe: countPeriode, estimasiPendapatan: estimasi, isDeleted: "false"}
     }))
     // const filter = map.filter(x => x.isDeleted === "false")
     return map
@@ -1202,17 +1291,29 @@ exports.kelolaPeternak = async (req, res, next) => {
 
         const mapAktif = await Promise.all(results.aktif.map(async(x) => {
             const tmp = x
-            const findPeriode = await Periode.findOne({kandang: x._id, isEnd: false}).select('-kandang')
-            const now = new Date(Date.now())
-            const start = new Date(findPeriode.tanggalMulai)
-            const umur = Math.round(Math.abs((now - start) / ONE_DAY))
-
-            const suhu = await fetch(`http://18.139.227.107:3104/api/flock/kandang/${x._id}`,{
+            const findUser = await fetch(`https://${urlAuth}/api/users/${x.createdBy}`, {
                 method: 'GET',
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
             }).then(res => res.json()).then(data => data.data)
-            return {...tmp.toObject(), umur: umur, periode: findPeriode, suhu: suhu[0].actualTemperature}
+            const urutan = await Periode.countDocuments({kandang: x._id})
+            const findPeriode = await Periode.aggregate([
+                {$match: {kandang: x._id, isEnd: false}},
+                {$addFields: {urutanKe: urutan}},
+                {$sort: {createdAt: -1}},
+                {$limit: 1}
+            ])
+            const now = new Date(Date.now())
+            const start = new Date(findPeriode[0].tanggalMulai)
+            console.log(findPeriode)
+            const umur = Math.round(Math.abs((now - start) / ONE_DAY))
+
+            const suhu = await fetch(`https://${urlIOT}/api/flock/kandang/${x._id}`,{
+                method: 'GET',
+                headers: {'Authorization': token,
+                "Content-Type": "application/json"}
+            }).then(res => res.json()).then(data => data.data)
+            return {...tmp.toObject(), user: findUser, umur: umur, periode: findPeriode[0], suhu: suhu[0] ? suhu[0].actualTemperature : 0}
         }))
         res.json({
             data: {
@@ -1234,6 +1335,11 @@ exports.kelolaPPL = async (req, res, next) => {
         const findPeriode = await Periode.find({ppl: user, isActivePPL: true})
         const map = await Promise.all(findPeriode.map(async(x) => {
             const findKandang = await Model.findById(x.kandang)
+            const findUser = await fetch(`https://${urlAuth}/api/users/${findKandang.createdBy}`, {
+                method: 'GET',
+                headers: {'Authorization': token,
+                "Content-Type": "application/json"}
+            }).then(res => res.json()).then(data => data.data)
             const now = new Date(Date.now())
             const start = new Date(x.tanggalMulai)
             const umur = Math.round(Math.abs((now - start) / ONE_DAY))
@@ -1274,13 +1380,15 @@ exports.kelolaPPL = async (req, res, next) => {
             const bawah = FCR * (dataPakan.length-1)
             const IP = (atas/bawah) * 100
 
-            const suhu = await fetch(`http://18.139.227.107:3104/api/flock/kandang/${x.kandang}`,{
+            const suhu = await fetch(`https://${urlIOT}/api/flock/kandang/${x.kandang}`,{
                 method: 'GET',
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
             }).then(res => res.json()).then(data => data.data)
 
-            return {...findKandang.toObject(), IP: IP, umur: umur, periode: x, suhu: suhu ? suhu[0].actualTemperature : 0}
+            const countPeriode = await Periode.countDocuments({kandang: x.kandang})
+
+            return {...findKandang.toObject(), user: findUser, IP: IP, umur: umur, periode: x, urutanKe: countPeriode,  suhu: suhu ? suhu[0].actualTemperature : 0}
         }))
         res.json({
             data: {
@@ -1303,6 +1411,11 @@ exports.detailKandang = async (req,res, next) => {
         const findPeriode = await Periode.find({kandang: id}).sort({isEnd: 1, tanggalMulai: -1})
 
         const map = await Promise.all(findPeriode.map(async(x) => {
+            const findUser = await fetch(`https://${urlAuth}/api/users/${x.createdBy}`, {
+                method: 'GET',
+                headers: {'Authorization': token,
+                "Content-Type": "application/json"}
+            }).then(res => res.json()).then(data => data.data)
             const now = new Date(Date.now())
             const start = new Date(x.tanggalMulai)
             const umur = Math.round(Math.abs((now - start) / ONE_DAY))
@@ -1323,14 +1436,13 @@ exports.detailKandang = async (req,res, next) => {
             const sapronak = pembelianSapronak.length === 0 ? 0 : pembelianSapronak[0].totalSapronak
             const estimasi = penjualan - pembelianDoc - sapronak
 
-            return {...x.toObject(), umur: umur, estimasi: estimasi}
+            return {...x.toObject(), umur: umur, estimasi: estimasi, user: findUser}
         }))
-        const suhu = await fetch(`http://18.139.227.107:3104/api/flock/kandang/${id}`,{
+        const suhu = await fetch(`https://${urlIOT}/api/flock/kandang/${id}`,{
                 method: 'GET',
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
             }).then(res => res.json()).then(data => data.data)
-        
         res.json({
             data: {
                 informasiKandang: {

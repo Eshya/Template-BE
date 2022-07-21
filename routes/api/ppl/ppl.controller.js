@@ -20,15 +20,14 @@ exports.findAll =  async (req, res, next) => {
         const {limit, offset} = parseQuery(req.query);
         const { name, address, phoneNumber, asalKemitraan } = req.query;
         let sort = handleQuerySort(req.query.sort)
+        let role = req.user.role ? req.user.role.name : '';
+        let kemitraanId = req.user.kemitraanUser ? req.user.kemitraanUser._id : '';
         const filter = {}
         if (name) {
             filter.fullname = new RegExp(name, 'i') 
         }
         if (address) {
             filter.address = new RegExp(address, 'i') 
-        }
-        if (asalKemitraan) {
-            filter.asalKemitraan = new RegExp(asalKemitraan, 'i') 
         }
         if (phoneNumber) {
             filter.phoneNumber = phoneNumber
@@ -40,8 +39,12 @@ exports.findAll =  async (req, res, next) => {
             sort = { fullname: 1 }
         }
 
+        if (role === "adminkemitraan") {
+            filter.kemitraanUser = kemitraanId
+        }
+
         const count = await Model.countDocuments(filter)
-        const data = await Model.find(filter).limit(limit).skip(offset).sort(sort).select('avatar image noKTP address fullname username email phoneNumber asalKemitraan kemitraanUser').collation({ locale: "en", caseLevel: true })
+        const data = await Model.find(filter).limit(limit).skip(offset).sort(sort).select('avatar image noKTP address fullname username email phoneNumber asalKemitraan kemitraanUser')
 
         res.json({
             message: 'Ok',
@@ -65,5 +68,22 @@ exports.findById = async (req, res, next) => {
         })
     } catch (error) {
         next(error)
+    }
+}
+
+exports.removePPLById = async (req, res, next) => {
+    let id = req.params.id;
+    try {
+        console.log("masuk sini")
+        const result = await Model.findByIdAndUpdate(id, {deleted: true}, {new: true}).exec();
+        if (!result) {
+            res.json({error: 404, message: 'PPL not found.'})
+        }
+        res.json({
+            data: result,
+            message: 'Ok'
+        })
+    } catch(err){
+        next(err)
     }
 }

@@ -101,5 +101,6 @@ const scheme = new Schema({
     }
 }, {timestamps: true, versionKey: false})
 scheme.plugin(require('mongoose-autopopulate'));
+scheme.plugin(require('mongoose-delete'), {deleteAt: true, overrideMethods: true})
 const dbAuth = createConnection(mongoString, options);
 module.exports = dbAuth.model('Users', scheme, 'users');

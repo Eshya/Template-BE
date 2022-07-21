@@ -7,6 +7,8 @@ const fs = require('fs')
 const util = require("util");
 const multer = require("multer");
 const maxSize = 5 * 1024 * 1024;
+const fetch = require('node-fetch')
+var urlAuth = process.env.DB_NAME === "chckin" ? `auth.chickinindonesia.com` : `staging-auth.chickinindonesia.com`
 
 const handleQuerySort = (query) => {
     try{
@@ -37,6 +39,7 @@ function dynamicSort(property) {
 
 exports.findAll =  async (req, res, next) => {
     try {
+        const token = req.headers['authorization']
         const {limit, offset} = parseQuery(req.query);
         const { rhpp, peternak } = req.query;
         let sort = handleQuerySort(req.query.sort);
@@ -44,27 +47,25 @@ exports.findAll =  async (req, res, next) => {
         let kemitraanId = req.user.kemitraanUser ? req.user.kemitraanUser._id : '';
         const filter = {}
         filter.deleted = false;
+        filter.isActive = false;
 
         if (!req.query.sort) {
             sort = { createdAt: -1 }
         }
 
         let result = [];
-        const data = await Kandang.find(filter).sort(sort).collation({ locale: "en", caseLevel: true })
+        const data = await Kandang.find(filter).sort(sort)
         for (let i = 0; i < data.length; i++) {
             let filterPeriod = {};
             filterPeriod.kandang = data[i].id;
             if (role === "adminkemitraan") {
                 filterPeriod.kemitraan = kemitraanId
             }
-            if (rhpp) {
-                filterPeriod.rhpp_path = { "$nin": [ null, "" ] }
-            }
             filterPeriod.isEnd = true
             const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 })
             if (periode && periode.kandang) {
                 // get periode ke
-                const kandang = await Periode.find(filterPeriod).sort('tanggalMulai')
+                const kandang = await Periode.find({kandang: data[i].id}).sort('tanggalMulai')
                 let dataPeriode = [];
                 await Promise.map(kandang, async (itemKandang, index) => {
                     if (itemKandang._id.toString() === periode._id.toString()) {
@@ -72,22 +73,48 @@ exports.findAll =  async (req, res, next) => {
                     }
                 });
 
-                let namaPemilik = data[i].createdBy ? data[i].createdBy.fullname : ""
+                //find detail peternak
+                const findUser = await fetch(`https://${urlAuth}/api/users/${data[i].createdBy}`, {
+                    method: 'GET',
+                    headers: {'Authorization': token,
+                    "Content-Type": "application/json"}
+                }).then(res => res.json()).then(data => data.data)
+
+                let namaPemilik = findUser ? findUser.fullname : ""
                 let namaPemilikSTR = namaPemilik.toLowerCase().replace(/\b[a-z]/g, function(letter) {
                     return letter.toUpperCase();
                 });
-                result.push({
-                    idPeriode: periode.id,
-                    tanggalClosing: periode.tanggalAkhir,
-                    idPemilik: data[i].createdBy ? data[i].createdBy._id : null,
-                    namaPemilik: namaPemilikSTR,
-                    idKandang: data[i]._id,
-                    namaKandang: data[i].kode,
-                    periodeKe: dataPeriode[0],
-                    idKemitraan: periode.kemitraan ? periode.kemitraan._id : null,
-                    kemitraan: periode.kemitraan ? periode.kemitraan.name : "",
-                    rhpp_path: periode.rhpp_path ? periode.rhpp_path : ""
-                });
+                if (rhpp) {
+                    if (periode.rhpp_path !== null && periode.rhpp_path !== '' && periode.rhpp_path !== undefined) {
+                        result.push({
+                            idPeriode: periode.id,
+                            tanggalClosing: periode.tanggalAkhir,
+                            idPemilik: data[i].createdBy ? data[i].createdBy._id : null,
+                            namaPemilik: namaPemilikSTR,
+                            idKandang: data[i]._id,
+                            namaKandang: data[i].kode,
+                            periodeKe: dataPeriode[0],
+                            idKemitraan: periode.kemitraan ? periode.kemitraan._id : null,
+                            kemitraan: periode.kemitraan ? periode.kemitraan.name : "",
+                            rhpp_path: periode.rhpp_path ? periode.rhpp_path : ""
+                        });
+                    }
+                } else {
+                    if (periode.rhpp_path === null || periode.rhpp_path === '' || periode.rhpp_path === undefined) {
+                        result.push({
+                            idPeriode: periode.id,
+                            tanggalClosing: periode.tanggalAkhir,
+                            idPemilik: data[i].createdBy ? data[i].createdBy._id : null,
+                            namaPemilik: namaPemilikSTR,
+                            idKandang: data[i]._id,
+                            namaKandang: data[i].kode,
+                            periodeKe: dataPeriode[0],
+                            idKemitraan: periode.kemitraan ? periode.kemitraan._id : null,
+                            kemitraan: periode.kemitraan ? periode.kemitraan.name : "",
+                            rhpp_path: periode.rhpp_path ? periode.rhpp_path : ""
+                        });
+                    }
+                }
             }
         }
         if (peternak) {
