@@ -11,7 +11,7 @@ services:
       DB_USER: $DB_USER
       DB_PASS: $DB_PASS
       DB_NAME: chckin
-      DB_NAME_AUTH: chickin-auth
+      DB_NAME_AUTH: chckin-auth
     volumes:
       - /sites/apps/smartfarm/uploads:/app/uploads
     networks:
