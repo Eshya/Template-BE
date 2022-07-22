@@ -3,7 +3,7 @@ services:
   - docker:dind
 
 stages:
-  - build-container
+  - build
   - deploy
   - notification
 
@@ -11,7 +11,7 @@ variables:
   TAG_IMAGE: $CI_COMMIT_BRANCH-$CI_COMMIT_SHA
 
 docker-build-shell:
-  stage: build-container
+  stage: build
   script:
     - aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin $AWS_ECR_REPOSITORY
     - docker build -t "${AWS_ECR_REPOSITORY}/${CI_PROJECT_NAME}:latest" -t "${AWS_ECR_REPOSITORY}/${CI_PROJECT_NAME}:$TAG_IMAGE" .
@@ -37,7 +37,7 @@ deploy-production-shell:
     - chickin-prod
 
 docker-build-shell:
-  stage: build-container
+  stage: build
   script:
     - aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin $AWS_ECR_REPOSITORY
     - docker build -t "${AWS_ECR_REPOSITORY}/${CI_PROJECT_NAME}:latest" -t "${AWS_ECR_REPOSITORY}/${CI_PROJECT_NAME}:$TAG_IMAGE" .
@@ -62,56 +62,6 @@ deploy-staging-shell:
     - staging
   tags:
     - chickin-stag
-
-docker-build:
-  image: docker:latest
-  stage: build-container
-  services:
-    - docker:dind
-  before_script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
-  script:
-    - docker build -t "$CI_REGISTRY_IMAGE:latest" -t "$CI_REGISTRY_IMAGE:$TAG_IMAGE" .
-    - docker push "$CI_REGISTRY_IMAGE" --all-tags
-  only:
-    - master
-
-deploy-stagging:
-  stage: deploy
-  image: alpine:latest
-  environment:
-    name: stagging
-  before_script:
-    - "which ssh-agent || (apk update && apk add --no-cache openssh)"
-    - mkdir -p ~/.ssh
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
-    - echo $CI_REGISTRY
-    - chmod 700 ~/.ssh/id_rsa
-    - eval "$(ssh-agent -s)"
-    - ssh-add ~/.ssh/id_rsa
-    - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
-  script:
-    - ssh -o StrictHostKeyChecking=no ${SSH_USER}@${SSH_HOST} "cd /home/chickin/projects/smartfarm-stagging && git checkout stagging && git pull && npm ci && pm2 restart 0"
-  only:
-    - stagging
-
-deploy-production:
-  stage: deploy
-  image: alpine:latest
-  before_script:
-    - "which ssh-agent || ( apk update && apk add --no-cache openssh )"
-    - mkdir -p ~/.ssh
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
-    - chmod 700 ~/.ssh/id_rsa
-    - eval "$(ssh-agent -s)"
-    - ssh-add ~/.ssh/id_rsa
-    - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
-  script:
-    - ssh -o StrictHostKeyChecking=no ${SSH_USER}@${SSH_HOST} "export APP_IMAGE_PROD=$CI_REGISTRY_IMAGE && export APP_IMAGE_PROD_TAG=$TAG_IMAGE && docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY && cd /home/chickin/projects/smartfarm && git checkout master && git pull && docker-compose -f docker-compose.prod.yml down && docker-compose -f docker-compose.prod.yml pull && docker-compose -f docker-compose.prod.yml up -d"
-  environment:
-    name: production
-  only:
-    - master
 
 success_notification:
   stage: notification
