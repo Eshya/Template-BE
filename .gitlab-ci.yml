@@ -10,31 +10,31 @@ stages:
 variables:
   TAG_IMAGE: $CI_COMMIT_BRANCH-$CI_COMMIT_SHA
 
-# docker-build-shell:
-#   stage: build-container
-#   script:
-#     - aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin $AWS_ECR_REPOSITORY
-#     - docker build -t "${AWS_ECR_REPOSITORY}/${CI_PROJECT_NAME}:latest" -t "${AWS_ECR_REPOSITORY}/${CI_PROJECT_NAME}:$TAG_IMAGE" .
-#     - docker push "${AWS_ECR_REPOSITORY}/${CI_PROJECT_NAME}" --all-tags
-#   only:
-#     - production
-#   tags:
-#     - chickin-prod
+docker-build-shell:
+  stage: build-container
+  script:
+    - aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin $AWS_ECR_REPOSITORY
+    - docker build -t "${AWS_ECR_REPOSITORY}/${CI_PROJECT_NAME}:latest" -t "${AWS_ECR_REPOSITORY}/${CI_PROJECT_NAME}:$TAG_IMAGE" .
+    - docker push "${AWS_ECR_REPOSITORY}/${CI_PROJECT_NAME}" --all-tags
+  only:
+    - production
+  tags:
+    - chickin-prod
 
-# deploy-production-shell:
-#   stage: deploy
-#   script:
-#     - aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin $AWS_ECR_REPOSITORY
-#     - export APP_IMAGE_PROD="${AWS_ECR_REPOSITORY}/${CI_PROJECT_NAME}"
-#     - export APP_IMAGE_PROD_TAG="${TAG_IMAGE}"
-#     - docker-compose -f docker-compose.prod.yml pull
-#     - docker-compose -f docker-compose.prod.yml up -d
-#   environment:
-#     name: production
-#   only:
-#     - production
-#   tags:
-#     - chickin-prod
+deploy-production-shell:
+  stage: deploy
+  script:
+    - aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin $AWS_ECR_REPOSITORY
+    - export APP_IMAGE_PROD="${AWS_ECR_REPOSITORY}/${CI_PROJECT_NAME}"
+    - export APP_IMAGE_PROD_TAG="${TAG_IMAGE}"
+    - docker-compose -f docker-compose.prod.yml pull
+    - docker-compose -f docker-compose.prod.yml up -d
+  environment:
+    name: production
+  only:
+    - production
+  tags:
+    - chickin-prod
 
 docker-build-shell:
   stage: build-container
