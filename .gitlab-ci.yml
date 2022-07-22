@@ -10,7 +10,7 @@ stages:
 variables:
   TAG_IMAGE: $CI_COMMIT_BRANCH-$CI_COMMIT_SHA
 
-docker-build:
+docker-build1:
   stage: build
   script:
     - aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin $AWS_ECR_REPOSITORY
