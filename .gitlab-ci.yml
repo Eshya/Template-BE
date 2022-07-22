@@ -21,20 +21,20 @@ docker-build-shell:
   tags:
     - chickin-prod
 
-deploy-production-shell:
-  stage: deploy
-  script:
-    - aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin $AWS_ECR_REPOSITORY
-    - export APP_IMAGE_PROD="${AWS_ECR_REPOSITORY}/${CI_PROJECT_NAME}"
-    - export APP_IMAGE_PROD_TAG="${TAG_IMAGE}"
-    - docker-compose -f docker-compose.prod.yml pull
-    - docker-compose -f docker-compose.prod.yml up -d
-  environment:
-    name: production
-  only:
-    - production
-  tags:
-    - chickin-prod
+# deploy-production-shell:
+#   stage: deploy
+#   script:
+#     - aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin $AWS_ECR_REPOSITORY
+#     - export APP_IMAGE_PROD="${AWS_ECR_REPOSITORY}/${CI_PROJECT_NAME}"
+#     - export APP_IMAGE_PROD_TAG="${TAG_IMAGE}"
+#     - docker-compose -f docker-compose.prod.yml pull
+#     - docker-compose -f docker-compose.prod.yml up -d
+#   environment:
+#     name: production
+#   only:
+#     - production
+#   tags:
+#     - chickin-prod
 
 docker-build-shell:
   stage: build-container
