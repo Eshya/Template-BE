@@ -3,3 +3,4 @@ node_modules
 /upload-stg
 .env
 /uploads
+.gitlab-ci.yml
