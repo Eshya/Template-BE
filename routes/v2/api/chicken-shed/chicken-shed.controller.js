@@ -52,7 +52,7 @@ exports.insert = async (req, res, next) => {
             kandang: results._id
         }
 
-        const createFlock = fetch('https://iot.chickinindonesia.com/api/flock', {
+        const createFlock = fetch(`https://${urlIOT}/api/flock`, {
             method: 'POST',
             body: JSON.stringify(body),
             headers: {
