@@ -18,6 +18,7 @@ exports.paramCek = param;
 exports.createError = createError;
 exports.projectName = process.env.npm_package_name;
 exports.isDevMode = process.env.NODE_ENV === 'development';
+exports.apiKey = 
 exports.fname = (fname) => {
     const splited = fname.split('/');
     return splited[splited.length-1];
@@ -46,4 +47,12 @@ const verifyToken = async (req, res, next) => {
   }
 }
 
+const verifyKey = async (req, res, next) => {
+  const apiKey = req.query.apiKey
+  console.log(apiKey)
+  if (!apiKey || apiKey !== "74e48c8e3c0bc19f9e22dd7570037392e5d0bf80cf9dd51") return res.json({error: 401, message: "unathorized"})
+  next()
+}
+
+exports.verifyApiKey = verifyKey
 exports.auth = verifyToken
