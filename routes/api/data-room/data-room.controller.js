@@ -89,7 +89,7 @@ exports.removeById = async(req, res, next) => {
             message: 'Ok'
         })
     } catch (error) {
-        next(errror)
+        next(error)
     }
 }
 
