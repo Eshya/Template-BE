@@ -80,16 +80,15 @@ exports.updateWhere = async (req, res, next) => {
     }
 }
 
-exports.removeById = async(req, res, next) => {
-    const id = req.params.id
+exports.removeById = async (req, res, next) => {
     try {
-        const result = await Model.deleteById(id).exec()
+        const results = await Model.findByIdAndRemove(req.params.id).exec();
         res.json({
-            data: result,
+            data: results,
             message: 'Ok'
         })
     } catch (error) {
-        next(error)
+        next(error);
     }
 }
 

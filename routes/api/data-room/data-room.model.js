@@ -46,7 +46,7 @@ const scheme = new Schema({
             unit: String
         }
     },
-    CFS: {
+    CSF: {
         revenue: {
             value: Number,
             unit: String
