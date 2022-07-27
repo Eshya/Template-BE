@@ -133,18 +133,17 @@ exports.findByDate = async (req, res, next) => {
 }
 
 exports.findByDepartment = async (req, res, next) => {
-    const params = req.params.department
+    var params
+    var department = req.params.department
     try {
-        const results = await Model.aggregate([
-            {$project: {
-                date: 1,
-                business: params === "business" ? 1 : "$$REMOVE",
-                CF: params === "CF" ? 1 : "$$REMOVE",
-                CLB: params === "CLB" ? 1 : "$$REMOVE",
-                CFS: params === "CFS" ? 1 : "$$REMOVE",
-                tech: params === "tech" ? 1 : "$$REMOVE",
-            }}
-        ])
+        if (department === "business") params = {business: 1}
+        if (department === "CF") params = {CF: 1}
+        if (department === "CLB") params = {CLB: 1}
+        if (department === "CSF") params = {CSF: 1}
+        if (department === "tech") params = {tech: 1}
+
+        const results = await Model.find({}, params)
+
         res.json({
             data: results,
             message: 'Ok'
