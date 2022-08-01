@@ -98,6 +98,23 @@ const scheme = new Schema({
     },
     avatar: {
       type: String,
+    },
+    province: {
+      type: Schema.Types.ObjectId,
+      ref: 'Provinces',
+      select: true,
+      autopopulate: true
+    },
+    regency: {
+        type: Schema.Types.ObjectId,
+        ref: 'Regencies',
+        select: true,
+        autopopulate: true
+    },
+    isPPLActive: {
+      type: Boolean,
+      default: null,
+      select: true
     }
 }, {timestamps: true, versionKey: false})
 scheme.plugin(require('mongoose-autopopulate'));

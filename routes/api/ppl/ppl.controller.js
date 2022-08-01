@@ -1,8 +1,5 @@
 const { parseQuery } = require('../../helpers');
 const Model = require('../peternak/peternak.model')
-const Promise = require("bluebird");
-const mongoose = require('mongoose');
-const reducer = (acc, value) => acc + value;
 
 const handleQuerySort = (query) => {
     try{
@@ -18,7 +15,7 @@ const handleQuerySort = (query) => {
 exports.findAll =  async (req, res, next) => {
     try {
         const {limit, offset} = parseQuery(req.query);
-        const { name, address, phoneNumber, asalKemitraan } = req.query;
+        const { name, address, phoneNumber, asalKemitraan, active } = req.query;
         let sort = handleQuerySort(req.query.sort)
         let role = req.user.role ? req.user.role.name : '';
         let kemitraanId = req.user.kemitraanUser ? req.user.kemitraanUser._id : '';
@@ -43,8 +40,14 @@ exports.findAll =  async (req, res, next) => {
             filter.kemitraanUser = kemitraanId
         }
 
+        if (active === 'true') {
+            filter.isPPLActive = true
+        } else if (active === 'false') {
+            filter.isPPLActive = false
+        }
+
         const count = await Model.countDocuments(filter)
-        const data = await Model.find(filter).limit(limit).skip(offset).sort(sort).select('avatar image noKTP address fullname username email phoneNumber asalKemitraan kemitraanUser')
+        const data = await Model.find(filter).limit(limit).skip(offset).sort(sort).select('avatar image noKTP address fullname username email phoneNumber asalKemitraan kemitraanUser isPPLActive')
 
         res.json({
             message: 'Ok',
@@ -58,7 +61,7 @@ exports.findAll =  async (req, res, next) => {
 
 exports.findById = async (req, res, next) => {
     try {
-        const ppl = await Model.findById(req.params.id).select('avatar image noKTP address fullname username email phoneNumber asalKemitraan kemitraanUser')
+        const ppl = await Model.findById(req.params.id).select('avatar image noKTP address fullname username email phoneNumber asalKemitraan kemitraanUser isPPLActive')
 
         res.json({
             detailPPL: ppl,
@@ -75,7 +78,7 @@ exports.removePPLById = async (req, res, next) => {
     let id = req.params.id;
     try {
         console.log("masuk sini")
-        const result = await Model.findByIdAndUpdate(id, {deleted: true}, {new: true}).exec();
+        const result = await Model.findByIdAndUpdate(id, {deleted: true, isPPLActive: false}, {new: true}).exec();
         if (!result) {
             res.json({error: 404, message: 'PPL not found.'})
         }
