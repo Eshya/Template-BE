@@ -256,9 +256,496 @@ exports.findAllDataPool =  async (req, res, next) => {
     }
 }
 
+exports.dropdownPeriodeDataPool =  async (req, res, next) => {
+    try {
+        let periode = await Periode.find({kandang: req.params.id}).sort({ createdAt: 1 })
+        let result = [];
+        for (let i = 0; i < periode.length; i++) {
+            result.push({
+                id: periode[i].id,
+                name: "Periode " + (i+1)
+            })
+        }
+        res.json({
+            data: result
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
+exports.grafikFeedIntakeDataPool =  async (req, res, next) => {
+    try {
+        let periode = await Periode.findOne({_id: req.params.id}).sort({ createdAt: 1 })
+        let dataSTD = await DataSTD.find().sort({day: 1}).select('day dailyIntake')
+
+        // actual
+        let actual = [];
+        let kegiatanHarianResult = await KegiatanHarian.find({periode: periode.id}).select('-periode').sort({'tanggal': 1})
+        await Promise.map(kegiatanHarianResult, async (kegiatanHarian, index) => {
+            //find usia ayam
+            const start = new Date(periode.tanggalMulai);
+            const tanggal = new Date(kegiatanHarian.tanggal)
+            let usiaAyam = Math.round(Math.abs((tanggal - start) / ONE_DAY))
+
+            const beratPakan = kegiatanHarian ? kegiatanHarian.pakanPakai.reduce((a, {beratPakan}) => a + beratPakan, 0) : 0
+
+            actual.push({
+                day: usiaAyam,
+                value: beratPakan
+            });
+        });
+
+        //standard
+        let standard = [];
+        for (let i = 0; i < dataSTD.length; i++) {
+            standard.push({
+                day: dataSTD[i].day,
+                value: dataSTD[i].dailyIntake
+            })
+        }
+
+        // day
+        let days = [];
+        for (let i = 0; i < dataSTD.length; i++) {
+            days.push(dataSTD[i].day)
+        }
+
+        res.json({
+            actual: actual,
+            standard: standard,
+            days: days
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
+exports.grafikDeplesiDataPool =  async (req, res, next) => {
+    try {
+        let periode = await Periode.findOne({_id: req.params.id}).sort({ createdAt: 1 })
+        let dataSTD = await DataSTD.find().sort({day: 1}).select('day deplesi')
+
+        // actual
+        let actual = [];
+        let kegiatanHarianResult = await KegiatanHarian.find({periode: periode.id}).select('-periode').sort({'tanggal': 1})
+        await Promise.map(kegiatanHarianResult, async (kegiatanHarian, index) => {
+            //find usia ayam
+            const start = new Date(periode.tanggalMulai);
+            const tanggal = new Date(kegiatanHarian.tanggal)
+            let usiaAyam = Math.round(Math.abs((tanggal - start) / ONE_DAY))
+
+            actual.push({
+                day: usiaAyam,
+                value: (kegiatanHarian.deplesi + kegiatanHarian.pemusnahan)
+            });
+        });
+
+        //standard
+        let standard = [];
+        for (let i = 0; i < dataSTD.length; i++) {
+            standard.push({
+                day: dataSTD[i].day,
+                value: dataSTD[i].deplesi
+            })
+        }
+
+        // day
+        let days = [];
+        for (let i = 0; i < dataSTD.length; i++) {
+            days.push(dataSTD[i].day)
+        }
+
+        res.json({
+            actual: actual,
+            standard: standard,
+            days: days
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
+exports.grafikBobotDataPool =  async (req, res, next) => {
+    try {
+        let periode = await Periode.findOne({_id: req.params.id}).sort({ createdAt: 1 })
+        let dataSTD = await DataSTD.find().sort({day: 1}).select('day bodyWeight')
+
+        // actual
+        let actual = [];
+        let kegiatanHarianResult = await KegiatanHarian.find({periode: periode.id}).select('-periode').sort({'tanggal': 1})
+        await Promise.map(kegiatanHarianResult, async (kegiatanHarian, index) => {
+            //find usia ayam
+            const start = new Date(periode.tanggalMulai);
+            const tanggal = new Date(kegiatanHarian.tanggal)
+            let usiaAyam = Math.round(Math.abs((tanggal - start) / ONE_DAY))
+
+            // kalkulasi bobot
+            let totalBerat = [];
+            for (let i = 0; i < kegiatanHarian.berat.length; i++) {
+                let populasi = 0;
+                if (kegiatanHarian.berat[i].populasi == 0) {
+                    populasi = 1
+                } else {
+                    populasi = kegiatanHarian.berat[i].populasi
+                }
+                totalBerat.push(kegiatanHarian.berat[i].beratTimbang / populasi)
+            }
+            let totalberatSum = totalBerat.reduce(function(acc, val) { return acc + val; }, 0)
+            let bobotResult = totalberatSum/kegiatanHarian.berat.length
+            let bobotFixed = Number.isInteger(bobotResult) ? bobotResult : bobotResult.toFixed(2);
+            let totalBobot = isFinite(bobotFixed) && bobotFixed || 0;
+
+            actual.push({
+                day: usiaAyam,
+                value: totalBobot
+            });
+        });
+
+        //standard
+        let standard = [];
+        for (let i = 0; i < dataSTD.length; i++) {
+            standard.push({
+                day: dataSTD[i].day,
+                value: dataSTD[i].bodyWeight
+            })
+        }
+
+        // day
+        let days = [];
+        for (let i = 0; i < dataSTD.length; i++) {
+            days.push(dataSTD[i].day)
+        }
+
+        res.json({
+            actual: actual,
+            standard: standard,
+            days: days
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
 exports.findOneDataPool =  async (req, res, next) => {
     try {
         const periode = await Periode.findOne({kandang: req.params.id}).sort({ createdAt: -1 })
+        let dataKandang;
+        let dataHarian = [];
+        let dataSapronak = [];
+        let dataNekropsi = [];
+        let dataPenjualan = [];
+        if (periode && periode.kandang) {
+            // get IP
+            const sapronak = await Sapronak.aggregate([
+                {$match: {periode: mongoose.Types.ObjectId(periode.id)}},
+                {$lookup:  {
+                    "from": "produk",
+                    "localField": "produk",
+                    "foreignField": "_id",
+                    "as": "produk_info"
+                }},
+                {$unwind: '$produk_info'},
+                {$group: {_id: '$produk_info.jenis', pakan_masuk: {$sum: '$kuantitas'}}}
+            ])
+
+            const penjualan = await Penjualan.aggregate([
+                {$match: {periode: mongoose.Types.ObjectId(periode.id)}},
+                {$group: {_id: '$_id', terjual: {$sum: '$qty'}}}
+            ])
+
+            const dataPakan = await KegiatanHarian.aggregate([
+                {$match: {periode: mongoose.Types.ObjectId(periode.id)}},
+                {$unwind: {'path': '$pakanPakai', "preserveNullAndEmptyArrays": true}},
+                {$group: {_id: '$_id', totalPakan: {$sum: '$pakanPakai.beratPakan'}}}
+            ])
+
+            const dataDeplesi = await KegiatanHarian.aggregate([
+                {$match: {periode: mongoose.Types.ObjectId(periode.id)}},
+                {$group: {_id: '$_id', totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
+            ])
+
+            const getKegiatan = await KegiatanHarian.find({periode: periode.id}).sort({'tanggal': -1}).limit(1).select('-periode')
+            const latestWeight = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0) : 0
+            const latestSampling = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {populasi}) => a + populasi, 0) : 0
+            const latestFeed = getKegiatan[0] ? getKegiatan[0].pakanPakai.reduce((a, {beratPakan}) => a + beratPakan, 0) : 0
+
+            const avgLatestWeight = latestWeight/latestSampling
+
+            const allDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
+            const allKematian = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
+            const allPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
+            const allPakan = dataPakan.reduce((a, {totalPakan})=>a + totalPakan, 0);
+            const filter_sapronak = sapronak.filter(x => x._id == "PAKAN")
+            const pakanMasuk = filter_sapronak.reduce((a, {pakan_masuk}) => a + pakan_masuk, 0);
+
+            const deplesi = (periode.populasi - (periode.populasi - (allDeplesi + allKematian))) * 100 / periode.populasi
+            const totalDeplesi = (allDeplesi + allKematian)
+            const batasDeplesi = ((2 / 100) * periode.populasi)
+            const presentaseAyamHidup = 100 - deplesi
+            const populasiAkhir = periode.populasi - (allDeplesi + allKematian + allPenjualan)
+            const FCR = allPakan / (populasiAkhir * (avgLatestWeight/1000)) 
+            const atas = presentaseAyamHidup * (avgLatestWeight/1000)
+            const bawah = FCR*(dataPakan.length-1)
+            const IP = (atas / bawah) * 100
+            const IPFixed = IP.toFixed(2)
+            const IPResult = isFinite(IPFixed) && IPFixed || 0
+
+            // get total penjualan
+            let harian = []
+            let pembelianPakan = 0
+            let pembelianOVK = 0
+            const getSapronak = await Sapronak.find({periode: periode._id});
+            for (let i = 0; i < getSapronak.length; i++) {
+                if (getSapronak[i].produk && (getSapronak[i].produk.jenis === 'PAKAN')) {
+                    const compliment = getSapronak[i].zak * getSapronak[i].hargaSatuan
+                    pembelianPakan += compliment
+                } else {
+                    const compliment = getSapronak[i].kuantitas * getSapronak[i].hargaSatuan
+                    pembelianOVK += compliment
+                }
+            }
+            const pembelianDoc = periode.populasi * periode.hargaSatuan
+            const getPenjualan = await Penjualan.find({periode: periode._id})
+            getPenjualan.forEach(x => {
+                harian.push(x.beratBadan * x.harga * x.qty)
+            })
+            const penjualanAyamBesar = harian.reduce(reducer, 0);
+            const pendapatanPeternak = penjualanAyamBesar - pembelianDoc - pembelianOVK - pembelianPakan
+
+            // get periode ke
+            const kandang = await Periode.find({kandang: periode.kandang._id}).sort('tanggalMulai')
+            let dataPeriode = [];
+            await Promise.map(kandang, async (kandang, index) => {
+                if (kandang._id.toString() === periode._id.toString()) {
+                    dataPeriode.push(index + 1);
+                }
+            });
+
+            // get usia
+            const now = new Date(Date.now());
+            const start = new Date(periode.tanggalMulai);
+            const usia = periode.isEnd ? Math.round(Math.abs((periode.tanggalAkhir - start) / ONE_DAY)) :  Math.round(Math.abs((now - start) / ONE_DAY))
+
+            let feedIntakeACT = latestFeed * 1000 / populasiAkhir;
+
+            // get Data STD
+            const STD = await DataSTD.findOne({day: usia})
+
+            dataKandang = {
+                idPemilik: periode.kandang.createdBy ? periode.kandang.createdBy._id : null,
+                namaPemilik: periode.kandang.createdBy ? periode.kandang.createdBy.fullname : null,
+                phoneNumber: periode.kandang.phoneNumber ? periode.kandang.createdBy.phoneNumber : null,
+                idKandang: periode.kandang._id,
+                namaKandang: periode.kandang.kode,
+                alamat: periode.kandang.alamat,
+                kota: periode.kandang.kota,
+                isActive: periode.kandang.isActive,
+                jenisKandang: periode.kandang.tipe ? periode.kandang.tipe.tipe : null,
+                kapasitas: periode.kandang.populasi,
+                idPeriode: periode._id,
+                periodeEnd: periode.isEnd,
+                periodeKe: dataPeriode[0],
+                IP: IPResult,
+                totalPenghasilanKandang: pendapatanPeternak,
+                DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
+                populasiAwal: periode.populasi,
+                populasiAkhir: populasiAkhir,
+                pakanAwal: pakanMasuk,
+                pakanPakai: allPakan,
+                pakanSisa: (pakanMasuk - allPakan),
+                usiaAyam: usia,
+                totalDeplesi: totalDeplesi,
+                batasDeplesi: batasDeplesi,
+                bobotACT: avgLatestWeight,
+                bobotSTD: STD ? STD.bodyWeight: 0,
+                feedIntakeACT: feedIntakeACT.toFixed(2),
+                feedIntakeSTD: STD ? STD.dailyIntake: 0,
+                fcrACT: FCR.toFixed(2),
+                fcrSTD: STD ? STD.fcr: 0,
+                rhpp_path: periode.rhpp_path ? periode.rhpp_path : ""
+            }
+
+            // get data harian
+            let kegiatanHarianResult = await KegiatanHarian.find({periode: periode.id}).select('-periode').sort({'tanggal': -1})
+            console.log(kegiatanHarianResult)
+            await Promise.map(kegiatanHarianResult, async (kegiatanHarian, index) => {
+                //find usia ayam
+                const tanggal = new Date(kegiatanHarian.tanggal)
+                let usiaAyam = Math.round(Math.abs((tanggal - start) / ONE_DAY))
+
+                // kalkulasi bobot
+                let totalBerat = [];
+                for (let i = 0; i < kegiatanHarian.berat.length; i++) {
+                    let populasi = 0;
+                    if (kegiatanHarian.berat[i].populasi == 0) {
+                        populasi = 1
+                    } else {
+                        populasi = kegiatanHarian.berat[i].populasi
+                    }
+                    totalBerat.push(kegiatanHarian.berat[i].beratTimbang / populasi)
+                }
+                let totalberatSum = totalBerat.reduce(function(acc, val) { return acc + val; }, 0)
+                let bobotResult = totalberatSum/kegiatanHarian.berat.length
+                let bobotFixed = Number.isInteger(bobotResult) ? bobotResult : bobotResult.toFixed(2);
+                let totalBobot = isFinite(bobotFixed) && bobotFixed || 0;
+
+                const beratPakan = kegiatanHarian ? kegiatanHarian.pakanPakai.reduce((a, {beratPakan}) => a + beratPakan, 0) : 0
+
+                //sisa populasi
+                let sisaPopulasi = await KegiatanHarian.find({periode: periode.id, tanggal: {$lte: kegiatanHarian.tanggal}}).select('-periode')
+                let totalCulling = sisaPopulasi.reduce((a, {pemusnahan}) => a + pemusnahan, 0);
+                let totalMortalitas = sisaPopulasi.reduce((a, {deplesi}) => a + deplesi, 0);
+                let ayamHidup = periode.populasi - (totalCulling + totalMortalitas);
+                let ayamHidupPercentage = ayamHidup / periode.populasi * 100;
+
+                dataHarian.push({
+                    usiaAyam: usiaAyam,
+                    tanggal: kegiatanHarian.tanggal,
+                    pakanPakai: beratPakan,
+                    feedIntake: beratPakan,
+                    bobot: totalBobot,
+                    deplesi: (kegiatanHarian.deplesi + kegiatanHarian.pemusnahan),
+                    mortalitas: kegiatanHarian.deplesi,
+                    culling: kegiatanHarian.pemusnahan,
+                    ayamHidupPercentage: ayamHidupPercentage.toFixed(2),
+                    ayamHidup: ayamHidup
+                });
+            });
+
+            // get sapronak
+            let sapronakResult = await Sapronak.find({periode: periode.id}).sort({'createdAt': -1})
+            await Promise.map(sapronakResult, async (sapronakResult, index) => {
+                //find usia ayam
+                const tanggal = new Date(sapronakResult.tanggal)
+                let usiaAyam = Math.round(Math.abs((tanggal - start) / ONE_DAY))
+
+                let totalHarga = 0;
+                let quantity = 0;
+                if (sapronakResult.produk && (sapronakResult.produk.jenis === 'PAKAN')) {
+                    totalHarga = sapronakResult.zak * sapronakResult.hargaSatuan
+                    quantity = sapronakResult.zak
+                } else {
+                    totalHarga = sapronakResult.kuantitas * sapronakResult.hargaSatuan
+                    quantity = sapronakResult.kuantitas
+                }
+                dataSapronak.push({
+                    usiaAyam: usiaAyam,
+                    tanggal: sapronakResult.tanggal,
+                    jenis: sapronakResult.produk ? sapronakResult.produk.jenis : "",
+                    produk: sapronakResult.produk ? sapronakResult.produk.merk : "",
+                    quantity: quantity,
+                    hargaSatuan: sapronakResult.hargaSatuan,
+                    totalHarga: totalHarga
+                });
+            });
+
+            // get nekropsi
+            let nekropsiResult = await Nekropsi.find({periode: periode.id}).sort({'tanggal': -1})
+            await Promise.map(nekropsiResult, async (nekropsiResult, index) => {
+                let penyakit = nekropsiResult.jenisPenyakit[0]
+                let namaPenyakit = ""
+                if (penyakit.CRD === true) {
+                    namaPenyakit = "CRD"
+                } else if (penyakit.COLLIBACILOSIS === true) {
+                    namaPenyakit = "COLLIBACILOSIS"
+                } else if (penyakit.snot === true) {
+                    namaPenyakit = "snot"
+                } else if (penyakit.colliPanopthalmitis === true) {
+                    namaPenyakit = "colliPanopthalmitis"
+                } else if (penyakit.gumboro === true) {
+                    namaPenyakit = "gumboro"
+                } else if (penyakit.ND === true) {
+                    namaPenyakit = "ND"
+                } else if (penyakit.AI === true) {
+                    namaPenyakit = "AI"
+                } else if (penyakit.koksidiosis === true) {
+                    namaPenyakit = "koksidiosis"
+                } else if (penyakit.aspergilosis === true) {
+                    namaPenyakit = "aspergilosis"
+                } else if (penyakit.candidiasis === true) {
+                    namaPenyakit = "candidiasis"
+                } else if (penyakit.mikotoksikosis === true) {
+                    namaPenyakit = "mikotoksikosis"
+                } else if (penyakit.malariaLike === true) {
+                    namaPenyakit = "malariaLike"
+                }
+
+                dataNekropsi.push({
+                    tanggal: nekropsiResult.tanggal,
+                    gambar: nekropsiResult.images[index] ? nekropsiResult.images[index].path : "",
+                    tindakan: nekropsiResult.actionPlan1,
+                    catatan: nekropsiResult.catatan,
+                    penyakit: namaPenyakit
+                });
+            });
+
+            // get penjualan
+            let penjualanResult = await Penjualan.find({periode: periode.id}).sort({'tanggal': -1})
+            await Promise.map(penjualanResult, async (penjualanResult, index) => {
+                dataPenjualan.push({
+                    tanggal: penjualanResult.tanggal,
+                    tonase: (penjualanResult.qty * penjualanResult.beratBadan),
+                    jumlah: penjualanResult.qty,
+                    BW: penjualanResult.beratBadan,
+                    pembeli: penjualanResult.pembeli,
+                    pendapatan: ((penjualanResult.qty * penjualanResult.beratBadan) * penjualanResult.harga),
+                    keterangan: penjualanResult.catatan
+                });
+            });
+        } else {
+            let kandang = await Model.findOne({_id: req.params.id}).sort({ createdAt: -1 })
+            dataKandang = {
+                idPemilik: kandang.createdBy ? kandang.createdBy._id : null,
+                namaPemilik: kandang.createdBy ? kandang.createdBy.fullname : null,
+                phoneNumber: kandang.phoneNumber ? kandang.createdBy.phoneNumber : null,
+                idKandang: kandang._id,
+                namaKandang: kandang.kode,
+                alamat: kandang.alamat,
+                kota: kandang.kota,
+                isActive: kandang.isActive,
+                jenisKandang: kandang.tipe ? kandang.tipe.tipe : null,
+                kapasitas: kandang.populasi,
+                idPeriode: null,
+                periodeEnd: 0,
+                periodeKe: "Belum Mulai Periode",
+                IP: 0,
+                totalPenghasilanKandang: 0,
+                DOC: "",
+                populasiAwal: 0,
+                populasiAkhir: 0,
+                pakanAwal: 0,
+                pakanPakai: 0,
+                pakanSisa: 0,
+                usiaAyam: 0,
+                totalDeplesi: 0,
+                batasDeplesi: 0,
+                bobotACT: 0,
+                bobotSTD: 0,
+                feedIntakeACT: 0,
+                feedIntakeSTD:  0,
+                fcrACT: 0,
+                fcrSTD: 0,
+                rhpp_path: ""
+            }
+        }
+
+        res.json({
+            dataKandang: dataKandang,
+            dataHarian: dataHarian,
+            dataSapronak: dataSapronak,
+            dataNekropsi: dataNekropsi,
+            dataPenjualan: dataPenjualan,
+            message: 'Ok'
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
+exports.findOnePeriodeDataPool =  async (req, res, next) => {
+    try {
+        const periode = await Periode.findOne({kandang: req.params.id, _id: req.params.periode}).sort({ createdAt: -1 })
         let dataKandang;
         let dataHarian = [];
         let dataSapronak = [];

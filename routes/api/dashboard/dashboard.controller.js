@@ -239,11 +239,24 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
                 let age = Math.round(Math.abs((now - start) / ONE_DAY))
 
                 // get weight actual
-                const getKegiatan = await KegiatanHarian.find({periode: periode.id}).sort({'tanggal': -1}).limit(1).select('-periode')
-                const latestWeight = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0) : 0
-                const latestSampling = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {populasi}) => a + populasi, 0) : 0
-                const totalAvgLatestWeight = latestWeight/latestSampling
-                const avgLatestWeight = totalAvgLatestWeight ? totalAvgLatestWeight : 0
+                let getKegiatan = await KegiatanHarian.findOne({periode: periode.id, berat: { $exists: true, $ne: [] }}).select('-periode').sort({'tanggal': -1})
+                let avgLatestWeight = 0;
+                if (getKegiatan)  {
+                    let totalBerat = [];
+                    for (let x = 0; x < getKegiatan.berat.length; x++) {
+                        let populasi = 0;
+                        if (getKegiatan.berat[x].populasi == 0) {
+                            populasi = 1
+                        } else {
+                            populasi = getKegiatan.berat[x].populasi
+                        }
+                        totalBerat.push(getKegiatan.berat[x].beratTimbang / populasi)
+                    }
+                    let totalberatSum = totalBerat.reduce(function(acc, val) { return acc + val; }, 0)
+                    let bobotResult = totalberatSum/getKegiatan.berat.length
+                    let bobotFixed = Number.isInteger(bobotResult) ? bobotResult : bobotResult.toFixed(2);
+                    avgLatestWeight = isFinite(bobotFixed) && bobotFixed || 0;
+                }
 
                 let pushData = false;
                 if (usiaFrom && usiaTo && bobotFrom && bobotTo) {
