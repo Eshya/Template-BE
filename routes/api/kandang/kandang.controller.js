@@ -527,8 +527,7 @@ exports.findOneDataPool =  async (req, res, next) => {
             const start = new Date(periode.tanggalMulai);
             const usia = periode.isEnd ? Math.round(Math.abs((periode.tanggalAkhir - start) / ONE_DAY)) :  Math.round(Math.abs((now - start) / ONE_DAY))
 
-            let feedIntakeACT = latestFeed * 1000 / populasiAkhir;
-
+            let feedIntakeACT = populasiAkhir === 0 ? 0 : latestFeed * 1000 / populasiAkhir
             // get Data STD
             const STD = await DataSTD.findOne({day: usia})
 
@@ -568,7 +567,6 @@ exports.findOneDataPool =  async (req, res, next) => {
 
             // get data harian
             let kegiatanHarianResult = await KegiatanHarian.find({periode: periode.id}).select('-periode').sort({'tanggal': -1})
-            console.log(kegiatanHarianResult)
             await Promise.map(kegiatanHarianResult, async (kegiatanHarian, index) => {
                 //find usia ayam
                 const tanggal = new Date(kegiatanHarian.tanggal)
@@ -843,7 +841,10 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
             const start = new Date(periode.tanggalMulai);
             const usia = periode.isEnd ? Math.round(Math.abs((periode.tanggalAkhir - start) / ONE_DAY)) :  Math.round(Math.abs((now - start) / ONE_DAY))
 
-            let feedIntakeACT = latestFeed * 1000 / populasiAkhir;
+            let feedIntakeACT = populasiAkhir !== 0 ? latestFeed * 1000 / populasiAkhir : 0
+            console.log(feedIntakeACT)
+
+            
 
             // get Data STD
             const STD = await DataSTD.findOne({day: usia})
@@ -875,7 +876,7 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
                 batasDeplesi: batasDeplesi,
                 bobotACT: avgLatestWeight,
                 bobotSTD: STD ? STD.bodyWeight: 0,
-                feedIntakeACT: feedIntakeACT.toFixed(2),
+                feedIntakeACT: feedIntakeACT,
                 feedIntakeSTD: STD ? STD.dailyIntake: 0,
                 fcrACT: FCR.toFixed(2),
                 fcrSTD: STD ? STD.fcr: 0,
