@@ -1896,7 +1896,7 @@ exports.detailKandang = async (req,res, next) => {
     const token = req.headers['authorization']
     try {
         const findKandang = await Model.findById(id)        
-        const findPeriode = await Periode.find({kandang: id}).sort({isEnd: 1, tanggalMulai: -1})
+        const findPeriode = await Periode.find({kandang: id}).sort({isEnd: 1, createdAt: 1})
 
         const map = await Promise.all(findPeriode.map(async(x) => {
             const findUser = await fetch(`https://${urlAuth}/api/users/${x.createdBy}`, {
