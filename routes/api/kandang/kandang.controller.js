@@ -9,6 +9,7 @@ const Penjualan = require("../penjualan/penjualan.model");
 const Sapronak = require("../sapronak/sapronak.model");
 const Nekropsi = require("../nekropsi/nekropsi.model");
 const DataSTD = require('../data/data.model');
+const PeternakModel = require('../peternak/peternak.model');
 const selectPublic = '-createdAt -updatedAt';
 const fetch = require('node-fetch')
 const Promise = require("bluebird");
@@ -531,11 +532,11 @@ exports.findOneDataPool =  async (req, res, next) => {
 
             // get Data STD
             const STD = await DataSTD.findOne({day: usia})
-
+            const peternak = await PeternakModel.findById(periode.kandang.createdBy._id).select('fullname phoneNumber')
             dataKandang = {
                 idPemilik: periode.kandang.createdBy ? periode.kandang.createdBy._id : null,
-                namaPemilik: periode.kandang.createdBy ? periode.kandang.createdBy.fullname : null,
-                phoneNumber: periode.kandang.phoneNumber ? periode.kandang.createdBy.phoneNumber : null,
+                namaPemilik: periode.kandang.createdBy ? peternak.fullname  : null,
+                phoneNumber: periode.kandang.createdBy ? peternak.phoneNumber : null,
                 idKandang: periode.kandang._id,
                 namaKandang: periode.kandang.kode,
                 alamat: periode.kandang.alamat,
@@ -695,10 +696,11 @@ exports.findOneDataPool =  async (req, res, next) => {
             });
         } else {
             let kandang = await Model.findOne({_id: req.params.id}).sort({ createdAt: -1 })
+            const peternak = await PeternakModel.findById(kandang.createdBy._id).select('fullname phoneNumber')
             dataKandang = {
                 idPemilik: kandang.createdBy ? kandang.createdBy._id : null,
-                namaPemilik: kandang.createdBy ? kandang.createdBy.fullname : null,
-                phoneNumber: kandang.phoneNumber ? kandang.createdBy.phoneNumber : null,
+                namaPemilik: kandang.createdBy ? peternak.fullname : null,
+                phoneNumber: kandang.createdBy ? peternak.phoneNumber : null,
                 idKandang: kandang._id,
                 namaKandang: kandang.kode,
                 alamat: kandang.alamat,
@@ -847,11 +849,11 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
 
             // get Data STD
             const STD = await DataSTD.findOne({day: usia})
-
+            const peternak = await PeternakModel.findById(periode.kandang.createdBy._id).select('fullname phoneNumber')
             dataKandang = {
                 idPemilik: periode.kandang.createdBy ? periode.kandang.createdBy._id : null,
-                namaPemilik: periode.kandang.createdBy ? periode.kandang.createdBy.fullname : null,
-                phoneNumber: periode.kandang.phoneNumber ? periode.kandang.createdBy.phoneNumber : null,
+                namaPemilik: periode.kandang.createdBy ? peternak.fullname : null,
+                phoneNumber: periode.kandang.createdBy ? peternak.phoneNumber : null,
                 idKandang: periode.kandang._id,
                 namaKandang: periode.kandang.kode,
                 alamat: periode.kandang.alamat,
@@ -991,10 +993,11 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
             });
         } else {
             let kandang = await Model.findOne({_id: req.params.id}).sort({ createdAt: -1 })
+            const peternak = await PeternakModel.findById(periode.kandang.createdBy._id).select('fullname phoneNumber')
             dataKandang = {
                 idPemilik: kandang.createdBy ? kandang.createdBy._id : null,
-                namaPemilik: kandang.createdBy ? kandang.createdBy.fullname : null,
-                phoneNumber: kandang.phoneNumber ? kandang.createdBy.phoneNumber : null,
+                namaPemilik: kandang.createdBy ? peternak.fullname : null,
+                phoneNumber: kandang.createdBy ? peternak.phoneNumber : null,
                 idKandang: kandang._id,
                 namaKandang: kandang.kode,
                 alamat: kandang.alamat,
