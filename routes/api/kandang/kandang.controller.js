@@ -1462,25 +1462,25 @@ exports.insert = async (req, res, next) => {
     const token = req.headers['authorization']
     const {kode, alamat, tipe, isMandiri, kota, populasi} = req.body;
     const createdBy = req.user._id
-    const flock = [] 
+    // const flock = [] 
     try {
         const results = await Model.create({kode, alamat, tipe, isMandiri, kota, createdBy, populasi});
         // console.log(results._id)
-        const body = {
-            name: 'flock 1',
-            kandang: results._id
-        }
-        await fetch(`https://${urlIOT}/api/flock`, {
-            method: 'post',
-            body: JSON.stringify(body),
-            headers: {
-                'Authorization': token,
-                "Content-Type": "application/json" }
-        }).then(res => res.json()).then(data => flock.push(data))
+        // const body = {
+        //     name: 'flock 1',
+        //     kandang: results._id
+        // }
+        // await fetch(`https://${urlIOT}/api/flock`, {
+        //     method: 'post',
+        //     body: JSON.stringify(body),
+        //     headers: {
+        //         'Authorization': token,
+        //         "Content-Type": "application/json" }
+        // }).then(res => res.json()).then(data => flock.push(data))
         // console.log(insertFlock)
         res.json({
             data: results,
-            flock: flock,
+            // flock: flock,
             message: 'Ok'
         })
     } catch (error) {
