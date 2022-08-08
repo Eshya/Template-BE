@@ -57,18 +57,27 @@ exports.insert = async (req, res, next) => {
 
         const date1 = new Date(data.tanggal)
         const date2 = new Date(findKegiatan[0].tanggal)
-        
+        c
        
-        
-        if(date1.getMonth() >= date2.getMonth() && date1.getDate() > date2.getDate() ) return res.json({error: 1006, message: 'isi kegiatan harian terlebih dahulu!'})
+        let isHarianNotSubmitted=true;
+        if(date1.getMonth() >= date2.getMonth() && date1.getDate() > date2.getDate() ) {
+            isHarianNotSubmitted=true;
+        }
+        else{
+            isHarianNotSubmitted=false;
+        }
         if(populasiAkhir < data.qty) return res.json({error: 1007, message: 'kuantiti melebihi populasi akhir!'})
-
         const results = await Model.create(data);
-        
         res.json({
-            data: results,
-            message: 'Ok'
+             data: results,
+             message: isHarianNotSubmitted ? 'Disarankan mengisi data harian terlebih dahulu' : 'ok'
         })
+       //return res.json({error: 1006, message: 'isi kegiatan harian terlebih dahulu!'})
+        
+
+        
+        
+        
     } catch (error) {
         next(error)
     }
