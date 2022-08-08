@@ -153,11 +153,11 @@ exports.findById = async (req, res, next) => {
 
                 const allDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
                 const allKematian = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
-                const allPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
+                //const allPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
                 const allPakan = dataPakan.reduce((a, {totalPakan})=>a + totalPakan, 0);
                 const deplesi = (periode.populasi - (periode.populasi - (allDeplesi + allKematian))) * 100 / periode.populasi
                 const presentaseAyamHidup = 100 - deplesi
-                const populasiAkhir = periode.populasi - (allDeplesi + allKematian + allPenjualan)
+                const populasiAkhir = periode.populasi - (allDeplesi + allKematian)
                 const FCR = allPakan / (populasiAkhir * (latestWeight/1000)) 
                 const atas = presentaseAyamHidup * (latestWeight/1000)
                 const bawah = FCR*(dataPakan.length-1)

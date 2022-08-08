@@ -359,7 +359,7 @@ exports.ringkasan = async (req, res, next) => {
         const filter_sapronak = sapronak.filter(x => x._id == "PAKAN")
         const pakanMasuk = filter_sapronak.reduce((a, {pakan_masuk}) => a + pakan_masuk, 0);
 
-        const populasiAkhir = getPeriode.populasi - (allDeplesi + allKematian + allPenjualan)
+        const populasiAkhir = getPeriode.populasi - (allDeplesi + allKematian )
         const deplesi = (getPeriode.populasi - (getPeriode.populasi - (allDeplesi + allKematian))) * 100 / getPeriode.populasi
         const presentaseAyamHidup = 100 - deplesi
         const FCR = allPakan / (populasiAkhir * (avgLatestWeight/1000)) 

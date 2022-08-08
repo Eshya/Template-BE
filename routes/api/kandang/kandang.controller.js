@@ -475,7 +475,7 @@ exports.findOneDataPool =  async (req, res, next) => {
 
             const allDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
             const allKematian = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
-            const allPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
+            //const allPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
             const allPakan = dataPakan.reduce((a, {totalPakan})=>a + totalPakan, 0);
             const filter_sapronak = sapronak.filter(x => x._id == "PAKAN")
             const pakanMasuk = filter_sapronak.reduce((a, {pakan_masuk}) => a + pakan_masuk, 0);
@@ -484,7 +484,7 @@ exports.findOneDataPool =  async (req, res, next) => {
             const totalDeplesi = (allDeplesi + allKematian)
             const batasDeplesi = ((2 / 100) * periode.populasi)
             const presentaseAyamHidup = 100 - deplesi
-            const populasiAkhir = periode.populasi - (allDeplesi + allKematian + allPenjualan)
+            const populasiAkhir = periode.populasi - (allDeplesi + allKematian)
             const FCR = allPakan / (populasiAkhir * (avgLatestWeight/1000)) 
             const atas = presentaseAyamHidup * (avgLatestWeight/1000)
             const bawah = FCR*(dataPakan.length-1)
@@ -796,7 +796,7 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
 
             const allDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
             const allKematian = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
-            const allPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
+            //const allPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
             const allPakan = dataPakan.reduce((a, {totalPakan})=>a + totalPakan, 0);
             const filter_sapronak = sapronak.filter(x => x._id == "PAKAN")
             const pakanMasuk = filter_sapronak.reduce((a, {pakan_masuk}) => a + pakan_masuk, 0);
@@ -805,7 +805,7 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
             const totalDeplesi = (allDeplesi + allKematian)
             const batasDeplesi = ((2 / 100) * periode.populasi)
             const presentaseAyamHidup = 100 - deplesi
-            const populasiAkhir = periode.populasi - (allDeplesi + allKematian + allPenjualan)
+            const populasiAkhir = periode.populasi - (allDeplesi + allKematian)
             const FCR = allPakan / (populasiAkhir * (avgLatestWeight/1000)) 
             const atas = presentaseAyamHidup * (avgLatestWeight/1000)
             const bawah = FCR*(dataPakan.length-1)
@@ -1601,10 +1601,10 @@ exports.getKelola = async (req, res, next) => {
 
                 const allDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
                 const allKematian = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
-                const allPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
+                //const allPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
                 const allPakan = dataPakan.reduce((a, {totalPakan})=>a + totalPakan, 0);
 
-                const populasiAkhir = periode[i].populasi - (allDeplesi + allKematian + allPenjualan)
+                const populasiAkhir = periode[i].populasi - (allDeplesi + allKematian)
                 const deplesi = (periode[i].populasi - (periode[i].populasi - (allDeplesi + allKematian))) * 100 / periode[i].populasi
                 const presentaseAyamHidup = 100 - deplesi
                 const FCR = allPakan / (populasiAkhir * (avgLatestWeight/1000)) 
