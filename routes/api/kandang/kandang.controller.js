@@ -1467,7 +1467,7 @@ exports.insert = async (req, res, next) => {
         // Check kandang name availability
         const availableKandang = await Model.findOne({ createdBy, kode });
         if (availableKandang) {
-            return res.json({ status: 400, mesage: 'Kandang name is already used for this user'});
+            return res.json({ error: 2021, mesage: 'Kandang name is already used for this user'});
         }
 
         const results = await Model.create({kode, alamat, tipe, isMandiri, kota, createdBy, populasi});
@@ -1503,7 +1503,7 @@ exports.updateById = async (req, res, next) => {
         // Check kandang name availability
         const availableKandang = await Model.findOne({ createdBy, kode: data.kode });
         if (availableKandang) {
-            return res.json({ status: 400, mesage: 'Kandang name is already used for this user'});
+            return res.json({ error: 2021, mesage: 'Kandang name is already used for this user'});
         }
 
         const results = await Model.findByIdAndUpdate(id, data, {new: true}).exec();
@@ -1524,7 +1524,7 @@ exports.updateWhere = async (req, res, next) => {
         // Check kandang name availability
         const availableKandang = await Model.findOne({ createdBy, kode: data.kode });
         if (availableKandang) {
-            return res.json({ status: 400, mesage: 'Kandang name is already used for this user'});
+            return res.json({ error: 2021, mesage: 'Kandang name is already used for this user'});
         }
 
         const results = await Model.updateMany(where, data, {new: true, upsert: false, multi: false}).exec();
