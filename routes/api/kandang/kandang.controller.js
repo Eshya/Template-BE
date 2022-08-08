@@ -1464,6 +1464,12 @@ exports.insert = async (req, res, next) => {
     const createdBy = req.user._id
     const flock = [] 
     try {
+        // Check kandang name availability
+        const availableKandang = await Model.findOne({ createdBy, kode });
+        if (availableKandang) {
+            return res.json({ error: 2021, mesage: 'Kandang name is already used for this user'});
+        }
+
         const results = await Model.create({kode, alamat, tipe, isMandiri, kota, createdBy, populasi});
         // console.log(results._id)
         const body = {
@@ -1491,8 +1497,15 @@ exports.insert = async (req, res, next) => {
 exports.updateById = async (req, res, next) => {
     const id = req.params.id;
     const data = req.body;
+    const createdBy = req.user._id;
 
     try {
+        // Check kandang name availability
+        const availableKandang = await Model.findOne({ createdBy, kode: data.kode });
+        if (availableKandang) {
+            return res.json({ error: 2021, mesage: 'Kandang name is already used for this user'});
+        }
+
         const results = await Model.findByIdAndUpdate(id, data, {new: true}).exec();
         res.json({
             data: results,
@@ -1506,7 +1519,14 @@ exports.updateById = async (req, res, next) => {
 exports.updateWhere = async (req, res, next) => {
     const {where} = parseQuery(req.query);
     const data = req.body;
+    const createdBy = req.user._id;
     try {
+        // Check kandang name availability
+        const availableKandang = await Model.findOne({ createdBy, kode: data.kode });
+        if (availableKandang) {
+            return res.json({ error: 2021, mesage: 'Kandang name is already used for this user'});
+        }
+
         const results = await Model.updateMany(where, data, {new: true, upsert: false, multi: false}).exec();
         res.json({data: results, message: 'Ok'});
     } catch (error) {
