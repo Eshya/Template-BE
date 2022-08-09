@@ -736,9 +736,13 @@ exports.findOneDataPool =  async (req, res, next) => {
             }
         }
 
+        var sortDataHarian = dataHarian.sort((x, y) => {
+            return x.usiaAyam - y.usiaAyam
+        })
+
         res.json({
             dataKandang: dataKandang,
-            dataHarian: dataHarian,
+            dataHarian: sortDataHarian,
             dataSapronak: dataSapronak,
             dataNekropsi: dataNekropsi,
             dataPenjualan: dataPenjualan,
@@ -850,9 +854,6 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
             const usia = periode.isEnd ? Math.round(Math.abs((periode.tanggalAkhir - start) / ONE_DAY)) :  Math.round(Math.abs((now - start) / ONE_DAY))
 
             let feedIntakeACT = populasiAkhir !== 0 ? latestFeed * 1000 / populasiAkhir : 0
-            console.log(feedIntakeACT)
-
-            
 
             // get Data STD
             const STD = await DataSTD.findOne({day: usia})
@@ -1829,7 +1830,6 @@ exports.kelolaPeternak = async (req, res, next) => {
             ])
             const now = new Date(Date.now())
             const start = new Date(findPeriode[0].tanggalMulai)
-            console.log(findPeriode)
             const umur = Math.round(Math.abs((now - start) / ONE_DAY))
 
             const suhu = await fetch(`https://${urlIOT}/api/flock/kandang/${x._id}`,{
