@@ -466,10 +466,16 @@ exports.findOneDataPool =  async (req, res, next) => {
                 {$group: {_id: '$_id', totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
             ])
 
-            const getKegiatan = await KegiatanHarian.find({periode: periode.id}).sort({'tanggal': -1}).limit(1).select('-periode')
-            const latestWeight = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0) : 0
-            const latestSampling = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {populasi}) => a + populasi, 0) : 0
-            const latestFeed = getKegiatan[0] ? getKegiatan[0].pakanPakai.reduce((a, {beratPakan}) => a + beratPakan, 0) : 0
+            const getKegiatanHarian = await KegiatanHarian.find({periode: periode.id}).sort({'tanggal': -1}).limit(1).select('-periode')
+            const getKegiatan = await KegiatanHarian.find({periode: periode.id}).sort({'tanggal': -1})
+                const findBerat = getKegiatan.filter((x) => {
+                    var berat = x.berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0)
+                    return berat !== 0
+                })
+                const latestWeight = findBerat[0] ? findBerat[0].berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0) : 0
+                const latestSampling = findBerat[0] ? findBerat[0].berat.reduce((a, {populasi}) => a + populasi, 0) : 0
+
+            const latestFeed = getKegiatanHarian[0] ? getKegiatanHarian[0].pakanPakai.reduce((a, {beratPakan}) => a + beratPakan, 0) : 0
 
             const avgLatestWeight = latestWeight/latestSampling
 
@@ -787,10 +793,19 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
                 {$group: {_id: '$_id', totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
             ])
 
-            const getKegiatan = await KegiatanHarian.find({periode: periode.id}).sort({'tanggal': -1}).limit(1).select('-periode')
-            const latestWeight = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0) : 0
-            const latestSampling = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {populasi}) => a + populasi, 0) : 0
-            const latestFeed = getKegiatan[0] ? getKegiatan[0].pakanPakai.reduce((a, {beratPakan}) => a + beratPakan, 0) : 0
+            const getKegiatanHarian = await KegiatanHarian.find({periode: periode.id}).sort({'tanggal': -1}).limit(1).select('-periode')
+            // const latestWeight = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0) : 0
+            // const latestSampling = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {populasi}) => a + populasi, 0) : 0
+            const latestFeed = getKegiatanHarian[0] ? getKegiatanHarian[0].pakanPakai.reduce((a, {beratPakan}) => a + beratPakan, 0) : 0
+
+            const getKegiatan = await KegiatanHarian.find({periode: periode.id}).sort({'tanggal': -1})
+                const findBerat = getKegiatan.filter((x) => {
+                    var berat = x.berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0)
+                    return berat !== 0
+                })
+                const latestWeight = findBerat[0] ? findBerat[0].berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0) : 0
+                const latestSampling = findBerat[0] ? findBerat[0].berat.reduce((a, {populasi}) => a + populasi, 0) : 0
+
 
             const avgLatestWeight = latestWeight/latestSampling
 
