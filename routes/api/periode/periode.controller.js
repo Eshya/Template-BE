@@ -266,13 +266,13 @@ exports.getBudidaya = async (req, res, next) => {
         let pembelianPakan = 0
         let pembelianOVK = 0
         const doc = await Model.findById(id);
-        console.log(doc)
         const pembelianDoc = doc.populasi * doc.hargaSatuan
         const getSapronak = await Sapronak.find({periode: id});
+        console.log(getSapronak)
         // const penjualanAyamBesar = await 
         for (let i = 0; i < getSapronak.length; i++) {
             if (getSapronak[i].produk.jenis === 'PAKAN') {
-                const compliment = getSapronak[i].zak * getSapronak[i].hargaSatuan
+                const compliment = getSapronak[i].zak * 50 * getSapronak[i].hargaSatuan
                 pembelianPakan += compliment
             } else {
                 const compliment = getSapronak[i].kuantitas * getSapronak[i].hargaSatuan
@@ -289,10 +289,17 @@ exports.getBudidaya = async (req, res, next) => {
         getPenjualan.forEach(x => {
             harian.push(x.beratBadan * x.harga * x.qty)
         })
+        const pembelianSapronak = await Sapronak.aggregate([
+            {$match: {periode: id}},
+            {$unwind: '$produk'},
+            {$project: {pembelianSapronak: {$cond: {if: '$product.jenis' === 'PAKAN', then: {$multiply: ['$zak', '$hargaSatuan']}, else: {$multiply: ['$kuantitas', '$hargaSatuan']}}}}},
+            {$group: {_id: '$periode', totalSapronak: {$sum: '$pembelianSapronak'}}}
+        ])
+        const sapronak = pembelianSapronak.length === 0 ? 0 : pembelianSapronak[0].totalSapronak
         const penjualanAyamBesar = harian.reduce(reducer, 0);
-        const pendapatanPeternak = penjualanAyamBesar -pembelianDoc - pembelianOVK - pembelianPakan
+        const pendapatanPeternak = penjualanAyamBesar -pembelianDoc - sapronak
         const pendapatanPerEkor = pendapatanPeternak / populasiAkhir
-        const totalPembelianSapronak = pembelianPakan + pembelianOVK + pembelianDoc
+        const totalPembelianSapronak = sapronak + pembelianDoc
 
         res.json({
             'penjualanAyamBesar': penjualanAyamBesar,
