@@ -341,7 +341,7 @@ exports.ringkasan = async (req, res, next) => {
             {$group: {_id: '$_id', totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
         ])
 
-        const getKegiatan = await KegiatanHarian.find({periode: getPeriode.id}).sort({'tanggal': -1}).limit(1).select('-periode')
+        const getKegiatan = await KegiatanHarian.find({periode: getPeriode.id, berat: {$exists: true, $not:{$size: 0}}, pakanPakai: {$exists: true, $not:{$size: 0}}}).sort({'tanggal': -1}).limit(1).select('-periode')
         const now = new Date(Date.now());
         const start = new Date(getPeriode.tanggalMulai);
         const umur = Math.round(Math.abs((now - start) / ONE_DAY))
