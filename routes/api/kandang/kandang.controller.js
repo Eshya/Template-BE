@@ -737,7 +737,7 @@ exports.findOneDataPool =  async (req, res, next) => {
         }
 
         var sortDataHarian = dataHarian.sort((x, y) => {
-            return x.usiaAyam - y.usiaAyam
+            return y.usiaAyam - x.usiaAyam
         })
 
         res.json({
