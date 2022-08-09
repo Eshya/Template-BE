@@ -1896,7 +1896,7 @@ exports.detailKandang = async (req,res, next) => {
     const token = req.headers['authorization']
     try {
         const findKandang = await Model.findById(id)        
-        const findPeriode = await Periode.find({kandang: id}).sort({isEnd: 1, createdAt: 1})
+        const findPeriode = await Periode.find({kandang: id}).sort({ createdAt: 1})
 
         const map = await Promise.all(findPeriode.map(async(x) => {
             const findUser = await fetch(`https://${urlAuth}/api/users/${x.createdBy}`, {
@@ -1905,8 +1905,10 @@ exports.detailKandang = async (req,res, next) => {
                 "Content-Type": "application/json"}
             }).then(res => res.json()).then(data => data.data)
             const now = new Date(Date.now())
+            const tanggalAkhir = new Date(x.tanggalAkhir)
+            const finish = x.isEnd === true ? new Date(x.tanggalAkhir) : new Date(Date.now())
             const start = new Date(x.tanggalMulai)
-            const umur = Math.round(Math.abs((now - start) / ONE_DAY))
+            const umur = Math.round(Math.abs((finish - start) / ONE_DAY))
             const pembelianSapronak = await Sapronak.aggregate([
                 {$match: {periode: x._id}},
                 {$unwind: '$produk'},
