@@ -81,7 +81,9 @@ exports.updateById = async (req, res, next) => {
     try {      
         if (data?.qty) {
             const penjualan = await Model.findById(id);
-            const kegiatanHarian = await KegiatanHarian.find({periode: penjualan.periode}).sort({tanggal: -1}).limit(1)
+            const kegiatanHarian = await KegiatanHarian.find({periode: penjualan.periode._id}).sort({tanggal: -1}).limit(1)
+            if(!kegiatanHarian[0]) return res.json({error: 1005, message: 'kegiatan harian tidak ditemukan!'})
+            console.log(kegiatanHarian)
             const populasi = kegiatanHarian[0].periode.populasi
             
             const dataDeplesi = await KegiatanHarian.aggregate([
@@ -97,8 +99,13 @@ exports.updateById = async (req, res, next) => {
             const totalDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
             const totalKematian = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
             const allPenjualan = dataPenjualan.reduce((a, {terjual}) => a + terjual, 0);
-            const populasiAkhir = populasi - (totalDeplesi + totalKematian + allPenjualan);
-
+            const populasiAkhir = populasi - (totalDeplesi + totalKematian);
+            
+            const date1 = new Date(data.tanggal)
+            const date2 = new Date(kegiatanHarian[0].tanggal)
+            // console.log(kegiatanHarian[0]);
+            if(date1.getMonth() >= date2.getMonth() && date1.getDate() > date2.getDate() ) return res.json({error: 1006, message: 'isi kegiatan harian terlebih dahulu!'})
+        
             if(populasiAkhir < data.qty) {
                 return res.json({error: 1007, message: 'kuantiti melebihi populasi akhir!'})  
             }
