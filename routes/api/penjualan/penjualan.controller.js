@@ -78,7 +78,32 @@ exports.insert = async (req, res, next) => {
 exports.updateById = async (req, res, next) => {
     const id = req.params.id;
     const data = req.body;
-    try {
+    try {      
+        if (data?.qty) {
+            const penjualan = await Model.findById(id);
+            const kegiatanHarian = await KegiatanHarian.find({periode: penjualan.periode}).sort({tanggal: -1}).limit(1)
+            const populasi = kegiatanHarian[0].periode.populasi
+            
+            const dataDeplesi = await KegiatanHarian.aggregate([
+                {$match: {periode: penjualan?.periode?._id}},
+                {$group: {_id: '$_id', totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
+            ])
+
+            const dataPenjualan = await Model.aggregate([
+                {$match: {periode: penjualan?.periode?._id}},
+                {$group: {_id: '$_id', terjual: {$sum: '$qty'}}}
+            ])
+
+            const totalDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
+            const totalKematian = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
+            const allPenjualan = dataPenjualan.reduce((a, {terjual}) => a + terjual, 0);
+            const populasiAkhir = populasi - (totalDeplesi + totalKematian + allPenjualan);
+
+            if(populasiAkhir < data.qty) {
+                return res.json({error: 1007, message: 'kuantiti melebihi populasi akhir!'})  
+            }
+        }
+
         const results = await Model.findByIdAndUpdate(id, data, {new: true}).exec();
         res.json({
             data: results,

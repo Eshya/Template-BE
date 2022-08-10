@@ -466,16 +466,22 @@ exports.findOneDataPool =  async (req, res, next) => {
                 {$group: {_id: '$_id', totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
             ])
 
-            const getKegiatan = await KegiatanHarian.find({periode: periode.id}).sort({'tanggal': -1}).limit(1).select('-periode')
-            const latestWeight = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0) : 0
-            const latestSampling = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {populasi}) => a + populasi, 0) : 0
-            const latestFeed = getKegiatan[0] ? getKegiatan[0].pakanPakai.reduce((a, {beratPakan}) => a + beratPakan, 0) : 0
+            const getKegiatanHarian = await KegiatanHarian.find({periode: periode.id}).sort({'tanggal': -1}).limit(1).select('-periode')
+            const getKegiatan = await KegiatanHarian.find({periode: periode.id}).sort({'tanggal': -1})
+                const findBerat = getKegiatan.filter((x) => {
+                    var berat = x.berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0)
+                    return berat !== 0
+                })
+                const latestWeight = findBerat[0] ? findBerat[0].berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0) : 0
+                const latestSampling = findBerat[0] ? findBerat[0].berat.reduce((a, {populasi}) => a + populasi, 0) : 0
+
+            const latestFeed = getKegiatanHarian[0] ? getKegiatanHarian[0].pakanPakai.reduce((a, {beratPakan}) => a + beratPakan, 0) : 0
 
             const avgLatestWeight = latestWeight/latestSampling
 
             const allDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
             const allKematian = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
-            const allPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
+            //const allPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
             const allPakan = dataPakan.reduce((a, {totalPakan})=>a + totalPakan, 0);
             const filter_sapronak = sapronak.filter(x => x._id == "PAKAN")
             const pakanMasuk = filter_sapronak.reduce((a, {pakan_masuk}) => a + pakan_masuk, 0);
@@ -484,7 +490,7 @@ exports.findOneDataPool =  async (req, res, next) => {
             const totalDeplesi = (allDeplesi + allKematian)
             const batasDeplesi = ((2 / 100) * periode.populasi)
             const presentaseAyamHidup = 100 - deplesi
-            const populasiAkhir = periode.populasi - (allDeplesi + allKematian + allPenjualan)
+            const populasiAkhir = periode.populasi - (allDeplesi + allKematian)
             const FCR = allPakan / (populasiAkhir * (avgLatestWeight/1000)) 
             const atas = presentaseAyamHidup * (avgLatestWeight/1000)
             const bawah = FCR*(dataPakan.length-1)
@@ -736,9 +742,13 @@ exports.findOneDataPool =  async (req, res, next) => {
             }
         }
 
+        var sortDataHarian = dataHarian.sort((x, y) => {
+            return y.usiaAyam - x.usiaAyam
+        })
+
         res.json({
             dataKandang: dataKandang,
-            dataHarian: dataHarian,
+            dataHarian: sortDataHarian,
             dataSapronak: dataSapronak,
             dataNekropsi: dataNekropsi,
             dataPenjualan: dataPenjualan,
@@ -787,16 +797,25 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
                 {$group: {_id: '$_id', totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
             ])
 
-            const getKegiatan = await KegiatanHarian.find({periode: periode.id}).sort({'tanggal': -1}).limit(1).select('-periode')
-            const latestWeight = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0) : 0
-            const latestSampling = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {populasi}) => a + populasi, 0) : 0
-            const latestFeed = getKegiatan[0] ? getKegiatan[0].pakanPakai.reduce((a, {beratPakan}) => a + beratPakan, 0) : 0
+            const getKegiatanHarian = await KegiatanHarian.find({periode: periode.id}).sort({'tanggal': -1}).limit(1).select('-periode')
+            // const latestWeight = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0) : 0
+            // const latestSampling = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {populasi}) => a + populasi, 0) : 0
+            const latestFeed = getKegiatanHarian[0] ? getKegiatanHarian[0].pakanPakai.reduce((a, {beratPakan}) => a + beratPakan, 0) : 0
+
+            const getKegiatan = await KegiatanHarian.find({periode: periode.id}).sort({'tanggal': -1})
+                const findBerat = getKegiatan.filter((x) => {
+                    var berat = x.berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0)
+                    return berat !== 0
+                })
+                const latestWeight = findBerat[0] ? findBerat[0].berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0) : 0
+                const latestSampling = findBerat[0] ? findBerat[0].berat.reduce((a, {populasi}) => a + populasi, 0) : 0
+
 
             const avgLatestWeight = latestWeight/latestSampling
 
             const allDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
             const allKematian = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
-            const allPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
+            //const allPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
             const allPakan = dataPakan.reduce((a, {totalPakan})=>a + totalPakan, 0);
             const filter_sapronak = sapronak.filter(x => x._id == "PAKAN")
             const pakanMasuk = filter_sapronak.reduce((a, {pakan_masuk}) => a + pakan_masuk, 0);
@@ -805,7 +824,7 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
             const totalDeplesi = (allDeplesi + allKematian)
             const batasDeplesi = ((2 / 100) * periode.populasi)
             const presentaseAyamHidup = 100 - deplesi
-            const populasiAkhir = periode.populasi - (allDeplesi + allKematian + allPenjualan)
+            const populasiAkhir = periode.populasi - (allDeplesi + allKematian)
             const FCR = allPakan / (populasiAkhir * (avgLatestWeight/1000)) 
             const atas = presentaseAyamHidup * (avgLatestWeight/1000)
             const bawah = FCR*(dataPakan.length-1)
@@ -850,9 +869,6 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
             const usia = periode.isEnd ? Math.round(Math.abs((periode.tanggalAkhir - start) / ONE_DAY)) :  Math.round(Math.abs((now - start) / ONE_DAY))
 
             let feedIntakeACT = populasiAkhir !== 0 ? latestFeed * 1000 / populasiAkhir : 0
-            console.log(feedIntakeACT)
-
-            
 
             // get Data STD
             const STD = await DataSTD.findOne({day: usia})
@@ -1462,25 +1478,31 @@ exports.insert = async (req, res, next) => {
     const token = req.headers['authorization']
     const {kode, alamat, tipe, isMandiri, kota, populasi} = req.body;
     const createdBy = req.user._id
-    const flock = [] 
+    // const flock = [] 
     try {
+        // Check kandang name availability
+        const availableKandang = await Model.findOne({ createdBy, kode });
+        if (availableKandang) {
+            return res.json({ error: 2021, mesage: 'Kandang name is already used for this user'});
+        }
+
         const results = await Model.create({kode, alamat, tipe, isMandiri, kota, createdBy, populasi});
         // console.log(results._id)
-        const body = {
-            name: 'flock 1',
-            kandang: results._id
-        }
-        await fetch(`https://${urlIOT}/api/flock`, {
-            method: 'post',
-            body: JSON.stringify(body),
-            headers: {
-                'Authorization': token,
-                "Content-Type": "application/json" }
-        }).then(res => res.json()).then(data => flock.push(data))
+        // const body = {
+        //     name: 'flock 1',
+        //     kandang: results._id
+        // }
+        // await fetch(`https://${urlIOT}/api/flock`, {
+        //     method: 'post',
+        //     body: JSON.stringify(body),
+        //     headers: {
+        //         'Authorization': token,
+        //         "Content-Type": "application/json" }
+        // }).then(res => res.json()).then(data => flock.push(data))
         // console.log(insertFlock)
         res.json({
             data: results,
-            flock: flock,
+            // flock: flock,
             message: 'Ok'
         })
     } catch (error) {
@@ -1491,8 +1513,15 @@ exports.insert = async (req, res, next) => {
 exports.updateById = async (req, res, next) => {
     const id = req.params.id;
     const data = req.body;
+    const createdBy = req.user._id;
 
     try {
+        // Check kandang name availability
+        const availableKandang = await Model.findOne({ createdBy, kode: data.kode });
+        if (availableKandang) {
+            return res.json({ error: 2021, mesage: 'Kandang name is already used for this user'});
+        }
+
         const results = await Model.findByIdAndUpdate(id, data, {new: true}).exec();
         res.json({
             data: results,
@@ -1506,7 +1535,14 @@ exports.updateById = async (req, res, next) => {
 exports.updateWhere = async (req, res, next) => {
     const {where} = parseQuery(req.query);
     const data = req.body;
+    const createdBy = req.user._id;
     try {
+        // Check kandang name availability
+        const availableKandang = await Model.findOne({ createdBy, kode: data.kode });
+        if (availableKandang) {
+            return res.json({ error: 2021, mesage: 'Kandang name is already used for this user'});
+        }
+
         const results = await Model.updateMany(where, data, {new: true, upsert: false, multi: false}).exec();
         res.json({data: results, message: 'Ok'});
     } catch (error) {
@@ -1601,10 +1637,10 @@ exports.getKelola = async (req, res, next) => {
 
                 const allDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
                 const allKematian = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
-                const allPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
+                //const allPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
                 const allPakan = dataPakan.reduce((a, {totalPakan})=>a + totalPakan, 0);
 
-                const populasiAkhir = periode[i].populasi - (allDeplesi + allKematian + allPenjualan)
+                const populasiAkhir = periode[i].populasi - (allDeplesi + allKematian)
                 const deplesi = (periode[i].populasi - (periode[i].populasi - (allDeplesi + allKematian))) * 100 / periode[i].populasi
                 const presentaseAyamHidup = 100 - deplesi
                 const FCR = allPakan / (populasiAkhir * (avgLatestWeight/1000)) 
@@ -1809,7 +1845,6 @@ exports.kelolaPeternak = async (req, res, next) => {
             ])
             const now = new Date(Date.now())
             const start = new Date(findPeriode[0].tanggalMulai)
-            console.log(findPeriode)
             const umur = Math.round(Math.abs((now - start) / ONE_DAY))
 
             const suhu = await fetch(`https://${urlIOT}/api/flock/kandang/${x._id}`,{
@@ -1912,7 +1947,7 @@ exports.detailKandang = async (req,res, next) => {
     const token = req.headers['authorization']
     try {
         const findKandang = await Model.findById(id)        
-        const findPeriode = await Periode.find({kandang: id}).sort({isEnd: 1, createdAt: 1})
+        const findPeriode = await Periode.find({kandang: id}).sort({ createdAt: 1})
 
         const map = await Promise.all(findPeriode.map(async(x) => {
             const findUser = await fetch(`https://${urlAuth}/api/users/${x.createdBy}`, {
@@ -1921,8 +1956,10 @@ exports.detailKandang = async (req,res, next) => {
                 "Content-Type": "application/json"}
             }).then(res => res.json()).then(data => data.data)
             const now = new Date(Date.now())
+            const tanggalAkhir = new Date(x.tanggalAkhir)
+            const finish = x.isEnd === true ? new Date(x.tanggalAkhir) : new Date(Date.now())
             const start = new Date(x.tanggalMulai)
-            const umur = Math.round(Math.abs((now - start) / ONE_DAY))
+            const umur = Math.round(Math.abs((finish - start) / ONE_DAY))
             const pembelianSapronak = await Sapronak.aggregate([
                 {$match: {periode: x._id}},
                 {$unwind: '$produk'},
