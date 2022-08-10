@@ -60,14 +60,12 @@ exports.insert = async (req, res, next) => {
         
        
         if(populasiAkhir < data.qty) return res.json({error: 1007, message: 'kuantiti melebihi populasi akhir!'})
-        let results = await Model.create(data);
+        let results;
         if(date1.getMonth() >= date2.getMonth() && date1.getDate() > date2.getDate() ) {
             results = await Model.create(data);
-            console.log("Created");
             return res.json({error: 1006, message: 'isi kegiatan harian terlebih dahulu!'})
         }
         else{
-            console.log("Still Created");
             results = await Model.create(data);
         }
         
