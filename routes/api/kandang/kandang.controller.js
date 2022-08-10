@@ -563,7 +563,7 @@ exports.findOneDataPool =  async (req, res, next) => {
                 pakanAwal: pakanMasuk,
                 pakanPakai: allPakan,
                 pakanSisa: (pakanMasuk - allPakan),
-                usiaAyam: usia,
+                usiaAyam: usia - 1,
                 totalDeplesi: totalDeplesi,
                 batasDeplesi: batasDeplesi,
                 bobotACT: avgLatestWeight,
@@ -871,7 +871,7 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
             let feedIntakeACT = populasiAkhir !== 0 ? latestFeed * 1000 / populasiAkhir : 0
 
             // get Data STD
-            const STD = await DataSTD.findOne({day: usia})
+            const STD = await DataSTD.findOne({day: usia - 1})
             const peternak = await PeternakModel.findById(periode.kandang.createdBy._id).select('fullname phoneNumber')
             const findPPL = await PeternakModel.findById(periode.ppl);
 
@@ -899,7 +899,7 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
                 pakanAwal: pakanMasuk,
                 pakanPakai: allPakan,
                 pakanSisa: (pakanMasuk - allPakan),
-                usiaAyam: usia,
+                usiaAyam: usia - 1,
                 totalDeplesi: totalDeplesi,
                 batasDeplesi: batasDeplesi,
                 bobotACT: avgLatestWeight,
