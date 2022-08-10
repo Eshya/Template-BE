@@ -541,8 +541,8 @@ exports.findOneDataPool =  async (req, res, next) => {
             const findPPL = await PeternakModel.findById(periode.ppl);
             dataKandang = {
                 idPemilik: periode.kandang.createdBy ? periode.kandang.createdBy._id : null,
-                namaPemilik: periode.kandang.createdBy ? peternak.fullname  : null,
-                phoneNumber: periode.kandang.createdBy ? peternak.phoneNumber : null,
+                namaPemilik: peternak?.fullname,
+                phoneNumber: peternak?.phoneNumber,
                 namaPPL: periode.isActivePPL ? findPPL.fullname : "PPL Not Active",
                 phonePPL: periode.isActivePPL ? findPPL.phoneNumber : null,
                 idKandang: periode.kandang._id,
@@ -707,8 +707,8 @@ exports.findOneDataPool =  async (req, res, next) => {
             const findPPL = await PeternakModel.findById(periode.ppl);
             dataKandang = {
                 idPemilik: kandang.createdBy ? kandang.createdBy._id : null,
-                namaPemilik: kandang.createdBy ? peternak.fullname : null,
-                phoneNumber: kandang.createdBy ? peternak.phoneNumber : null,
+                namaPemilik: peternak?.fullname,
+                phoneNumber: peternak?.phoneNumber,
                 namaPPL: periode.isActivePPL ? findPPL.fullname : "PPL Not Active",
                 phonePPL: periode.isActivePPL ? findPPL.phoneNumber : null,
                 idKandang: kandang._id,
@@ -877,8 +877,8 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
 
             dataKandang = {
                 idPemilik: periode.kandang.createdBy ? periode.kandang.createdBy._id : null,
-                namaPemilik: periode.kandang.createdBy ? peternak.fullname : null,
-                phoneNumber: periode.kandang.createdBy ? peternak.phoneNumber : null,
+                namaPemilik: peternak?.fullname,
+                phoneNumber: peternak?.phoneNumber,
                 namaPPL: periode.isActivePPL ? findPPL.fullname : "PPL Not Active",
                 phonePPL: periode.isActivePPL ? findPPL.phoneNumber : null,
                 idKandang: periode.kandang._id,
@@ -1024,8 +1024,8 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
             const findPPL = await PeternakModel.findById(periode.ppl);
             dataKandang = {
                 idPemilik: kandang.createdBy ? kandang.createdBy._id : null,
-                namaPemilik: kandang.createdBy ? peternak.fullname : null,
-                phoneNumber: kandang.createdBy ? peternak.phoneNumber : null,
+                namaPemilik: peternak?.fullname,
+                phoneNumber: peternak?.phoneNumber, 
                 namaPPL: periode.isActivePPL ? findPPL.fullname : "PPL Not Active",
                 phonePPL: periode.isActivePPL ? findPPL.phoneNumber : null,
                 idKandang: kandang._id,
