@@ -53,13 +53,12 @@ exports.insert = async (req, res, next) => {
         const allKematian = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
         const allPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
 
-        const populasiAkhir = populasi - (allDeplesi + allKematian + allPenjualan)
+        const populasiAkhir = populasi - (allDeplesi + allKematian )
 
         const date1 = new Date(data.tanggal)
         const date2 = new Date(findKegiatan[0].tanggal)
         
        
-        
         if(date1.getMonth() >= date2.getMonth() && date1.getDate() > date2.getDate() ) return res.json({error: 1006, message: 'isi kegiatan harian terlebih dahulu!'})
         if(populasiAkhir < data.qty) return res.json({error: 1007, message: 'kuantiti melebihi populasi akhir!'})
 
@@ -69,6 +68,8 @@ exports.insert = async (req, res, next) => {
             data: results,
             message: 'Ok'
         })
+
+        
     } catch (error) {
         next(error)
     }
