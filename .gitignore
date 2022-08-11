@@ -4,3 +4,4 @@ node_modules
 .env
 /uploads
 .gitlab-ci.yml
+docker-compose.local-stg.yml

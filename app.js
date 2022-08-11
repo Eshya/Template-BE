@@ -41,6 +41,11 @@ app.use(cors());
 app.use(require('./routes'));
 app.use(express.static(path.join(__dirname, staticFile)));
 
+app.use('/robot.txt', (req, res, next) => {
+    res.type('text/plain')
+    res.send("User-agent: *\nDisallow: /");
+})
+
 app.use('/uploads', (req, res, next) => {
     const regex = /((\w+\/)+)(\w+.[a-z]{3,4}$)/gm
     res.sendFile(req.path.replace(regex,'$3'),{root:`./uploads/${req.path.replace(regex,'$1')}`})

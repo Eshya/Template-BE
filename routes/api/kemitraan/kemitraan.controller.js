@@ -97,11 +97,11 @@ exports.getKandangPeriode = async (req, res, next) => {
 
                 const allDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
                 const allKematian = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
-                const allPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
+                //const allPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
                 const allPakan = dataPakan.reduce((a, {totalPakan})=>a + totalPakan, 0);
                 const deplesi = (itemPeriode.populasi - (itemPeriode.populasi - (allDeplesi + allKematian))) * 100 / itemPeriode.populasi
                 const presentaseAyamHidup = 100 - deplesi
-                const populasiAkhir = itemPeriode.populasi - (allDeplesi + allKematian + allPenjualan)
+                const populasiAkhir = itemPeriode.populasi - (allDeplesi + allKematian )
                 const FCR = allPakan / (populasiAkhir * (latestWeight/1000)) 
                 const atas = presentaseAyamHidup * (latestWeight/1000)
                 const bawah = FCR*(dataPakan.length-1)
