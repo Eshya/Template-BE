@@ -538,13 +538,13 @@ exports.findOneDataPool =  async (req, res, next) => {
             // get Data STD
             const STD = await DataSTD.findOne({day: usia})
             const peternak = await PeternakModel.findById(periode.kandang.createdBy._id).select('fullname phoneNumber')
-            const findPPL = await PeternakModel.findById(periode.ppl);
+            const findPPL = await PeternakModel.findById(periode?.ppl);
             dataKandang = {
                 idPemilik: periode.kandang.createdBy ? periode.kandang.createdBy._id : null,
                 namaPemilik: peternak?.fullname,
                 phoneNumber: peternak?.phoneNumber,
-                namaPPL: periode.isActivePPL ? findPPL.fullname : "PPL Not Active",
-                phonePPL: periode.isActivePPL ? findPPL.phoneNumber : null,
+                namaPPL: periode?.isActivePPL ? findPPL.fullname : "PPL Not Active",
+                phonePPL: periode?.isActivePPL ? findPPL.phoneNumber : null,
                 idKandang: periode.kandang._id,
                 namaKandang: periode.kandang.kode,
                 alamat: periode.kandang.alamat,
@@ -704,13 +704,13 @@ exports.findOneDataPool =  async (req, res, next) => {
         } else {
             let kandang = await Model.findOne({_id: req.params.id}).sort({ createdAt: -1 })
             const peternak = await PeternakModel.findById(kandang.createdBy._id).select('fullname phoneNumber')
-            const findPPL = await PeternakModel.findById(periode.ppl);
+            const findPPL = await PeternakModel.findById(periode?.ppl);
             dataKandang = {
                 idPemilik: kandang.createdBy ? kandang.createdBy._id : null,
                 namaPemilik: peternak?.fullname,
                 phoneNumber: peternak?.phoneNumber,
-                namaPPL: periode.isActivePPL ? findPPL.fullname : "PPL Not Active",
-                phonePPL: periode.isActivePPL ? findPPL.phoneNumber : null,
+                namaPPL: periode?.isActivePPL ? findPPL.fullname : "PPL Not Active",
+                phonePPL: periode?.isActivePPL ? findPPL.phoneNumber : null,
                 idKandang: kandang._id,
                 namaKandang: kandang.kode,
                 alamat: kandang.alamat,
@@ -873,14 +873,14 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
             // get Data STD
             const STD = await DataSTD.findOne({day: usia - 1})
             const peternak = await PeternakModel.findById(periode.kandang.createdBy._id).select('fullname phoneNumber')
-            const findPPL = await PeternakModel.findById(periode.ppl);
+            const findPPL = await PeternakModel.findById(periode?.ppl);
 
             dataKandang = {
                 idPemilik: periode.kandang.createdBy ? periode.kandang.createdBy._id : null,
                 namaPemilik: peternak?.fullname,
                 phoneNumber: peternak?.phoneNumber,
-                namaPPL: periode.isActivePPL ? findPPL.fullname : "PPL Not Active",
-                phonePPL: periode.isActivePPL ? findPPL.phoneNumber : null,
+                namaPPL: periode?.isActivePPL ? findPPL.fullname : "PPL Not Active",
+                phonePPL: periode?.isActivePPL ? findPPL.phoneNumber : null,
                 idKandang: periode.kandang._id,
                 namaKandang: periode.kandang.kode,
                 alamat: periode.kandang.alamat,
@@ -1021,13 +1021,13 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
         } else {
             let kandang = await Model.findOne({_id: req.params.id}).sort({ createdAt: -1 })
             const peternak = await PeternakModel.findById(periode.kandang.createdBy._id).select('fullname phoneNumber')
-            const findPPL = await PeternakModel.findById(periode.ppl);
+            const findPPL = await PeternakModel.findById(periode?.ppl);
             dataKandang = {
                 idPemilik: kandang.createdBy ? kandang.createdBy._id : null,
                 namaPemilik: peternak?.fullname,
                 phoneNumber: peternak?.phoneNumber, 
-                namaPPL: periode.isActivePPL ? findPPL.fullname : "PPL Not Active",
-                phonePPL: periode.isActivePPL ? findPPL.phoneNumber : null,
+                namaPPL: periode?.isActivePPL ? findPPL.fullname : "PPL Not Active",
+                phonePPL: periode?.isActivePPL ? findPPL.phoneNumber : null,
                 idKandang: kandang._id,
                 namaKandang: kandang.kode,
                 alamat: kandang.alamat,
