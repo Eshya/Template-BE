@@ -8,5 +8,5 @@ const scheme = new Schema({
         type: String,
         required: true
     }
-}, {versionKey: false})
+}, {versionKey: false, timestamps: true})
 module.exports = model('Produk', scheme, 'produk')
