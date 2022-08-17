@@ -147,6 +147,7 @@ exports.updateById = async (req, res, next) => {
                 if (!findSapronak) return res.json({error: 1011, message: 'jenisOVK not found'})
                 const oldStock = findKegiatan.ovkPakai.find(e => e._id == x._id ? x._id : findKegiatan.pakanPakai[0]._id)
                 if (!oldStock) return res.json({error: 1012, message: 'ovkPakai not found'})
+                if (!findSapronak.periode?._id || !findSapronak.produk?._id) return res.json({error: 1015, message: 'periode or produk not found'})
                 const diff = oldStock.kuantitas - x.kuantitas
                 const dec = await Sapronak.updateMany({periode: mongoose.Types.ObjectId(findSapronak.periode._id), produk: mongoose.Types.ObjectId(findSapronak.produk._id)}, {$inc: {stockOVK: diff}})
                 return dec
@@ -160,8 +161,9 @@ exports.updateById = async (req, res, next) => {
                 if (!findSapronak) return res.json({error: 1013, message: 'jenisPakan not found'})
                 const oldStock = findKegiatan.pakanPakai.find(e => e._id == x._id ? x._id : findKegiatan.pakanPakai[0]._id )
                 if (!oldStock) return res.json({error: 1014, message: 'pakanPakai not found'})
+                console.log(`${findSapronak.periode?._id} : ${findSapronak.produk?._id}`)
+                if (!findSapronak.periode?._id || !findSapronak.produk?._id) return res.json({error: 1015, message: 'periode or produk not found'})
                 const diff = oldStock.beratPakan - (x.beratZak * 50)
-                // console.log(findSapronak)
                 const dec = await Sapronak.updateMany({periode: mongoose.Types.ObjectId(findSapronak.periode._id), produk: mongoose.Types.ObjectId(findSapronak.produk._id)}, {$inc: {stock: diff}})
                 return dec
             }))
