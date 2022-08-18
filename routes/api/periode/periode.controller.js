@@ -268,7 +268,6 @@ exports.getBudidaya = async (req, res, next) => {
         const doc = await Model.findById(id);
         const pembelianDoc = doc.populasi * doc.hargaSatuan
         const getSapronak = await Sapronak.find({periode: id});
-        console.log(getSapronak)
         // const penjualanAyamBesar = await 
         for (let i = 0; i < getSapronak.length; i++) {
             if (getSapronak[i].produk.jenis === 'PAKAN') {
@@ -285,18 +284,20 @@ exports.getBudidaya = async (req, res, next) => {
         });
         const totalKematian = kematian.reduce(reducer, 0);
         const populasiAkhir = doc.populasi - totalKematian
-        const getPenjualan = await Penjualan.find({periode: id})
-        getPenjualan.forEach(x => {
-            harian.push(x.beratBadan * x.harga * x.qty)
-        })
+        const akumulasiPenjualan = await Penjualan.aggregate([
+            {$match: {periode: mongoose.Types.ObjectId(id)}},
+            {$project: {penjualan: {$multiply: ['$qty', '$harga', '$beratBadan']}}},
+            {$group: {_id: '$periode', totalPenjualan: {$sum: '$penjualan'}}}
+        ])
+        console.log(akumulasiPenjualan)
         const pembelianSapronak = await Sapronak.aggregate([
-            {$match: {periode: id}},
+            {$match: {periode: mongoose.Types.ObjectId(id)}},
             {$unwind: '$produk'},
             {$project: {pembelianSapronak: {$cond: {if: '$product.jenis' === 'PAKAN', then: {$multiply: ['$zak', '$hargaSatuan']}, else: {$multiply: ['$kuantitas', '$hargaSatuan']}}}}},
             {$group: {_id: '$periode', totalSapronak: {$sum: '$pembelianSapronak'}}}
         ])
         const sapronak = pembelianSapronak.length === 0 ? 0 : pembelianSapronak[0].totalSapronak
-        const penjualanAyamBesar = harian.reduce(reducer, 0);
+        const penjualanAyamBesar = akumulasiPenjualan[0].totalPenjualan
         const pendapatanPeternak = penjualanAyamBesar -pembelianDoc - sapronak
         const pendapatanPerEkor = pendapatanPeternak / populasiAkhir
         const totalPembelianSapronak = sapronak + pembelianDoc

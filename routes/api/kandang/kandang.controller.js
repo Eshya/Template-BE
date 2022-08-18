@@ -1975,6 +1975,7 @@ exports.detailKandang = async (req,res, next) => {
                 {$project: {penjualan: {$multiply: ['$qty', '$harga', '$beratBadan']}}},
                 {$group: {_id: '$periode', totalPenjualan: {$sum: '$penjualan'}}}
             ])
+            console.log(akumulasiPenjualan)
             const penjualan = findPenjualan.length == 0 ? 0 : akumulasiPenjualan[0].totalPenjualan
             const sapronak = pembelianSapronak.length === 0 ? 0 : pembelianSapronak[0].totalSapronak
             const estimasi = penjualan - pembelianDoc - sapronak
