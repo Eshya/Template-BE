@@ -141,6 +141,17 @@ exports.updateById = async (req, res, next) => {
     const data = req.body;
     try {
         const findKegiatan = await Model.findById(id);
+        const findPeriode = await Periode.findById(data.periode);
+        if (!findPeriode) return res.json({error: 1015, message: 'periode or produk not found'})   
+        const dataDeplesi = await Model.aggregate([
+            {$match: {periode: mongoose.Types.ObjectId(data.periode)}},
+            {$group: {_id: '$_id', totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
+        ])
+        const allDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
+        const allKematian = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
+        const populasiAkhir = findPeriode.populasi - (allDeplesi + allKematian)
+        
+        if (data.deplesi + data.pemusnahan > populasiAkhir) return res.json({error: 1008, message: 'data deplesi melebihi populasi akhir'}) 
         if(data.ovkPakai){
             Promise.all(data.ovkPakai.map(async(x) => {
                 const findSapronak = await Sapronak.findById(x.jenisOVK ? x.jenisOVK : findKegiatan.ovkPakai[0].jenisOVK )
