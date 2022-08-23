@@ -1,6 +1,8 @@
+const mongoose = require('mongoose');
 const { parseQuery } = require('../../helpers');
 const Model = require('../peternak/peternak.model')
-
+const kandang = require('../kandang/kandang.model');
+const Periode = require('../periode/periode.model');
 const handleQuerySort = (query) => {
     try{
       const toJSONString = ("{" + query + "}").replace(/(\w+:)|(\w+ :)/g, (matched => {
@@ -58,15 +60,39 @@ exports.findAll =  async (req, res, next) => {
         next(error)
     }
 }
+const _findPPL = async (req, isActive) => {
+    const findPeriode = await Periode.aggregate([
+        {$match: {ppl: mongoose.Types.ObjectId(req.params.id), isActivePPL: isActive}},
+        {$sort: {'tanggalAkhir': -1}},
+        {$group: {_id: '$_id', id: {$first: '$kandang'}}},
+        {$group: {_id: '$id', periode: {$push: '$_id'},}}
+    ])
 
+    const map = await Promise.all(findPeriode.map(async(x)=>{
+        const findPeriode = await Periode.findById(x.periode[0])
+        const findKandang = await kandang.findOneWithDeleted({_id: x._id})
+        const countPeriode = await Periode.countDocuments({kandang: x._id})
+        return {...findKandang.toObject(),periode: findPeriode, urutanKe: countPeriode}
+    }))
+
+    return map;
+
+}
 exports.findById = async (req, res, next) => {
     try {
         const ppl = await Model.findById(req.params.id).select('avatar image noKTP address fullname username email phoneNumber asalKemitraan kemitraanUser isPPLActive')
-
+        
+        const findActive = await _findPPL(req, true)
+        const findUnactive = await _findPPL(req, false)
+        console.log(findActive)
+        console.log(findUnactive)
         res.json({
             detailPPL: ppl,
-            totalKandang: 0,
-            detailKandang: [],
+            totalKandang: findActive.length + findUnactive.length,
+            detailKandang: {
+                kelolaAktif:findActive,
+                kelolaRehat:findUnactive
+            },
             message: 'Ok'
         })
     } catch (error) {
