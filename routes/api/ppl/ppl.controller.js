@@ -84,8 +84,6 @@ exports.findById = async (req, res, next) => {
         
         const findActive = await _findPPL(req, true)
         const findUnactive = await _findPPL(req, false)
-        console.log(findActive)
-        console.log(findUnactive)
         res.json({
             detailPPL: ppl,
             totalKandang: findActive.length + findUnactive.length,
