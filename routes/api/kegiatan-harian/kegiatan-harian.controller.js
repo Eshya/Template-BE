@@ -100,7 +100,7 @@ exports.insert = async (req, res, next) => {
         const allKematian = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
         const allPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
 
-        const populasiAkhir = findPeriode.populasi - (allDeplesi + allKematian + allPenjualan)
+        const populasiAkhir = findPeriode.populasi - (allDeplesi + allKematian)
 
         if (data.deplesi + data.pemusnahan > populasiAkhir) return res.json({error: 1008, message: 'data deplesi melebihi populasi akhir'})
         if(data.ovkPakai){
