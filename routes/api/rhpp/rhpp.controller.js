@@ -175,9 +175,9 @@ exports.uploadRHPP =  async (req, res, next) => {
         const periode = await Periode.findById(idPeriode);
         const kandang = periode.kandang;
         const dataPeriode = [];
-        const cages = await Periode.find({kandang: periode.kandang._id}).sort('tanggalMulai')
 
         if (kandang){
+            const cages = await Periode.find({kandang: periode.kandang._id}).sort('tanggalMulai')
             await Promise.map(cages, async (itemKandang, index) => {
                 if (itemKandang._id.toString() === periode._id.toString()) {
                     dataPeriode.push(index + 1);
@@ -186,8 +186,8 @@ exports.uploadRHPP =  async (req, res, next) => {
 
             const objectEntry = {
               id_user: req.user._id,
-              id_kandang: kandang._id,
               id_periode: idPeriode,
+              id_kandang: kandang._id,
               urutan_periode: periode ? dataPeriode[0] : 0,
               nama_kandang: kandang.kode,
             };
