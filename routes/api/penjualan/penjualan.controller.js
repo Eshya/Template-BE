@@ -99,7 +99,11 @@ exports.updateById = async (req, res, next) => {
         const totalDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
         const totalKematian = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
         const populasiAkhir = populasi - (totalDeplesi + totalKematian + allPenjualan);
-
+        
+        const date1 = new Date(data.tanggal)
+        const date2 = new Date(kegiatanHarian[0].tanggal)
+        if(date1.getMonth() >= date2.getMonth() && date1.getDate() > date2.getDate() ) return res.json({error: 1006, message: 'Edit Tidak Bisa Melebihi Data Harian'})
+       
         if (data?.qty) {
             const tempPopulasi = populasiAkhir + penjualan.qty;
             
