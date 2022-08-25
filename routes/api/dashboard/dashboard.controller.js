@@ -427,15 +427,12 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
                 let age = Math.round(Math.abs((now - start) / ONE_DAY))
 
                 // get weight actual
-                const getKegiatan = await KegiatanHarian.find({periode: periode.id}).sort({'tanggal': -1})
-                const findBerat = getKegiatan.filter((x) => {
-                    var berat = x.berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0)
-                    return berat !== 0
-                })
-                const latestWeight = findBerat[0] ? findBerat[0].berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0) : 0
-                const latestSampling = findBerat[0] ? findBerat[0].berat.reduce((a, {populasi}) => a + populasi, 0) : 0
+                const getKegiatan = await KegiatanHarian.find({periode: periode.id}).sort({'tanggal': -1}).limit(1).select('-periode')
+                const latestWeight = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0) : 0
+                const latestSampling = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {populasi}) => a + populasi, 0) : 0
                 const totalAvgLatestWeight = latestWeight/latestSampling
-                const avgLatestWeight = totalAvgLatestWeight ? totalAvgLatestWeight : 0 
+                const avgLatestWeight = totalAvgLatestWeight ? totalAvgLatestWeight : 0
+
                 let pushData = false;
                 if (usiaFrom && usiaTo && bobotFrom && bobotTo) {
                     if (age >= usiaFrom && age <= usiaTo && avgLatestWeight >= bobotFrom && avgLatestWeight <= bobotTo) {
