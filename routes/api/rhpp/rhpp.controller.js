@@ -8,6 +8,8 @@ const util = require("util");
 const multer = require("multer");
 const maxSize = 5 * 1024 * 1024;
 const fetch = require('node-fetch')
+const axios = require('axios');
+const qs = require('qs');
 var urlAuth = process.env.DB_NAME === "chckin" ? `auth.chickinindonesia.com` : `staging-auth.chickinindonesia.com`
 
 const handleQuerySort = (query) => {
@@ -140,6 +142,7 @@ exports.findAll =  async (req, res, next) => {
 }
 
 exports.uploadRHPP =  async (req, res, next) => {
+    const { NOTIFICATION_BASE_URL } = process.env;
     try {
         let idPeriode = req.params.id
         let filename = Date.now()+".pdf"
@@ -168,6 +171,35 @@ exports.uploadRHPP =  async (req, res, next) => {
         if (req.file == undefined) {
             return res.status(400).send({ message: "Please upload a file!" });
         }
+
+        const periode = await Periode.findById(idPeriode);
+        const kandang = periode.kandang;
+        const dataPeriode = [];
+        const cages = await Periode.find({kandang: periode.kandang._id}).sort('tanggalMulai')
+
+        if (kandang){
+            await Promise.map(cages, async (itemKandang, index) => {
+                if (itemKandang._id.toString() === periode._id.toString()) {
+                    dataPeriode.push(index + 1);
+                }
+            });
+
+            const objectEntry = {
+              id_user: req.user._id,
+              id_kandang: kandang._id,
+              id_periode: idPeriode,
+              urutan_periode: periode ? dataPeriode[0] : 0,
+              nama_kandang: kandang.kode,
+            };
+
+          await axios({
+            method: "POST",
+            headers: { "content-type": "application/x-www-form-urlencoded" },
+            params: objectEntry,
+            url: `${NOTIFICATION_BASE_URL}/api/rhpp`
+          });
+        }
+
         res.status(200).send({
             message: "RHPP successfully uploaded.",
         });
