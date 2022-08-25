@@ -4,6 +4,7 @@ const Periode = require('../periode/periode.model')
 const KegiatanHarian = require('../kegiatan-harian/kegiatan-harian.model')
 const Penjualan = require("../penjualan/penjualan.model");
 const Sapronak = require("../sapronak/sapronak.model");
+const PeternakModel = require('../peternak/peternak.model');
 const Promise = require("bluebird");
 const mongoose = require('mongoose');
 const reducer = (acc, value) => acc + value;
@@ -137,9 +138,10 @@ exports.getKandangPeriode = async (req, res, next) => {
                         dataPeriode.push(index + 1);
                     }
                 });
+                const peternak = await PeternakModel.findById(itemPeriode.kandang.createdBy._id).select('fullname')
                 dataKandangPeriode.push({
                     idPemilik: itemPeriode.kandang.createdBy ? itemPeriode.kandang.createdBy._id : null,
-                    namaPemilik: itemPeriode.kandang.createdBy ? itemPeriode.kandang.createdBy.fullname : null,
+                    namaPemilik: itemPeriode.kandang.createdBy ? (peternak?.fullname ? peternak.fullname : "Not Registered") : null,
                     idKandang: itemPeriode.kandang._id,
                     namaKandang: itemPeriode.kandang.kode,
                     alamat: itemPeriode.kandang.alamat,
