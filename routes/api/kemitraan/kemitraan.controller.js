@@ -178,6 +178,9 @@ exports.insert = async (req, res, next) => {
             fs.writeFileSync(path, base64Data,  {encoding: 'base64'});
             data.image = path;
         }
+
+        const findNumber = await Model.findOne({phoneNumber: data.phoneNumber})
+        if(findNumber) throw res.json({error: 400, message: 'phone number already registered'})
         const result = await Model.create(data)
         res.json({
             data: result,
@@ -201,6 +204,7 @@ exports.updateById = async (req, res, next) => {
             fs.writeFileSync(path, base64Data,  {encoding: 'base64'});
             data.image = path;
         }
+
         const result = await Model.findByIdAndUpdate(id, data, {new: true}).exec()
         res.json({
             data: result,
@@ -238,3 +242,4 @@ exports.removeKemitraanById = async (req, res, next) => {
         next(err)
     }
 }
+
