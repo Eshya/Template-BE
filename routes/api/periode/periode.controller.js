@@ -114,7 +114,10 @@ exports.findKegiatan = async (req, res, next) => {
 
             const rgr = umur === 7 ? (avgBW7 - avgBW0) / avgBW0 * 100 : null
 
-            return {...tmp.toObject(), std: std == null ? null : std.toObject(), deplesiEkor: deplesiEkor, age: umur, populasi: populasiNow, rgr: rgr} // Join all of them in coolest way :-* - Atha
+            const deplesi = (periode.populasi - (periode.populasi - (x.deplesi + x.pemusnahan))) * 100 / periode.populasi
+
+
+            return {...tmp.toObject(), std: std == null ? null : std.toObject(), deplesiEkor: deplesiEkor, prosentaseDeplesi: deplesi, age: umur, populasi: populasiNow, rgr: rgr} // Join all of them in coolest way :-* - Atha
         }))
 
         res.json({
