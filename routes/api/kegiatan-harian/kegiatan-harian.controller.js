@@ -142,7 +142,7 @@ exports.updateById = async (req, res, next) => {
     try {
         const findKegiatan = await Model.findById(id);
         const findPeriode = await Periode.findById(data.periode);
-        if (!findPeriode) return res.json({error: 1015, message: 'periode or produk not found'})   
+        if (!findPeriode) return res.json({error: 1009, message: 'periode or produk not found'})   
         const dataDeplesi = await Model.aggregate([
             {$match: {periode: mongoose.Types.ObjectId(data.periode)}},
             {$group: {_id: '$_id', totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
@@ -152,29 +152,30 @@ exports.updateById = async (req, res, next) => {
         const populasiAkhir = findPeriode.populasi - (allDeplesi + allKematian)
         
         if (data.deplesi + data.pemusnahan > populasiAkhir) return res.json({error: 1008, message: 'data deplesi melebihi populasi akhir'}) 
-        if(data.ovkPakai){
+        if(data.ovkPakai[0]){
             Promise.all(data.ovkPakai.map(async(x) => {
-                const findSapronak = await Sapronak.findById(x.jenisOVK ? x.jenisOVK : findKegiatan.ovkPakai[0].jenisOVK )
-                if (!findSapronak) return res.json({error: 1011, message: 'jenisOVK not found'})
-                const oldStock = findKegiatan.ovkPakai.find(e => e._id == x._id ? x._id : findKegiatan.pakanPakai[0]._id)
-                if (!oldStock) return res.json({error: 1012, message: 'ovkPakai not found'})
-                if (!findSapronak.periode?._id || !findSapronak.produk?._id) return res.json({error: 1015, message: 'periode or produk not found'})
-                const diff = oldStock.kuantitas - x.kuantitas
+                const findSapronak = await Sapronak.findById(x?.jenisOVK ? x.jenisOVK : findKegiatan.ovkPakai[0].jenisOVK )
+                if (!findSapronak) return res.json({error: 1010, message: 'Sapronak not found'})
+                const oldStock = await findKegiatan.ovkPakai.find(e => e._id == findKegiatan.ovkPakai[0]._id)
+                // if (!oldStock) return res.json({error: 1010, message: 'Sapronak not found'})
+                if (!findSapronak.periode?._id || !findSapronak.produk?._id) return res.json({error: 1009, message: 'periode or produk not found'})
+                const diff = (oldStock?.kuantitas === undefined ? 0 : oldStock.kuantitas) - x.kuantitas
                 const dec = await Sapronak.updateMany({periode: mongoose.Types.ObjectId(findSapronak.periode._id), produk: mongoose.Types.ObjectId(findSapronak.produk._id)}, {$inc: {stockOVK: diff}})
                 return dec
             }))
         }
-        if(data.pakanPakai){
+        
+        if(data.pakanPakai[0]){
             Promise.all(data.pakanPakai.map(async(x) => {
                 
                 x.beratPakan = x.beratZak * 50
-                const findSapronak = await Sapronak.findById(x.jenisPakan ? x.jenisPakan : findKegiatan.pakanPakai[0].jenisPakan)
-                if (!findSapronak) return res.json({error: 1013, message: 'jenisPakan not found'})
-                const oldStock = findKegiatan.pakanPakai.find(e => e._id == x._id ? x._id : findKegiatan.pakanPakai[0]._id )
-                if (!oldStock) return res.json({error: 1014, message: 'pakanPakai not found'})
-                console.log(`${findSapronak.periode?._id} : ${findSapronak.produk?._id}`)
-                if (!findSapronak.periode?._id || !findSapronak.produk?._id) return res.json({error: 1015, message: 'periode or produk not found'})
-                const diff = oldStock.beratPakan - (x.beratZak * 50)
+                const findSapronak = await Sapronak.findById(x?.jenisPakan ? x.jenisPakan : findKegiatan.pakanPakai[0].jenisPakan)
+                if (!findSapronak) return res.json({error: 1010, message: 'jenisPakan not found'})
+                const oldStock =  findKegiatan.pakanPakai.find(e => e._id == findKegiatan.pakanPakai[0]._id )
+                // if (!oldStock) return res.json({error: 1010, message: 'pakanPakai not found'})
+                // // console.log(`${findSapronak.periode?._id} : ${findSapronak.produk?._id}`)
+                if (!findSapronak.periode?._id || !findSapronak.produk?._id) return res.json({error: 1009, message: 'periode or produk not found'})
+                const diff = (oldStock?.beratPakan === undefined ? 0 : oldStock.beratPakan) - (x.beratZak * 50)
                 const dec = await Sapronak.updateMany({periode: mongoose.Types.ObjectId(findSapronak.periode._id), produk: mongoose.Types.ObjectId(findSapronak.produk._id)}, {$inc: {stock: diff}})
                 return dec
             }))
