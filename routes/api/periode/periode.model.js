@@ -46,7 +46,11 @@ const scheme = new Schema({
     },
     rhpp_path: {
         type: String,
-    }
+    },
+    downloadedDate: {
+        type: Date,
+        default: null
+    },
 }, {versionKey: false, timestamps: true})
 scheme.plugin(require('mongoose-autopopulate'));
 scheme.plugin(require('mongoose-delete'), {deletedAt: true, overrideMethods: true})

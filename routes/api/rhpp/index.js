@@ -4,6 +4,7 @@ const c = require('./rhpp.controller');
 const {auth, queryCek} = require('../../helpers')
 
 router.get('/', auth, queryCek, c.findAll);
+router.get('/downloaded-rhpp', auth, queryCek, c.downloadedRHPP);
 router.post('/upload/:id', auth, c.uploadRHPP);
 router.get('/download/:id', c.downloadRHPP);
 router.get('/delete/:id', c.deleteRHPP);
