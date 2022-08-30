@@ -61,12 +61,13 @@ exports.insert = async (req, res, next) => {
        
         
         if(date1.getMonth() >= date2.getMonth() && date1.getDate() > date2.getDate() ) return res.json({error: 1006, message: 'isi kegiatan harian terlebih dahulu!'})
-        if(populasiAkhir < data.qty) return res.json({error: 1007, message: 'kuantiti melebihi populasi akhir!'})
+        if(populasiAkhir < data.qty) return res.json({error: 1007, populasiAktual: populasiAkhir, message: 'kuantiti melebihi populasi akhir!'})
 
         const results = await Model.create(data);
         
         res.json({
             data: results,
+            populasiAktual: populasiAkhir,
             message: 'Ok'
         })
     } catch (error) {
@@ -99,13 +100,14 @@ exports.updateById = async (req, res, next) => {
             const populasiAkhir = populasi - (totalDeplesi + totalKematian + allPenjualan);
 
             if(populasiAkhir < data.qty) {
-                return res.json({error: 1007, message: 'kuantiti melebihi populasi akhir!'})  
+                return res.json({error: 1007, message: 'kuantiti melebihi populasi akhir!', populasiAktual: populasiAkhir })  
             }
         }
 
         const results = await Model.findByIdAndUpdate(id, data, {new: true}).exec();
         res.json({
             data: results,
+            populasiAktual: populasiAkhir,
             message: 'Ok'
         })
     } catch (error) {
