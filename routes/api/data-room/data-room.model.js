@@ -65,7 +65,7 @@ const scheme = new Schema({
         }
     },
     tech: {
-        farmers: {
+        monthlyActiveUsers: {
             value: Number,
             unit: String
         },
