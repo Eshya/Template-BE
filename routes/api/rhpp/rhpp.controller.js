@@ -239,21 +239,48 @@ exports.deleteRHPP =  async (req, res, next) => {
 }
 
 exports.downloadedRHPP = async(req, res, next) => {
+    const query = req.query;
     const periodsData = [];
-    try {
-        const periods = await Periode.find({});
-        for (const periode of periods) {
-            if (periode.downloadedDate) {
-                periodsData.push({
-                    user_id: periode.kandang.createdBy,
-                    periode: periode._id,
-                    downloaded_date: periode.downloadedDate
-                })
+
+    if (query.periode) {
+        findQuery = { _id : query.periode }
+        try {
+            const periods = await Periode.find(findQuery);
+            for (const periode of periods) {
+                if (periode.downloadedDate ) {
+                    periodsData.push({
+                        user_id: periode.kandang.createdBy,
+                         periode: periode._id,
+                        downloaded_date: periode.downloadedDate
+                    })
+                }
             }
-        }
             
-        return res.json({ status: 200, message: 'OK', data: periodsData })
-    } catch(err) {
-        return res.json({ status: 500, message: err });
+            return res.json({ status: 200, message: 'OK', data: periodsData })
+        } catch(err) {
+            return res.json({ status: 500, message: err });
+        }
+    }
+
+    if (!query.periode) {
+        try {
+            const chickenSheds = await Kandang.find({ createdBy: req.user._id });
+            for (const chickenShed of chickenSheds) {
+                const periods = await Periode.find({kandang: chickenShed._id});
+                for (const periode of periods) {
+                    if (periode.downloadedDate ) {
+                        periodsData.push({
+                            user_id: periode.kandang.createdBy,
+                            periode: periode._id,
+                            downloaded_date: periode.downloadedDate
+                        })
+                    }
+                }
+            }
+
+            return res.json({ status: 200, message: 'OK', data: periodsData })
+        } catch (err) {
+            return res.json({ status: 500, message: err });
+        }
     }
 }
