@@ -80,7 +80,7 @@ exports.findKegiatan = async (req, res, next) => {
     const id = req.params.id
     try {
         const periode = await Model.findById(id)
-        const start = new Date(periode.tanggalMulai);
+        const start = !periode?.tanggalMulai ? new Date() : new Date(periode.tanggalMulai);
         // console.log(periode.populasi);
         const data = await KegiatanHarian.find({periode: id}).select('-periode').sort({'tanggal': -1})
 
