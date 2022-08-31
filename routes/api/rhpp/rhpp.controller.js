@@ -143,6 +143,8 @@ exports.findAll =  async (req, res, next) => {
 
 exports.uploadRHPP =  async (req, res, next) => {
     const { NOTIFICATION_BASE_URL } = process.env;
+    const notificationUrl = !NOTIFICATION_BASE_URL ? 'https://staging-notification.chickinindonesia.com' : NOTIFICATION_BASE_URL
+
     try {
         let idPeriode = req.params.id
         let filename = Date.now()+".pdf"
@@ -196,7 +198,7 @@ exports.uploadRHPP =  async (req, res, next) => {
             method: "POST",
             headers: { "content-type": "application/x-www-form-urlencoded" },
             params: objectEntry,
-            url: `${NOTIFICATION_BASE_URL}/api/rhpp`
+            url: `${notificationUrl}/api/rhpp`
           });
         }
 
