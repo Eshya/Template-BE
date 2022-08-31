@@ -300,6 +300,7 @@ exports.getBudidaya = async (req, res, next) => {
             {$group: {_id: '$periode', totalSapronak: {$sum: '$pembelianSapronak'}}}
         ])
         const sapronak = pembelianSapronak.length === 0 ? 0 : pembelianSapronak[0].totalSapronak
+        const penjualanAyamBesar = akumulasiPenjualan[0]?.totalPenjualan
         const pendapatanPeternak = penjualanAyamBesar -pembelianDoc - sapronak
         const pendapatanPerEkor = pendapatanPeternak / populasiAkhir
         const totalPembelianSapronak = sapronak + pembelianDoc
@@ -370,18 +371,20 @@ exports.ringkasan = async (req, res, next) => {
         const pakanMasuk = filter_sapronak.reduce((a, {pakan_masuk}) => a + pakan_masuk, 0);
 
         const populasiAkhir = getPeriode.populasi - (allDeplesi + allKematian )
+        const populasiAktual = getPeriode.populasi - (allDeplesi + allKematian + allPenjualan )
         const deplesi = (getPeriode.populasi - (getPeriode.populasi - (allDeplesi + allKematian))) * 100 / getPeriode.populasi
         const presentaseAyamHidup = 100 - deplesi
         const FCR = allPakan / (populasiAkhir * (avgLatestWeight/1000)) 
         const atas = presentaseAyamHidup * (avgLatestWeight/1000)
         const bawah = FCR*(dataPakan.length-1)
         const IP = (atas / bawah) * 100
-        const populasiAktual = getPeriode.populasi - allPenjualan;
+        // const populasiAktual = getPeriode.populasi - allPenjualan;
 
         res.json({
             populasiAkhir: populasiAkhir,
             populasiAktual,
             populasiAwal: getPeriode.populasi,
+            populasiAktual,
             panen: allPenjualan,
             jenisDoc: getPeriode.jenisDOC ? getPeriode.jenisDOC.name : "",
             IP: IP,
