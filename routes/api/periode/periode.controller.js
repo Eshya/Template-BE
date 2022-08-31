@@ -119,7 +119,7 @@ exports.findKegiatan = async (req, res, next) => {
 
         const sortedData = map.sort((a, b) => b.age - a.age);
         res.json({
-            data: map,
+            data: sortedData,
             message: 'Ok'
         })
     } catch (error) {
