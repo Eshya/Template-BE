@@ -120,7 +120,7 @@ exports.findKegiatan = async (req, res, next) => {
             return {...tmp.toObject(), std: std == null ? null : std.toObject(), deplesiEkor: deplesiEkor, prosentaseDeplesi: deplesi, age: umur, populasi: populasiNow, rgr: rgr} // Join all of them in coolest way :-* - Atha
         }))
 
-        const sortedData = map.sort((a, b) => a.age - b.age);
+        const sortedData = map.sort((a, b) => b.age - a.age);
         res.json({
             data: sortedData,
             message: 'Ok'
