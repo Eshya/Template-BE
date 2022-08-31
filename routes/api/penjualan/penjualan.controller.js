@@ -97,9 +97,10 @@ exports.updateById = async (req, res, next) => {
             const totalKematian = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
             const allPenjualan = dataPenjualan.reduce((a, {terjual}) => a + terjual, 0);
             const populasiAkhir = populasi - (totalDeplesi + totalKematian + allPenjualan);
+            const tempPopulasi = populasiAkhir + penjualan.qty;
 
-            if(populasiAkhir < data.qty) {
-                return res.json({error: 1007, message: 'kuantiti melebihi populasi akhir!', data: { populasiAktual: populasiAkhir } })  
+            if(tempPopulasi < data.qty) {
+                return res.json({error: 1007, message: 'kuantiti melebihi populasi akhir!', data: { populasiAktual: tempPopulasi } })  
             }
         }
 
