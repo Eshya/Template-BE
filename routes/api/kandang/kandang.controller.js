@@ -1957,11 +1957,11 @@ exports.detailKandang = async (req,res, next) => {
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
             }).then(res => res.json()).then(data => data.data)
-            const ppl = await fetch(`https://${urlAuth}/api/users/${x.ppl}`, {
-                method: 'GET',
-                headers: {'Authorization': token,
-                "Content-Type": "application/json"}
-            }).then(res => res.json()).then(data => data.data)
+            // const ppl = await fetch(`https://${urlAuth}/api/users/${x.ppl}`, {
+            //     method: 'GET',
+            //     headers: {'Authorization': token,
+            //     "Content-Type": "application/json"}
+            // }).then(res => res.json()).then(data => data.data)
             const now = new Date(Date.now())
             const tanggalAkhir = new Date(x.tanggalAkhir)
             const finish = x.isEnd === true ? new Date(x.tanggalAkhir) : new Date(Date.now())
@@ -1985,7 +1985,7 @@ exports.detailKandang = async (req,res, next) => {
             const sapronak = pembelianSapronak.length === 0 ? 0 : pembelianSapronak[0].totalSapronak
             const estimasi = penjualan - pembelianDoc - sapronak
 
-            return {...x.toObject(), ppl, umur: umur, estimasi: estimasi, user: findUser}
+            return {...x.toObject(), umur: umur, estimasi: estimasi, user: findUser}
         }))
         const suhu = await fetch(`https://${urlIOT}/api/flock/kandang/${id}`,{
                 method: 'GET',
