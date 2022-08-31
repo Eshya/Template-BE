@@ -274,7 +274,7 @@ exports.getBudidaya = async (req, res, next) => {
         const getSapronak = await Sapronak.find({periode: id});
         // const penjualanAyamBesar = await 
         for (let i = 0; i < getSapronak.length; i++) {
-            if (getSapronak[i].produk.jenis === 'PAKAN') {
+            if (getSapronak[i]?.produk?.jenis === 'PAKAN') {
                 const compliment = getSapronak[i].zak * 50 * getSapronak[i].hargaSatuan
                 pembelianPakan += compliment
             } else {
