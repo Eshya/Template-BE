@@ -102,13 +102,13 @@ exports.updateById = async (req, res, next) => {
             if(tempPopulasi < data.qty) {
                 return res.json({error: 1007, message: 'kuantiti melebihi populasi akhir!', data: { populasiAktual: tempPopulasi } })  
             }
-        }
 
-        const results = await Model.findByIdAndUpdate(id, data, {new: true}).exec();
-        res.json({
-            data: {populasiAktual: populasiAkhir, results},
-            message: 'Ok'
-        })
+            const results = await Model.findByIdAndUpdate(id, data, {new: true}).exec();
+            res.json({
+                data: {populasiAktual: populasiAkhir, results},
+                message: 'Ok'
+            })
+        }
     } catch (error) {
         next(error);
     }
