@@ -300,7 +300,7 @@ exports.getBudidaya = async (req, res, next) => {
             {$group: {_id: '$periode', totalSapronak: {$sum: '$pembelianSapronak'}}}
         ])
         const sapronak = pembelianSapronak.length === 0 ? 0 : pembelianSapronak[0].totalSapronak
-        const penjualanAyamBesar = akumulasiPenjualan[0].totalPenjualan
+        const penjualanAyamBesar = akumulasiPenjualan[0]?.totalPenjualan
         const pendapatanPeternak = penjualanAyamBesar -pembelianDoc - sapronak
         const pendapatanPerEkor = pendapatanPeternak / populasiAkhir
         const totalPembelianSapronak = sapronak + pembelianDoc
