@@ -378,7 +378,7 @@ exports.ringkasan = async (req, res, next) => {
         const atas = presentaseAyamHidup * (avgLatestWeight/1000)
         const bawah = FCR*(dataPakan.length-1)
         const IP = (atas / bawah) * 100
-        const populasiAktual = getPeriode.populasi - allPenjualan;
+        // const populasiAktual = getPeriode.populasi - allPenjualan;
 
         res.json({
             populasiAkhir: populasiAkhir,

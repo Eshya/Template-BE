@@ -179,7 +179,7 @@ exports.uploadRHPP =  async (req, res, next) => {
             return res.status(400).send({ message: "Please upload a file!" });
         }
 
-        const periode = await Periode.findById(idPeriode);
+        // const periode = await Periode.findById(idPeriode);
         const kandang = periode.kandang;
         const dataPeriode = [];
 
