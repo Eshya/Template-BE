@@ -1874,6 +1874,7 @@ exports.kelolaPPL = async (req, res, next) => {
     const token = req.headers['authorization']
     try {
         const findPeriode = await Periode.find({ppl: user, isActivePPL: true}, {}, {autopopulate: false}).populate({path: 'kandang', options: {withDeleted: true}})
+        console.log(findPeriode)
         const map = await Promise.all(findPeriode.map(async(x) => {
             const findKandang = await Model.findOneWithDeleted({_id: x.kandang})
             const findUser = await fetch(`https://${urlAuth}/api/users/${findKandang.createdBy}`, {
@@ -1948,8 +1949,11 @@ exports.detailKandang = async (req,res, next) => {
     const id = req.params.id
     const token = req.headers['authorization']
     try {
-        const findKandang = await Model.findById(id)        
-        const findPeriode = await Periode.find({kandang: id}).sort({ createdAt: 1})
+        console.log(req.user)
+        var findKandang, findPeriode
+        req.user.isPPLActive === true ? findKandang = await Model.findOneWithDeleted({_id: id}) : findKandang = await Model.findById(id)
+        req.user.isPPLActive === true ? findPeriode = await Periode.find({kandang: id, isActivePPL: true}, {}, {autopopulate: false}).populate({path: 'kandang', options: {withDeleted: true}}).sort({createdAt: 1}) : findPeriode = await Periode.find({kandang: id}).sort({ createdAt: 1})
+        // const findPeriode = await Periode.find({ppl: user, isActivePPL: true}, {}, {autopopulate: false}).populate({path: 'kandang', options: {withDeleted: true}})
 
         const map = await Promise.all(findPeriode.map(async(x) => {
             const findUser = await fetch(`https://${urlAuth}/api/users/${x.createdBy}`, {
@@ -1957,11 +1961,11 @@ exports.detailKandang = async (req,res, next) => {
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
             }).then(res => res.json()).then(data => data.data)
-            const ppl = await fetch(`https://${urlAuth}/api/users/${x.ppl}`, {
-                method: 'GET',
-                headers: {'Authorization': token,
-                "Content-Type": "application/json"}
-            }).then(res => res.json()).then(data => data.data)
+            // const ppl = await fetch(`https://${urlAuth}/api/users/${x.ppl}`, {
+            //     method: 'GET',
+            //     headers: {'Authorization': token,
+            //     "Content-Type": "application/json"}
+            // }).then(res => res.json()).then(data => data.data)
             const now = new Date(Date.now())
             const tanggalAkhir = new Date(x.tanggalAkhir)
             const finish = x.isEnd === true ? new Date(x.tanggalAkhir) : new Date(Date.now())
@@ -1985,7 +1989,7 @@ exports.detailKandang = async (req,res, next) => {
             const sapronak = pembelianSapronak.length === 0 ? 0 : pembelianSapronak[0].totalSapronak
             const estimasi = penjualan - pembelianDoc - sapronak
 
-            return {...x.toObject(), ppl, umur: umur, estimasi: estimasi, user: findUser}
+            return {...x.toObject(), umur: umur, estimasi: estimasi, user: findUser}
         }))
         const suhu = await fetch(`https://${urlIOT}/api/flock/kandang/${id}`,{
                 method: 'GET',
