@@ -147,12 +147,17 @@ exports.updateById = async (req, res, next) => {
             {$match: {periode: mongoose.Types.ObjectId(data.periode)}},
             {$group: {_id: '$_id', totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
         ])
+        const dataPenjualan = await Model.aggregate([
+            {$match: {periode: data.periode}},
+            {$group: {_id: '$_id', terjual: {$sum: '$qty'}}}
+        ])
         const allDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
         const allKematian = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
-        const populasiAkhir = findPeriode.populasi - (allDeplesi + allKematian)
+        const allPenjualan = dataPenjualan.reduce((a, {terjual}) => a + terjual, 0);
+        const populasiAkhir = findPeriode.populasi - (allDeplesi + allKematian + allPenjualan)
         
         if (data.deplesi + data.pemusnahan > populasiAkhir) return res.json({error: 1008, message: 'data deplesi melebihi populasi akhir'}) 
-        if(data.ovkPakai[0]){
+        if(data?.ovkPakai[0]){
             Promise.all(data.ovkPakai.map(async(x) => {
                 const findSapronak = await Sapronak.findById(x?.jenisOVK ? x.jenisOVK : findKegiatan.ovkPakai[0].jenisOVK )
                 if (!findSapronak) return res.json({error: 1010, message: 'Sapronak not found'})
