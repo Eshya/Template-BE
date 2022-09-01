@@ -172,8 +172,7 @@ exports.updateById = async (req, res, next) => {
         
         if(data.pakanPakai[0]){
             Promise.all(data.pakanPakai.map(async(x) => {
-                
-                x.beratPakan = x.beratZak * 50
+
                 const findSapronak = await Sapronak.findById(x?.jenisPakan ? x.jenisPakan : findKegiatan.pakanPakai[0].jenisPakan)
                 if (!findSapronak) return res.json({error: 1010, message: 'jenisPakan not found'})
                 const oldStock =  findKegiatan.pakanPakai.find(e => e._id == findKegiatan.pakanPakai[0]._id )
