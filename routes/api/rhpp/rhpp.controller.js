@@ -241,7 +241,6 @@ exports.deleteRHPP =  async (req, res, next) => {
 exports.downloadedRHPP = async(req, res, next) => {
     const query = req.query;
     const periodsData = [];
-
     if (query.periode) {
         findQuery = { _id : query.periode }
         try {
