@@ -5,5 +5,5 @@ const scheme = new Schema({
         required: true,
         unique: true
     }
-}, {versionKey: false})
+}, {versionKey: false, timestamps: true})
 module.exports = model('JenisDOC', scheme, 'jenis-DOC');

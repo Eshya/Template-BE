@@ -538,13 +538,14 @@ exports.findOneDataPool =  async (req, res, next) => {
             // get Data STD
             const STD = await DataSTD.findOne({day: usia})
             const peternak = await PeternakModel.findById(periode.kandang.createdBy._id).select('fullname phoneNumber')
-            const findPPL = await PeternakModel.findById(periode.ppl);
+            const findPPL = await PeternakModel.findById(periode?.ppl);
             dataKandang = {
                 idPemilik: periode.kandang.createdBy ? periode.kandang.createdBy._id : null,
                 namaPemilik: peternak?.fullname,
                 phoneNumber: peternak?.phoneNumber,
-                namaPPL: periode.isActivePPL ? findPPL.fullname : "PPL Not Active",
-                phonePPL: periode.isActivePPL ? findPPL.phoneNumber : null,
+                idPPL: findPPL?._id,
+                namaPPL: periode?.isActivePPL ? findPPL.fullname : "PPL Not Active",
+                phonePPL: periode?.isActivePPL ? findPPL.phoneNumber : null,
                 idKandang: periode.kandang._id,
                 namaKandang: periode.kandang.kode,
                 alamat: periode.kandang.alamat,
@@ -704,13 +705,13 @@ exports.findOneDataPool =  async (req, res, next) => {
         } else {
             let kandang = await Model.findOne({_id: req.params.id}).sort({ createdAt: -1 })
             const peternak = await PeternakModel.findById(kandang.createdBy._id).select('fullname phoneNumber')
-            const findPPL = await PeternakModel.findById(periode.ppl);
+            const findPPL = await PeternakModel.findById(periode?.ppl);
             dataKandang = {
                 idPemilik: kandang.createdBy ? kandang.createdBy._id : null,
                 namaPemilik: peternak?.fullname,
                 phoneNumber: peternak?.phoneNumber,
-                namaPPL: periode.isActivePPL ? findPPL.fullname : "PPL Not Active",
-                phonePPL: periode.isActivePPL ? findPPL.phoneNumber : null,
+                namaPPL: periode?.isActivePPL ? findPPL.fullname : "PPL Not Active",
+                phonePPL: periode?.isActivePPL ? findPPL.phoneNumber : null,
                 idKandang: kandang._id,
                 namaKandang: kandang.kode,
                 alamat: kandang.alamat,
@@ -873,14 +874,15 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
             // get Data STD
             const STD = await DataSTD.findOne({day: usia - 1})
             const peternak = await PeternakModel.findById(periode.kandang.createdBy._id).select('fullname phoneNumber')
-            const findPPL = await PeternakModel.findById(periode.ppl);
+            const findPPL = await PeternakModel.findById(periode?.ppl);
 
             dataKandang = {
                 idPemilik: periode.kandang.createdBy ? periode.kandang.createdBy._id : null,
                 namaPemilik: peternak?.fullname,
                 phoneNumber: peternak?.phoneNumber,
-                namaPPL: periode.isActivePPL ? findPPL.fullname : "PPL Not Active",
-                phonePPL: periode.isActivePPL ? findPPL.phoneNumber : null,
+                idPPL: findPPL?._id,
+                namaPPL: periode?.isActivePPL ? findPPL.fullname : "PPL Not Active",
+                phonePPL: periode?.isActivePPL ? findPPL.phoneNumber : null,
                 idKandang: periode.kandang._id,
                 namaKandang: periode.kandang.kode,
                 alamat: periode.kandang.alamat,
@@ -1021,13 +1023,13 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
         } else {
             let kandang = await Model.findOne({_id: req.params.id}).sort({ createdAt: -1 })
             const peternak = await PeternakModel.findById(periode.kandang.createdBy._id).select('fullname phoneNumber')
-            const findPPL = await PeternakModel.findById(periode.ppl);
+            const findPPL = await PeternakModel.findById(periode?.ppl);
             dataKandang = {
                 idPemilik: kandang.createdBy ? kandang.createdBy._id : null,
                 namaPemilik: peternak?.fullname,
                 phoneNumber: peternak?.phoneNumber, 
-                namaPPL: periode.isActivePPL ? findPPL.fullname : "PPL Not Active",
-                phonePPL: periode.isActivePPL ? findPPL.phoneNumber : null,
+                namaPPL: periode?.isActivePPL ? findPPL.fullname : "PPL Not Active",
+                phonePPL: periode?.isActivePPL ? findPPL.phoneNumber : null,
                 idKandang: kandang._id,
                 namaKandang: kandang.kode,
                 alamat: kandang.alamat,
@@ -1482,10 +1484,9 @@ exports.insert = async (req, res, next) => {
     try {
         // Check kandang name availability
         const availableKandang = await Model.findOne({ createdBy, kode });
-        //uncomment when sprint 9 already done
-        // if (availableKandang) {
-        //     return res.json({ error: 2021, mesage: 'Kandang name is already used for this user'});
-        // }
+        if (availableKandang) {
+            return res.json({ error: 2021, mesage: 'Kandang name is already used for this user'});
+        }
 
         const results = await Model.create({kode, alamat, tipe, isMandiri, kota, createdBy, populasi});
         // console.log(results._id)
@@ -1519,10 +1520,9 @@ exports.updateById = async (req, res, next) => {
     try {
         // Check kandang name availability
         const availableKandang = await Model.findOne({ createdBy, kode: data.kode });
-        //uncomment when sprint 9 already done
-        // if (availableKandang) {
-        //     return res.json({ error: 2021, mesage: 'Kandang name is already used for this user'});
-        // }
+        if (availableKandang) {
+            return res.json({ error: 2021, mesage: 'Kandang name is already used for this user'});
+        }
 
         const results = await Model.findByIdAndUpdate(id, data, {new: true}).exec();
         res.json({
@@ -1873,9 +1873,10 @@ exports.kelolaPPL = async (req, res, next) => {
     const user = req.user._id
     const token = req.headers['authorization']
     try {
-        const findPeriode = await Periode.find({ppl: user, isActivePPL: true})
+        const findPeriode = await Periode.find({ppl: user, isActivePPL: true}, {}, {autopopulate: false}).populate({path: 'kandang', options: {withDeleted: true}})
+        console.log(findPeriode)
         const map = await Promise.all(findPeriode.map(async(x) => {
-            const findKandang = await Model.findById(x.kandang)
+            const findKandang = await Model.findOneWithDeleted({_id: x.kandang})
             const findUser = await fetch(`https://${urlAuth}/api/users/${findKandang.createdBy}`, {
                 method: 'GET',
                 headers: {'Authorization': token,
@@ -1948,8 +1949,11 @@ exports.detailKandang = async (req,res, next) => {
     const id = req.params.id
     const token = req.headers['authorization']
     try {
-        const findKandang = await Model.findById(id)        
-        const findPeriode = await Periode.find({kandang: id}).sort({ createdAt: 1})
+        console.log(req.user)
+        var findKandang, findPeriode
+        req.user.isPPLActive === true ? findKandang = await Model.findOneWithDeleted({_id: id}) : findKandang = await Model.findById(id)
+        req.user.isPPLActive === true ? findPeriode = await Periode.find({kandang: id, isActivePPL: true}, {}, {autopopulate: false}).populate({path: 'kandang', options: {withDeleted: true}}).sort({createdAt: 1}) : findPeriode = await Periode.find({kandang: id}).sort({ createdAt: 1})
+        // const findPeriode = await Periode.find({ppl: user, isActivePPL: true}, {}, {autopopulate: false}).populate({path: 'kandang', options: {withDeleted: true}})
 
         const map = await Promise.all(findPeriode.map(async(x) => {
             const findUser = await fetch(`https://${urlAuth}/api/users/${x.createdBy}`, {
@@ -1957,6 +1961,11 @@ exports.detailKandang = async (req,res, next) => {
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
             }).then(res => res.json()).then(data => data.data)
+            // const ppl = await fetch(`https://${urlAuth}/api/users/${x.ppl}`, {
+            //     method: 'GET',
+            //     headers: {'Authorization': token,
+            //     "Content-Type": "application/json"}
+            // }).then(res => res.json()).then(data => data.data)
             const now = new Date(Date.now())
             const tanggalAkhir = new Date(x.tanggalAkhir)
             const finish = x.isEnd === true ? new Date(x.tanggalAkhir) : new Date(Date.now())
@@ -1975,6 +1984,7 @@ exports.detailKandang = async (req,res, next) => {
                 {$project: {penjualan: {$multiply: ['$qty', '$harga', '$beratBadan']}}},
                 {$group: {_id: '$periode', totalPenjualan: {$sum: '$penjualan'}}}
             ])
+            console.log(akumulasiPenjualan)
             const penjualan = findPenjualan.length == 0 ? 0 : akumulasiPenjualan[0].totalPenjualan
             const sapronak = pembelianSapronak.length === 0 ? 0 : pembelianSapronak[0].totalSapronak
             const estimasi = penjualan - pembelianDoc - sapronak

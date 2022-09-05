@@ -4,6 +4,7 @@ const Periode = require('../periode/periode.model')
 const KegiatanHarian = require('../kegiatan-harian/kegiatan-harian.model')
 const Penjualan = require("../penjualan/penjualan.model");
 const Sapronak = require("../sapronak/sapronak.model");
+const PeternakModel = require('../peternak/peternak.model');
 const Promise = require("bluebird");
 const mongoose = require('mongoose');
 const reducer = (acc, value) => acc + value;
@@ -137,9 +138,10 @@ exports.getKandangPeriode = async (req, res, next) => {
                         dataPeriode.push(index + 1);
                     }
                 });
+                const peternak = await PeternakModel.findById(itemPeriode.kandang.createdBy._id).select('fullname')
                 dataKandangPeriode.push({
                     idPemilik: itemPeriode.kandang.createdBy ? itemPeriode.kandang.createdBy._id : null,
-                    namaPemilik: itemPeriode.kandang.createdBy ? itemPeriode.kandang.createdBy.fullname : null,
+                    namaPemilik: itemPeriode.kandang.createdBy ? (peternak?.fullname ? peternak.fullname : "Not Registered") : null,
                     idKandang: itemPeriode.kandang._id,
                     namaKandang: itemPeriode.kandang.kode,
                     alamat: itemPeriode.kandang.alamat,
@@ -176,6 +178,9 @@ exports.insert = async (req, res, next) => {
             fs.writeFileSync(path, base64Data,  {encoding: 'base64'});
             data.image = path;
         }
+
+        const findNumber = await Model.findOne({phoneNumber: data.phoneNumber})
+        if(findNumber) throw res.json({error: 400, message: 'phone number already registered'})
         const result = await Model.create(data)
         res.json({
             data: result,
@@ -199,6 +204,7 @@ exports.updateById = async (req, res, next) => {
             fs.writeFileSync(path, base64Data,  {encoding: 'base64'});
             data.image = path;
         }
+
         const result = await Model.findByIdAndUpdate(id, data, {new: true}).exec()
         res.json({
             data: result,
@@ -236,3 +242,4 @@ exports.removeKemitraanById = async (req, res, next) => {
         next(err)
     }
 }
+
