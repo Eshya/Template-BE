@@ -338,7 +338,7 @@ exports.ringkasan = async (req, res, next) => {
 
         const penjualan = await Penjualan.aggregate([
             {$match: {periode: mongoose.Types.ObjectId(getPeriode.id)}},
-            {$group: {_id: '$_id', terjual: {$sum: '$qty'}}}
+            {$group: {_id: '$_id', tanggal: {$push: '$tanggal'}, terjual: {$sum: '$qty'}}}
         ])
 
         const dataPakan = await KegiatanHarian.aggregate([
@@ -378,6 +378,11 @@ exports.ringkasan = async (req, res, next) => {
         const atas = presentaseAyamHidup * (avgLatestWeight/1000)
         const bawah = FCR*(dataPakan.length-1)
         const IP = (atas / bawah) * 100
+        const detailPanen = penjualan.map(data => { return {
+            panen: data.terjual,
+            tanggal: data.tanggal[0]
+        }});
+
         // const populasiAktual = getPeriode.populasi - allPenjualan;
 
         res.json({
@@ -385,6 +390,7 @@ exports.ringkasan = async (req, res, next) => {
             populasiAktual,
             populasiAwal: getPeriode.populasi,
             populasiAktual,
+            detailPanen: detailPanen,
             panen: allPenjualan,
             jenisDoc: getPeriode.jenisDOC ? getPeriode.jenisDOC.name : "",
             IP: IP,
