@@ -48,69 +48,72 @@ function dynamicSort(property) {
 function removeDuplicatesData(array) {
     return [...new Set(array)];
 }
-
+// Total kemitraan dan total kandang
 exports.dashboardKemitraan =  async (req, res, next) => {
     try {
-        const token = req.headers['authorization']
-        let role = req.user.role ? req.user.role.name : '';
-        let kemitraanId = req.user.kemitraanUser ? req.user.kemitraanUser._id : '';
-        let { kemitraan } = req.query;
-        let filter = {}
-        let resultKandangActive = [];
-        let resultPeternak = [];
+        // const token = req.headers['authorization']
+        const role = req.user.role ? req.user.role.name : '';
+        const kemitraanId = req.user.kemitraanUser ? req.user.kemitraanUser._id : '';
+        const { kemitraan } = req.query;
+        const filter = {}
+        const resultKandangActive = [];
+        const resultPeternak = [];
         filter.deleted = false;
+        const filterPPL = {};
 
-        let getKandang = await Kandang.find(filter).exec();
-        await Promise.map(getKandang, async (dataItem, index) => {
-            let filterPeriod = {};
-            filterPeriod.kandang = dataItem.id;
+        const getKandang = await Kandang.find(filter);
+        if (getKandang.length) {
 
-            if (kemitraan) {
-                filterPeriod.kemitraan = kemitraan
-            }
-            if (role === "adminkemitraan") {
-                filterPeriod.kemitraan = kemitraanId
-            }
-
-            let periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 })
-            if (periode && periode.kandang && periode.kemitraan && periode.kandang.createdBy) {
-                //find detail peternak
-                const findUser = await fetch(`https://${urlAuth}/api/users/${periode.kandang.createdBy}`, {
-                    method: 'GET',
-                    headers: {'Authorization': token,
-                    "Content-Type": "application/json"}
-                }).then(res => res.json()).then(data => data.data)
-
-                let namaPemilik = findUser ? findUser.fullname : ""
-                let idPemilik = findUser ? findUser._id : ""
-                if (namaPemilik !== "") {
-                    if (periode.kandang.isActive === true) {
-                        resultPeternak.push(idPemilik);
-                        resultKandangActive.push({
-                            periodeId: periode.id,
-                            kandangId: periode.kandang.id,
-                            user: periode.kandang.createdBy
-                        });
+            for (const dataItem of getKandang) {
+                const filterPeriod = {};
+                filterPeriod.kandang = dataItem.id;
+    
+                if (kemitraan) {
+                    filterPeriod.kemitraan = kemitraan
+                    filterPPL.kemitraanUser = kemitraan
+                }
+                if (role === "adminkemitraan") {
+                    filterPeriod.kemitraan = kemitraanId
+                    filterPPL.kemitraanUser = kemitraanId
+                }
+    
+                let periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 })
+                if (periode && periode?.kandang && periode?.kemitraan && periode?.kandang?.createdBy) {
+                    //find detail peternak
+                    // const findUser = await fetch(`https://${urlAuth}/api/users/${periode.kandang.createdBy}`, {
+                    //     method: 'GET',
+                    //     headers: {'Authorization': token,
+                    //     "Content-Type": "application/json"}
+                    // }).then(res => res.json()).then(data => data.data)
+    
+                    const findUser = await User.findById(periode.kandang.createdBy);
+                    const namaPemilik = findUser ? findUser.fullname : ""
+                    const idPemilik = findUser ? findUser._id : ""
+                    if (!namaPemilik) {
+                        if (periode?.kandang?.isActive) {
+                            resultPeternak.push(idPemilik);
+                            resultKandangActive.push({
+                                periodeId: periode.id,
+                                kandangId: periode.kandang.id,
+                                user: periode.kandang.createdBy
+                            });
+                        }
                     }
                 }
             }
-        });
+        }
+        // await Promise.map(getKandang, async (dataItem, index) => {
+            
+        // });
 
         // get total peternak
-        let totalPeternak = removeDuplicatesData(resultPeternak)
+        const totalPeternak = removeDuplicatesData(resultPeternak)
 
         // get total PPL
-        let filterPPL = {};
         filterPPL.role = '61d5608d4a7ba5b05c9c7ae3';
         filterPPL.deleted = false;
-        if (kemitraan) {
-            filterPPL.kemitraanUser = kemitraan
-        }
-        if (role === "adminkemitraan") {
-            filterPPL.kemitraanUser = kemitraanId
-        }
-        let totalPPl = await User.countDocuments(filterPPL).exec();
-        res.json({
+        const totalPPl = await User.countDocuments(filterPPL).exec();
+        return res.json({
             totalKandangActive: resultKandangActive.length,
             totalPPL: totalPPl,
             totalPeternak: totalPeternak.length,
@@ -154,11 +157,13 @@ exports.dashboardKemitraanPopulasi =  async (req, res, next) => {
                 let usia = Math.round(Math.abs((now - start) / ONE_DAY))
 
                 //find detail peternak
-                const findUser = await fetch(`https://${urlAuth}/api/users/${periode.kandang.createdBy}`, {
-                    method: 'GET',
-                    headers: {'Authorization': token,
-                    "Content-Type": "application/json"}
-                }).then(res => res.json()).then(data => data.data)
+                // const findUser = await fetch(`https://${urlAuth}/api/users/${periode.kandang.createdBy}`, {
+                //     method: 'GET',
+                //     headers: {'Authorization': token,
+                //     "Content-Type": "application/json"}
+                // }).then(res => res.json()).then(data => data.data)
+
+                const findUser = await User.findById(periode.kandang.createdBy);
 
                 let namaPemilik = findUser ? findUser.fullname : ""
                 if (namaPemilik !== "") {
@@ -203,43 +208,53 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
             sort = { createdAt: -1 }
         }
 
-        let dataKandang = await Kandang.find(filter).sort(sort);
-        await Promise.map(dataKandang, async (dataItem, index) => {
-            let filterPeriod = {};
+        const dataKandang = await Kandang.find(filter).sort(sort);
+        await Promise.map(dataKandang, async(dataItem, index) => {
+            const filterPeriod = {};
             filterPeriod.kandang = dataItem.id;
             filterPeriod.isEnd = false;
 
-            if (populasi === '10000') {
-                filterPeriod.populasi = {$gte: 0, $lte: 10000}
-            } else if (populasi === '20000') {
-                filterPeriod.populasi = {$gte: 10001, $lte: 20000}
-            } else if (populasi === '30000') {
-                filterPeriod.populasi = {$gte: 20001, $lte: 30000}
-            } else if (populasi === '40000') {
-                filterPeriod.populasi = {$gte: 30001, $lte: 40000}
-            } else if (populasi === '50000') {
-                filterPeriod.populasi = {$gte: 40001, $lte: 50000}
-            } else if (populasi === '50001') {
-                filterPeriod.populasi = {$gte: 50001}
+            if (populasi) {
+                switch (populasi) {
+                    case '10000':
+                        filterPeriod.populasi = {$gte: 0, $lte: 10000}
+                    break;
+                    case '20000':
+                        filterPeriod.populasi = {$gte: 10001, $lte: 20000}
+                    break;
+                    case '30000':
+                        filterPeriod.populasi = {$gte: 20001, $lte: 30000}
+                    break;
+                    case '40000':
+                        filterPeriod.populasi = {$gte: 30001, $lte: 40000}
+                        break;
+                    case '50000':
+                        filterPeriod.populasi = {$gte: 40001, $lte: 50000}
+                    break;
+                    case '50001':
+                        filterPeriod.populasi = {$gte: 50001}
+                    break;
+                }
             }
 
             if (kemitraan) {
                 filterPeriod.kemitraan = kemitraan
             }
-            let kemitraanId = req.user.kemitraanUser ? req.user.kemitraanUser._id : '';
+
+            const kemitraanId = req.user.kemitraanUser ? req.user.kemitraanUser._id : '';
             if (role === "adminkemitraan") {
                 filterPeriod.kemitraan = kemitraanId
             }
 
             const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 })
-            if (periode && periode.kandang && periode.kemitraan && periode.kandang.createdBy) {
+            if (periode?.kemitraan && periode?.kandang?.createdBy) {
                 // get usia
-                let now = new Date(Date.now());
-                let start = new Date(periode.tanggalMulai);
-                let age = Math.round(Math.abs((now - start) / ONE_DAY))
+                const now = new Date(Date.now());
+                const start = new Date(periode.tanggalMulai);
+                const age = Math.round(Math.abs((now - start) / ONE_DAY))
 
                 // get weight actual
-                let getKegiatan = await KegiatanHarian.findOne({periode: periode.id, berat: { $exists: true, $ne: [] }}).select('-periode').sort({'tanggal': -1})
+                const getKegiatan = await KegiatanHarian.findOne({periode: periode.id, berat: { $exists: true, $ne: [] }}).select('-periode').sort({'tanggal': -1})
                 let avgLatestWeight = 0;
                 if (getKegiatan)  {
                     let totalBerat = [];
@@ -252,9 +267,9 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
                         }
                         totalBerat.push(getKegiatan.berat[x].beratTimbang / populasi)
                     }
-                    let totalberatSum = totalBerat.reduce(function(acc, val) { return acc + val; }, 0)
-                    let bobotResult = totalberatSum/getKegiatan.berat.length
-                    let bobotFixed = Number.isInteger(bobotResult) ? bobotResult : bobotResult.toFixed(2);
+                    const totalberatSum = totalBerat.reduce(function(acc, val) { return acc + val; }, 0)
+                    const bobotResult = totalberatSum/getKegiatan.berat.length
+                    const bobotFixed = Number.isInteger(bobotResult) ? bobotResult : bobotResult.toFixed(2);
                     avgLatestWeight = isFinite(bobotFixed) && bobotFixed || 0;
                 }
 
@@ -265,59 +280,61 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
                     }
                 }
 
-                if (usiaFrom && !usiaTo && !bobotFrom && !bobotTo) {
+                if (usiaFrom) {
                     if (age >= usiaFrom) {
                         pushData = true;
                     }
                 }
 
-                if (!usiaFrom && usiaTo && !bobotFrom && !bobotTo) {
+                if (usiaTo) {
                     if (age <= usiaTo) {
                         pushData = true;
                     }
                 }
 
-                if (usiaFrom && usiaTo && !bobotFrom && !bobotTo) {
+                if (usiaFrom && usiaTo) {
                     if (age >= usiaFrom && age <= usiaTo) {
                         pushData = true;
                     }
                 }
 
-                if (!usiaFrom && !usiaTo && bobotFrom && !bobotTo) {
+                if (bobotFrom) {
                     if (avgLatestWeight >= bobotFrom) {
                         pushData = true;
                     }
                 }
 
-                if (!usiaFrom && !usiaTo && !bobotFrom && bobotTo) {
+                if (bobotTo) {
                     if (avgLatestWeight <= bobotTo) {
                         pushData = true;
                     }
                 }
 
-                if (!usiaFrom && !usiaTo && bobotFrom && bobotTo) {
+                if (bobotFrom && bobotTo) {
                     if (avgLatestWeight >= bobotFrom && avgLatestWeight <= bobotTo) {
                         pushData = true;
                     }
                 }
 
-                if (usiaFrom === "" && usiaTo === "" && bobotFrom === "" && bobotTo === "") {
+                if (!usiaFrom && !usiaTo && !bobotFrom && !bobotTo) {
                     pushData = true;
                 }
 
                 if (pushData) {
                     //find detail peternak
-                    const findUser = await fetch(`https://${urlAuth}/api/users/${periode.kandang.createdBy}`, {
-                        method: 'GET',
-                        headers: {'Authorization': token,
-                        "Content-Type": "application/json"}
-                    }).then(res => res.json()).then(data => data.data)
+                    // const findUser = await fetch(`https://${urlAuth}/api/users/${periode.kandang.createdBy}`, {
+                    //     method: 'GET',
+                    //     headers: {'Authorization': token,
+                    //     "Content-Type": "application/json"}
+                    // }).then(res => res.json()).then(data => data.data)
 
-                    let namaPemilik = findUser ? findUser.fullname : ""
-                    let namaPemilikSTR = namaPemilik.toLowerCase().replace(/\b[a-z]/g, function(letter) {
+                    const findUser = await User.findById(periode?.kandang?.createdBy)
+
+                    const namaPemilik = findUser ? findUser.fullname : ""
+                    const namaPemilikSTR = namaPemilik.toLowerCase().replace(/\b[a-z]/g, function(letter) {
                         return letter.toUpperCase();
                     });
-                    if (namaPemilik !== "") {
+                    if (namaPemilik) {
                         resultPeriode.push({
                             idKandang: periode.kandang.id,
                             namaKandang: periode.kandang.kode,
@@ -334,7 +351,10 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
                     }
                 }
             }
-        });
+        })
+        // await Promise.map(dataKandang, async (dataItem, index) => {
+            
+        // });
 
         let countPopulasi = resultPeriode.reduce((a, {populasi}) => a + populasi, 0);
         let countUsia = (resultPeriode.reduce((a, {usia}) => a + usia, 0) / resultPeriode.length);
@@ -353,7 +373,7 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
             offsetPaging = (offset / 10 + 1)
         }
 
-        let resultPeriodeSort = resultPeriode.sort(dynamicSort("namaPemilik"));
+        const resultPeriodeSort = resultPeriode.sort(dynamicSort("namaPemilik"));
 
         res.json({
             count: resultPeriode.length,
@@ -397,18 +417,25 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
             filterPeriod.kandang = dataItem.id;
             filterPeriod.isEnd = false;
 
-            if (populasi === '10000') {
-                filterPeriod.populasi = {$gte: 0, $lte: 10000}
-            } else if (populasi === '20000') {
-                filterPeriod.populasi = {$gte: 10001, $lte: 20000}
-            } else if (populasi === '30000') {
-                filterPeriod.populasi = {$gte: 20001, $lte: 30000}
-            } else if (populasi === '40000') {
-                filterPeriod.populasi = {$gte: 30001, $lte: 40000}
-            } else if (populasi === '50000') {
-                filterPeriod.populasi = {$gte: 40001, $lte: 50000}
-            } else if (populasi === '50001') {
-                filterPeriod.populasi = {$gte: 50001}
+            switch (populasi) {
+                case '10000':
+                    filterPeriod.populasi = {$gte: 0, $lte: 10000}
+                break;
+                case '20000':
+                    filterPeriod.populasi = {$gte: 10001, $lte: 20000}
+                break;
+                case '30000':
+                    filterPeriod.populasi = {$gte: 20001, $lte: 30000}
+                break;
+                case '40000':
+                    filterPeriod.populasi = {$gte: 30001, $lte: 40000}
+                    break;
+                case '50000':
+                    filterPeriod.populasi = {$gte: 40001, $lte: 50000}
+                break;
+                case '50001':
+                    filterPeriod.populasi = {$gte: 50001}
+                break;
             }
 
             if (kemitraan) {
@@ -434,60 +461,63 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
                 const avgLatestWeight = totalAvgLatestWeight ? totalAvgLatestWeight : 0
 
                 let pushData = false;
-                if (usiaFrom && usiaTo && bobotFrom && bobotTo) {
-                    if (age >= usiaFrom && age <= usiaTo && avgLatestWeight >= bobotFrom && avgLatestWeight <= bobotTo) {
+                if (usiaFrom || usiaTo || bobotFrom || bobotTo) {
+                    if (usiaFrom && usiaTo && bobotFrom && bobotTo) {
+                        if (age >= usiaFrom && age <= usiaTo && avgLatestWeight >= bobotFrom && avgLatestWeight <= bobotTo) {
+                            pushData = true;
+                        }
+                    }
+    
+                    if (usiaFrom) {
+                        if (age >= usiaFrom) {
+                            pushData = true;
+                        }
+                    }
+    
+                    if (usiaTo) {
+                        if (age <= usiaTo) {
+                            pushData = true;
+                        }
+                    }
+    
+                    if (usiaFrom && usiaTo) {
+                        if (age >= usiaFrom && age <= usiaTo) {
+                            pushData = true;
+                        }
+                    }
+    
+                    if (bobotFrom) {
+                        if (avgLatestWeight >= bobotFrom) {
+                            pushData = true;
+                        }
+                    }
+    
+                    if (bobotTo) {
+                        if (avgLatestWeight <= bobotTo) {
+                            pushData = true;
+                        }
+                    }
+    
+                    if (bobotFrom && bobotTo) {
+                        if (avgLatestWeight >= bobotFrom && avgLatestWeight <= bobotTo) {
+                            pushData = true;
+                        }
+                    }
+    
+                    if (usiaFrom === "" && usiaTo === "" && bobotFrom === "" && bobotTo === "") {
                         pushData = true;
                     }
-                }
-
-                if (usiaFrom && !usiaTo && !bobotFrom && !bobotTo) {
-                    if (age >= usiaFrom) {
-                        pushData = true;
-                    }
-                }
-
-                if (!usiaFrom && usiaTo && !bobotFrom && !bobotTo) {
-                    if (age <= usiaTo) {
-                        pushData = true;
-                    }
-                }
-
-                if (usiaFrom && usiaTo && !bobotFrom && !bobotTo) {
-                    if (age >= usiaFrom && age <= usiaTo) {
-                        pushData = true;
-                    }
-                }
-
-                if (!usiaFrom && !usiaTo && bobotFrom && !bobotTo) {
-                    if (avgLatestWeight >= bobotFrom) {
-                        pushData = true;
-                    }
-                }
-
-                if (!usiaFrom && !usiaTo && !bobotFrom && bobotTo) {
-                    if (avgLatestWeight <= bobotTo) {
-                        pushData = true;
-                    }
-                }
-
-                if (!usiaFrom && !usiaTo && bobotFrom && bobotTo) {
-                    if (avgLatestWeight >= bobotFrom && avgLatestWeight <= bobotTo) {
-                        pushData = true;
-                    }
-                }
-
-                if (usiaFrom === "" && usiaTo === "" && bobotFrom === "" && bobotTo === "") {
-                    pushData = true;
                 }
 
                 if (pushData) {
                     //find detail peternak
-                    const findUser = await fetch(`https://${urlAuth}/api/users/${periode.kandang.createdBy}`, {
-                        method: 'GET',
-                        headers: {'Authorization': token,
-                        "Content-Type": "application/json"}
-                    }).then(res => res.json()).then(data => data.data)
+                    // const findUser = await fetch(`https://${urlAuth}/api/users/${periode.kandang.createdBy}`, {
+                    //     method: 'GET',
+                    //     headers: {'Authorization': token,
+                    //     "Content-Type": "application/json"}
+                    // }).then(res => res.json()).then(data => data.data)
 
+                    const findUser = await User.findById(periode?.kandang?.createdBy);
                     let namaPemilik = findUser ? findUser.fullname : ""
                     let namaPemilikSTR = namaPemilik.toLowerCase().replace(/\b[a-z]/g, function(letter) {
                         return letter.toUpperCase();
