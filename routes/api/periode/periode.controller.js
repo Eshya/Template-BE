@@ -549,9 +549,11 @@ exports.autoCultivation = async(req, res, next) => {
             const now = new Date(Date.now());
             const start = new Date(periode.tanggalMulai);
             const chickenAge = Math.round(Math.abs((now - start) / oneDay))
+            const kandang = await Kandang.findById(periode.kandang);
         
             if (chickenAge >= 50) {
                 periode.isEnd = true
+                kandang.isActive = false
             }
     
             await periode.save();
