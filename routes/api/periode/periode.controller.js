@@ -551,7 +551,7 @@ exports.autoCultivation = async(req, res, next) => {
             const chickenAge = Math.round(Math.abs((now - start) / oneDay))
         
             if (chickenAge >= 50) {
-                periode.isAutoClosing = true
+                periode.isEnd = true
             }
     
             await periode.save();
