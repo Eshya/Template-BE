@@ -7,7 +7,7 @@ const Promise = require("bluebird");
 const ONE_DAY = 24 * 60 * 60 * 1000;
 const fetch = require('node-fetch')
 var urlAuth = process.env.DB_NAME === "chckin" ? `auth.chickinindonesia.com` : `staging-auth.chickinindonesia.com`
-
+var urlIOT = process.env.DB_NAME === "chckin" ? `prod-iot.chickinindonesia.com` : `staging-iot.chickinindonesia.com`
 const handleQuerySort = (query) => {
     try{
       const toJSONString = ("{" + query + "}").replace(/(\w+:)|(\w+ :)/g, (matched => {
@@ -317,10 +317,23 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
                     let namaPemilikSTR = namaPemilik.toLowerCase().replace(/\b[a-z]/g, function(letter) {
                         return letter.toUpperCase();
                     });
+                    let flock = [];
+                    flock = await fetch(`https://${urlIOT}/api/flock/kandang/` + periode.kandang.id, {
+                        method: 'get',
+                        headers: {
+                            'Authorization': token,
+                            "Content-Type": "application/json" }
+                    }).then(result => {
+                        if (result.ok) {
+                            return result.json();
+                        }
+                    });
+                    // console.log(flock.data?.flock ? true : false)
                     if (namaPemilik !== "") {
                         resultPeriode.push({
                             idKandang: periode.kandang.id,
                             namaKandang: periode.kandang.kode,
+                            isIoTInstalled:flock.data?.flock ? true : false,
                             kota: periode.kandang.kota,
                             DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
                             bobot: avgLatestWeight,
@@ -492,10 +505,24 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
                     let namaPemilikSTR = namaPemilik.toLowerCase().replace(/\b[a-z]/g, function(letter) {
                         return letter.toUpperCase();
                     });
+                    // find flock iot
+                    let flock = [];
+                    flock = await fetch(`https://${urlIOT}/api/flock/kandang/` + periode.kandang.id, {
+                        method: 'get',
+                        headers: {
+                            'Authorization': token,
+                            "Content-Type": "application/json" }
+                    }).then(result => {
+                        if (result.ok) {
+                            return result.json();
+                        }
+                    });
+                    // console.log(flock.data?.flock ? true : false)
                     if (namaPemilik !== "") {
                         resultPeriode.push({
                             idKandang: periode.kandang.id,
                             namaKandang: periode.kandang.kode,
+                            isIoTInstalled:flock.data?.flock ? true : false,
                             kota: periode.kandang.kota,
                             DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
                             bobot: avgLatestWeight,

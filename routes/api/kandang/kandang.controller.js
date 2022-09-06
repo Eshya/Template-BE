@@ -143,13 +143,26 @@ exports.findAllDataPool =  async (req, res, next) => {
                     let namaKandangSTR = namaKandang.toLowerCase().replace(/\b[a-z]/g, function(letter) {
                         return letter.toUpperCase();
                     });
-
+                    // find flock IoT
+                    let flock = [];
+                    flock = await fetch(`https://${urlIOT}/api/flock/kandang/` + data[i]._id, {
+                        method: 'get',
+                        headers: {
+                            'Authorization': token,
+                            "Content-Type": "application/json" }
+                    }).then(result => {
+                        if (result.ok) {
+                            return result.json();
+                        }
+                    });
+                    // console.log(`1id kandang:${data[i]._id} id flock ${flock}`)
                     if (namaPemilik !== "") {
                         result.push({
                             idPemilik: data[i].createdBy ? data[i].createdBy._id : null,
                             namaPemilik: namaPemilik,
                             idKandang: data[i]._id,
                             namaKandang: namaKandangSTR,
+                            isIoTInstalled:flock.data?.flock ? true : false,
                             kota: data[i].kota,
                             isActive: data[i].isActive ? "Aktif" : "Rehat",
                             usia: usia,
@@ -195,6 +208,7 @@ exports.findAllDataPool =  async (req, res, next) => {
                         headers: {'Authorization': token,
                         "Content-Type": "application/json"}
                     }).then(res => res.json()).then(data => data.data)
+                    
                     let namaPemilik = findUser ? findUser.fullname : ""
 
                     // sort by nama kandang
@@ -202,13 +216,27 @@ exports.findAllDataPool =  async (req, res, next) => {
                     let namaKandangSTR = namaKandang.toLowerCase().replace(/\b[a-z]/g, function(letter) {
                         return letter.toUpperCase();
                     });
-    
+                    // find flock iot
+                    let flock = [];
+                    flock = await fetch(`https://${urlIOT}/api/flock/kandang/` + data[i]._id, {
+                        method: 'get',
+                        headers: {
+                            'Authorization': token,
+                            "Content-Type": "application/json" }
+                    }).then(result => {
+                        if (result.ok) {
+                            return result.json();
+                        }
+                    });
+                    // console.log(`2id kandang:${data[i]._id} id flock ${flock}`)
+                    console.log(flock.data?.flock ? true : false)
                     // if (namaPemilik !== "") {
                         result.push({
                             idPemilik: data[i].createdBy ? data[i].createdBy._id : null,
                             namaPemilik: namaPemilik,
                             idKandang: data[i]._id,
                             namaKandang: namaKandangSTR,
+                            isIoTInstalled:flock.data?.flock ? true : false,
                             kota: data[i].kota,
                             isActive: data[i].isActive ? "Aktif" : "Rehat",
                             usia: usia,
@@ -223,7 +251,20 @@ exports.findAllDataPool =  async (req, res, next) => {
                         "Content-Type": "application/json"}
                     }).then(res => res.json()).then(data => data.data)
                     let namaPemilik = findUser ? findUser.fullname : ""
-
+                    /// find flock from iot
+                    let flock = [];
+                    flock = await fetch(`https://${urlIOT}/api/flock/kandang/` + data[i]._id, {
+                        method: 'get',
+                        headers: {
+                            'Authorization': token,
+                            "Content-Type": "application/json" }
+                    }).then(result => {
+                        if (result.ok) {
+                            return result.json();
+                        }
+                    });
+                    // console.log(`3id kandang:${data[i]._id} id flock ${flock}`)
+                    console.log(flock.data?.flock ? true : false)
                     // sort by nama kandang
                     let namaKandang = data[i].kode ? data[i].kode : ""
                     let namaKandangSTR = namaKandang.toLowerCase().replace(/\b[a-z]/g, function(letter) {
@@ -236,6 +277,7 @@ exports.findAllDataPool =  async (req, res, next) => {
                             namaPemilik: namaPemilik,
                             idKandang: data[i]._id,
                             namaKandang: namaKandangSTR,
+                            isIoTInstalled:flock.data?.flock ? true : false,
                             kota: data[i].kota,
                             isActive: data[i].isActive ? "Aktif" : "Rehat",
                             usia: 0,

@@ -7,8 +7,9 @@ const Penjualan = require("../penjualan/penjualan.model");
 const Sapronak = require("../sapronak/sapronak.model");
 const Promise = require("bluebird");
 const mongoose = require('mongoose');
+const fetch = require('node-fetch')
 const reducer = (acc, value) => acc + value;
-
+var urlIOT = process.env.DB_NAME === "chckin" ? `prod-iot.chickinindonesia.com` : `staging-iot.chickinindonesia.com`
 const handleQuerySort = (query) => {
     try{
       const toJSONString = ("{" + query + "}").replace(/(\w+:)|(\w+ :)/g, (matched => {
@@ -121,6 +122,7 @@ exports.findAll =  async (req, res, next) => {
 
 exports.findById = async (req, res, next) => {
     try {
+        const token = req.headers['authorization']
         const peternak = await Model.findById(req.params.id).select('avatar image noKTP address fullname username email phoneNumber')
         const kandang = await Kandang.find({createdBy: req.params.id, deleted: false})
         let dataKandang = [];
@@ -130,6 +132,7 @@ exports.findById = async (req, res, next) => {
             let dataPeriode = [];
             let IP;
             let pendapatanPeternak;
+            let flock = [];
             if (periode && periode.kandang) {
                 // get IP
                 const penjualan = await Penjualan.aggregate([
@@ -193,12 +196,24 @@ exports.findById = async (req, res, next) => {
                     }
                 });
                 
+                flock = await fetch(`https://${urlIOT}/api/flock/kandang/` + itemKandang._id, {
+                    method: 'get',
+                    headers: {
+                        'Authorization': token,
+                        "Content-Type": "application/json" }
+                }).then(result => {
+                    if (result.ok) {
+                        return result.json();
+                    }
+                });
+                
             }
             dataKandangPeriode.push({
                 idPemilik: itemKandang.createdBy ? itemKandang.createdBy._id : null,
                 namaPemilik: itemKandang.createdBy ? itemKandang.createdBy.fullname : null,
                 idKandang: itemKandang._id,
                 namaKandang: itemKandang.kode,
+                isIoTInstalled:flock.data?.flock ? true : false,
                 alamat: itemKandang.alamat,
                 kota: itemKandang.kota,
                 isActive: itemKandang.isActive,
