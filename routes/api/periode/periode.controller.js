@@ -541,7 +541,7 @@ exports.validateTambah = async (req,res, next) => {
     }
 }
 
-exports.autoCultivation = async(req, res, next) => {
+exports.autoCloseCultivation = async(req, res, next) => {
     const periods = await Model.find({}).sort('updatedAt');
     try {
         for (const periode of periods) {
