@@ -6,7 +6,10 @@ const User = require('../peternak/peternak.model')
 const Promise = require("bluebird");
 const ONE_DAY = 24 * 60 * 60 * 1000;
 const fetch = require('node-fetch')
-var urlAuth = process.env.DB_NAME === "chckin" ? `auth.chickinindonesia.com` : `staging-auth.chickinindonesia.com`
+var urlAuth = process.env.DB_NAME === "chckin" ? `https://auth.chickinindonesia.com` : `https://staging-auth.chickinindonesia.com`
+
+// This URL is for development purpose only
+// var urlAuth = `http://localhost:3105`
 
 const handleQuerySort = (query) => {
     try{
@@ -51,7 +54,7 @@ function removeDuplicatesData(array) {
 // Total kemitraan dan total kandang
 exports.dashboardKemitraan =  async (req, res, next) => {
     try {
-        // const token = req.headers['authorization']
+        const token = req.headers['authorization']
         const role = req.user.role ? req.user.role.name : '';
         const kemitraanId = req.user.kemitraanUser ? req.user.kemitraanUser._id : '';
         const { kemitraan } = req.query;
@@ -64,9 +67,9 @@ exports.dashboardKemitraan =  async (req, res, next) => {
 
         const getKandang = await Kandang.find(filter);
         if (getKandang.length) {
-         const result = await handleResultKandang(getKandang, kemitraan, filterPPL, role, kemitraanId);
-         resultPeternak.push(...result.peternak);
-         resultKandangActive.push(...result.kandangActive);
+            const result = await handleResultKandang(token, getKandang, kemitraan, filterPPL, role, kemitraanId);
+            resultPeternak.push(...result.peternak);
+            resultKandangActive.push(...result.kandangActive);
         }
 
         // get total peternak
@@ -93,6 +96,7 @@ exports.dashboardKemitraan =  async (req, res, next) => {
 
 exports.dashboardKemitraanPopulasi =  async (req, res, next) => {
     try {
+        const token = req.headers['authorization']
         let role = req.user.role ? req.user.role.name : '';
         let { city, kemitraan } = req.query;
         let filter = {}
@@ -103,6 +107,12 @@ exports.dashboardKemitraanPopulasi =  async (req, res, next) => {
         filter.deleted = false;
 
         const getKandang = await Kandang.find(filter);
+        const users = await fetch(`${urlAuth}/api/users/`, {
+            method: 'GET',
+            headers: {'Authorization': token,
+            "Content-Type": "application/json"}
+        }).then(res => res.json()).then(data => data.data)
+
         await Promise.map(getKandang, async (dataItem, index) => {
             let filterPeriod = {};
             filterPeriod.kandang = dataItem.id;
@@ -124,14 +134,7 @@ exports.dashboardKemitraanPopulasi =  async (req, res, next) => {
                 let usia = Math.round(Math.abs((now - start) / ONE_DAY))
 
                 //find detail peternak
-                // const findUser = await fetch(`https://${urlAuth}/api/users/${periode.kandang.createdBy}`, {
-                //     method: 'GET',
-                //     headers: {'Authorization': token,
-                //     "Content-Type": "application/json"}
-                // }).then(res => res.json()).then(data => data.data)
-
-                const findUser = await User.findById(periode.kandang.createdBy);
-
+                const findUser = users.find(user => user._id.toString() === periode.kandang.createdBy.toString())                
                 let namaPemilik = findUser ? findUser.fullname : ""
                 if (namaPemilik !== "") {
                     resultPeriode.push({
@@ -175,8 +178,8 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
             sort = { createdAt: -1 }
         }
 
-        const dataKandang = await Kandang.find(filter).sort(sort);
-        const resultPeriods = await handlePeriode(true, dataKandang, populasi, kemitraan, req.user, role, usiaFrom, usiaTo, bobotFrom, bobotTo);
+        const dataKandang = await Kandang.find(filter).sort(sort).select('_id');
+        const resultPeriods = await handlePeriode(true, token, dataKandang, populasi, kemitraan, req.user, role, usiaFrom, usiaTo, bobotFrom, bobotTo);
         resultPeriode.push(...resultPeriods);
 
         let countPopulasi = resultPeriode.reduce((a, {populasi}) => a + populasi, 0);
@@ -197,10 +200,11 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
         }
 
         const resultPeriodeSort = resultPeriode.sort(dynamicSort("namaPemilik"));
+        const resultPagination = paginate(resultPeriodeSort, limit, offsetPaging)
 
-        res.json({
+        return res.json({
             count: resultPeriode.length,
-            ketersediaan: paginate(resultPeriodeSort, limit, offsetPaging),
+            ketersediaan: resultPagination,
             summary: {
                 totalPopulasi: Math.ceil(countPopulasi),
                 averageUsia: Math.ceil(countUsia),
@@ -234,9 +238,9 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
             sort = { createdAt: -1 }
         }
 
-        let dataKandang = await Kandang.find(filter).sort(sort);
+        const dataKandang = await Kandang.find(filter).sort(sort).select('_id');
 
-        const resultPeriods = await handlePeriode(true, dataKandang, populasi, kemitraan, req.user, role, usiaFrom, usiaTo, bobotFrom, bobotTo);
+        const resultPeriods = await handlePeriode(true, token, dataKandang, populasi, kemitraan, req.user, role, usiaFrom, usiaTo, bobotFrom, bobotTo);
         resultPeriode.push(...resultPeriods)
 
         let countPopulasi = resultPeriode.reduce((a, {populasi}) => a + populasi, 0);
@@ -257,24 +261,32 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
         }
 
         const resultPeriodeSort = resultPeriode.sort(dynamicSort("namaPemilik"));
+        const paginateResult = paginate(resultPeriodeSort, limit, offsetPaging); 
 
-        res.json({
+        return res.json({
             count: resultPeriode.length,
-            ketersediaan: paginate(resultPeriodeSort, limit, offsetPaging),
+            ketersediaan: paginateResult,
             summary: {
                 totalPopulasi: Math.ceil(countPopulasi),
                 averageUsia: Math.ceil(countUsia),
                 averageBobot: Math.ceil(countBobot)
             }
         })
+        
     } catch (error) {
         next(error)
     }
 }
 
-const handleResultKandang = async(getKandang, kemitraan, filterPPL, role, kemitraanId) => {
+const handleResultKandang = async(token, getKandang, kemitraan, filterPPL, role, kemitraanId) => {
     const kandangActive = [];
     const peternak = [];
+    const users = await fetch(`${urlAuth}/api/users/`, {
+        method: 'GET',
+        headers: {'Authorization': token,
+        "Content-Type": "application/json"}
+    }).then(res => res.json()).then(data => data.data);
+
     await Promise.map(getKandang, async (dataItem, index) => {
         const filterPeriod = {};
         filterPeriod.kandang = dataItem.id;
@@ -291,12 +303,7 @@ const handleResultKandang = async(getKandang, kemitraan, filterPPL, role, kemitr
         const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 });
         if (periode?.kandang && periode?.kemitraan && periode?.kandang?.createdBy) {
             //find detail peternak
-            // const findUser = await fetch(`https://${urlAuth}/api/users/${periode.kandang.createdBy}`, {
-            //     method: 'GET',
-            //     headers: {'Authorization': token,
-            //     "Content-Type": "application/json"}
-            // }).then(res => res.json()).then(data => data.data)
-            const findUser = await User.findById(periode.kandang.createdBy);
+            const findUser = users.find(user => user._id.toString() === periode?.kandang?.createdBy.toString());
             const namaPemilik = findUser ? findUser.fullname : "";
             const idPemilik = findUser ? findUser._id : "";
 
@@ -316,35 +323,24 @@ const handleResultKandang = async(getKandang, kemitraan, filterPPL, role, kemitr
     return {kandangActive, peternak}
 }
 
-const handlePeriode = async(isKemitraan, dataKandang, populasi, kemitraan, user, role, usiaFrom, usiaTo, bobotFrom, bobotTo) => {
-    const resultPeriode = [];
-    await Promise.map(dataKandang, async (dataItem, index) => {
+const handlePeriode = async(isKemitraan, token, dataKandang, populasi, kemitraan, user, role, usiaFrom, usiaTo, bobotFrom, bobotTo) => {
+    const users = await fetch(`${urlAuth}/api/users/`, {
+        method: 'GET',
+        headers: {'Authorization': token,
+        "Content-Type": "application/json"}
+    }).then(res => res.json()).then(data => data.data)
+
+    return Promise.map(dataKandang, async (dataItem, index) => {
         const filterPeriod = {};
         filterPeriod.kandang = dataItem.id;
         filterPeriod.isEnd = false;
 
-        if (populasi) {
-            switch (populasi) {
-                case '10000':
-                    filterPeriod.populasi = { $gte: 0, $lte: 10000 };
-                    break;
-                case '20000':
-                    filterPeriod.populasi = { $gte: 10001, $lte: 20000 };
-                    break;
-                case '30000':
-                    filterPeriod.populasi = { $gte: 20001, $lte: 30000 };
-                    break;
-                case '40000':
-                    filterPeriod.populasi = { $gte: 30001, $lte: 40000 };
-                    break;
-                case '50000':
-                    filterPeriod.populasi = { $gte: 40001, $lte: 50000 };
-                    break;
-                case '50001':
-                    filterPeriod.populasi = { $gte: 50001 };
-                    break;
-            }
-        }
+        if (populasi === '10000') filterPeriod.populasi = {$gte: 0, $lte: 10000}
+        if (populasi === '20000') filterPeriod.populasi = {$gte: 10001, $lte: 20000}
+        if (populasi === '30000') filterPeriod.populasi = {$gte: 20001, $lte: 30000}
+        if (populasi === '40000') filterPeriod.populasi = {$gte: 30001, $lte: 40000}
+        if (populasi === '50000') filterPeriod.populasi = {$gte: 40001, $lte: 50000}
+        if (populasi === '50001') filterPeriod.populasi = {$gte: 50001}
 
         if (kemitraan) {
             filterPeriod.kemitraan = kemitraan;
@@ -368,7 +364,7 @@ const handlePeriode = async(isKemitraan, dataKandang, populasi, kemitraan, user,
             }
 
             // get weight actual
-            const getKegiatan = await KegiatanHarian.find(query).sort({'tanggal': -1}).limit(1).select('-periode')
+            const getKegiatan = await KegiatanHarian.findOne(query).sort({'tanggal': -1}).select('-periode')
             /**
              * Sanja Remark
              * Old logic to calculate avg latest weight
@@ -392,8 +388,8 @@ const handlePeriode = async(isKemitraan, dataKandang, populasi, kemitraan, user,
             //     avgLatestWeight = isFinite(bobotFixed) && bobotFixed || 0;
             // }
 
-            const latestWeight = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0) : 0
-            const latestSampling = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {populasi}) => a + populasi, 0) : 0
+            const latestWeight = getKegiatan ? getKegiatan.berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0) : 0
+            const latestSampling = getKegiatan ? getKegiatan.berat.reduce((a, {populasi}) => a + populasi, 0) : 0
             const totalAvgLatestWeight = latestWeight/latestSampling
             const avgLatestWeight = totalAvgLatestWeight ? totalAvgLatestWeight : 0
 
@@ -404,77 +400,73 @@ const handlePeriode = async(isKemitraan, dataKandang, populasi, kemitraan, user,
                 }
             }
 
-            if (usiaFrom) {
+            if (usiaFrom && !usiaTo && !bobotFrom && !bobotTo) {
                 if (age >= usiaFrom) {
                     pushData = true;
                 }
             }
 
-            if (usiaTo) {
+            if (!usiaFrom && usiaTo && !bobotFrom && !bobotTo) {
                 if (age <= usiaTo) {
                     pushData = true;
                 }
             }
 
-            if (usiaFrom && usiaTo) {
+            if (usiaFrom && usiaTo && !bobotFrom && !bobotTo) {
                 if (age >= usiaFrom && age <= usiaTo) {
                     pushData = true;
                 }
             }
 
-            if (bobotFrom) {
+            if (!usiaFrom && !usiaTo && bobotFrom && !bobotTo) {
                 if (avgLatestWeight >= bobotFrom) {
                     pushData = true;
                 }
             }
 
-            if (bobotTo) {
+            if (!usiaFrom && !usiaTo && !bobotFrom && bobotTo) {
                 if (avgLatestWeight <= bobotTo) {
                     pushData = true;
                 }
             }
 
-            if (bobotFrom && bobotTo) {
+            if (!usiaFrom && !usiaTo && bobotFrom && bobotTo) {
                 if (avgLatestWeight >= bobotFrom && avgLatestWeight <= bobotTo) {
                     pushData = true;
                 }
             }
 
-            if (!usiaFrom && !usiaTo && !bobotFrom && !bobotTo) {
+            if (usiaFrom === "" && usiaTo === "" && bobotFrom === "" && bobotTo === "") {
                 pushData = true;
             }
 
             if (pushData) {
                 //find detail peternak
-                // const findUser = await fetch(`https://${urlAuth}/api/users/${periode.kandang.createdBy}`, {
-                //     method: 'GET',
-                //     headers: {'Authorization': token,
-                //     "Content-Type": "application/json"}
-                // }).then(res => res.json()).then(data => data.data)
-                const findUser = await User.findById(periode?.kandang?.createdBy);
-
+                const findUser = users.find(user => user._id.toString() === periode?.kandang?.createdBy.toString());
                 const namaPemilik = findUser ? findUser.fullname : "";
                 const namaPemilikSTR = namaPemilik.toLowerCase().replace(/\b[a-z]/g, function (letter) {
                     return letter.toUpperCase();
                 });
-                if (namaPemilik) {
-                    resultPeriode.push({
-                        idKandang: periode.kandang.id,
-                        namaKandang: periode.kandang.kode,
-                        kota: periode.kandang.kota,
-                        DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                        bobot: avgLatestWeight,
-                        usia: age,
-                        populasi: periode.populasi,
-                        IdKemitraan: periode.kemitraan ? periode.kemitraan.id : null,
-                        namaKemitraan: periode.kemitraan ? periode.kemitraan.name : "",
-                        idPemilik: periode.kandang.createdBy ? periode.kandang.createdBy._id : null,
-                        namaPemilik: namaPemilikSTR,
-                    });
+
+                if (!namaPemilik) {
+                    return
                 }
+
+                return({
+                    idKandang: periode.kandang.id,
+                    namaKandang: periode.kandang.kode,
+                    kota: periode.kandang.kota,
+                    DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
+                    bobot: avgLatestWeight,
+                    usia: age,
+                    populasi: periode.populasi,
+                    IdKemitraan: periode.kemitraan ? periode.kemitraan.id : null,
+                    namaKemitraan: periode.kemitraan ? periode.kemitraan.name : "",
+                    idPemilik: periode.kandang.createdBy ? periode.kandang.createdBy._id : null,
+                    namaPemilik: namaPemilikSTR,
+                });
             }
         }
-    });
-    return resultPeriode;
+    }).filter(result => result);
 }
 
