@@ -9,7 +9,7 @@ const Promise = require("bluebird");
 const mongoose = require('mongoose');
 const fetch = require('node-fetch')
 const reducer = (acc, value) => acc + value;
-var urlIOT = process.env.DB_NAME === "chckin" ? `prod-iot.chickinindonesia.com` : `staging-iot.chickinindonesia.com`
+var urlIOT = process.env.DB_NAME === "chckin" ? `172.18.0.4:3103` : `172.19.0.2:3104`
 const handleQuerySort = (query) => {
     try{
       const toJSONString = ("{" + query + "}").replace(/(\w+:)|(\w+ :)/g, (matched => {
@@ -196,7 +196,7 @@ exports.findById = async (req, res, next) => {
                     }
                 });
                 
-                flock = await fetch(`https://${urlIOT}/api/flock/kandang/` + itemKandang._id, {
+                flock = await fetch(`http://${urlIOT}/api/flock/datapool/kandang/` + itemKandang._id, {
                     method: 'get',
                     headers: {
                         'Authorization': token,
@@ -213,7 +213,7 @@ exports.findById = async (req, res, next) => {
                 namaPemilik: itemKandang.createdBy ? itemKandang.createdBy.fullname : null,
                 idKandang: itemKandang._id,
                 namaKandang: itemKandang.kode,
-                isIoTInstalled:flock.data?.flock ? true : false,
+                isIoTInstalled:flock.data?.flock.length!=0 ? true : false,
                 alamat: itemKandang.alamat,
                 kota: itemKandang.kota,
                 isActive: itemKandang.isActive,

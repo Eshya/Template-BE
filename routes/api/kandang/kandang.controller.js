@@ -18,7 +18,7 @@ const ONE_DAY = 24 * 60 * 60 * 1000;
 const moment = require('moment');
 const excelJS = require("exceljs");
 
-var urlIOT = process.env.DB_NAME === "chckin" ? `prod-iot.chickinindonesia.com` : `staging-iot.chickinindonesia.com`
+var urlIOT = process.env.DB_NAME === "chckin" ? `172.18.0.4:3103` : `172.19.0.2:3104`
 var urlAuth = process.env.DB_NAME === "chckin" ? `auth.chickinindonesia.com` : `staging-auth.chickinindonesia.com`
 const handleQuerySort = (query) => {
     try{
@@ -145,7 +145,7 @@ exports.findAllDataPool =  async (req, res, next) => {
                     });
                     // find flock IoT
                     let flock = [];
-                    flock = await fetch(`https://${urlIOT}/api/flock/kandang/` + data[i]._id, {
+                    flock = await fetch(`http://${urlIOT}/api/flock/datapool/kandang/` + data[i]._id, {
                         method: 'get',
                         headers: {
                             'Authorization': token,
@@ -162,7 +162,7 @@ exports.findAllDataPool =  async (req, res, next) => {
                             namaPemilik: namaPemilik,
                             idKandang: data[i]._id,
                             namaKandang: namaKandangSTR,
-                            isIoTInstalled:flock.data?.flock ? true : false,
+                            isIoTInstalled:flock.data?.flock.length!=0 ? true : false,
                             kota: data[i].kota,
                             isActive: data[i].isActive ? "Aktif" : "Rehat",
                             usia: usia,
@@ -218,7 +218,7 @@ exports.findAllDataPool =  async (req, res, next) => {
                     });
                     // find flock iot
                     let flock = [];
-                    flock = await fetch(`https://${urlIOT}/api/flock/kandang/` + data[i]._id, {
+                    flock = await fetch(`http://${urlIOT}/api/flock/datapool/kandang/` + data[i]._id, {
                         method: 'get',
                         headers: {
                             'Authorization': token,
@@ -229,14 +229,14 @@ exports.findAllDataPool =  async (req, res, next) => {
                         }
                     });
                     // console.log(`2id kandang:${data[i]._id} id flock ${flock}`)
-                    console.log(flock.data?.flock ? true : false)
+                    console.log(flock)
                     // if (namaPemilik !== "") {
                         result.push({
                             idPemilik: data[i].createdBy ? data[i].createdBy._id : null,
                             namaPemilik: namaPemilik,
                             idKandang: data[i]._id,
                             namaKandang: namaKandangSTR,
-                            isIoTInstalled:flock.data?.flock ? true : false,
+                            isIoTInstalled:flock.data?.flock.length!=0 ? true : false,
                             kota: data[i].kota,
                             isActive: data[i].isActive ? "Aktif" : "Rehat",
                             usia: usia,
@@ -253,7 +253,7 @@ exports.findAllDataPool =  async (req, res, next) => {
                     let namaPemilik = findUser ? findUser.fullname : ""
                     /// find flock from iot
                     let flock = [];
-                    flock = await fetch(`https://${urlIOT}/api/flock/kandang/` + data[i]._id, {
+                    flock = await fetch(`http://${urlIOT}/api/flock/datapool/kandang/` + data[i]._id, {
                         method: 'get',
                         headers: {
                             'Authorization': token,
@@ -264,7 +264,7 @@ exports.findAllDataPool =  async (req, res, next) => {
                         }
                     });
                     // console.log(`3id kandang:${data[i]._id} id flock ${flock}`)
-                    console.log(flock.data?.flock ? true : false)
+                    console.log(flock)
                     // sort by nama kandang
                     let namaKandang = data[i].kode ? data[i].kode : ""
                     let namaKandangSTR = namaKandang.toLowerCase().replace(/\b[a-z]/g, function(letter) {
@@ -277,7 +277,7 @@ exports.findAllDataPool =  async (req, res, next) => {
                             namaPemilik: namaPemilik,
                             idKandang: data[i]._id,
                             namaKandang: namaKandangSTR,
-                            isIoTInstalled:flock.data?.flock ? true : false,
+                            isIoTInstalled:flock.data?.flock.length!=0 ? true : false,
                             kota: data[i].kota,
                             isActive: data[i].isActive ? "Aktif" : "Rehat",
                             usia: 0,
@@ -1707,7 +1707,7 @@ exports.getKelola = async (req, res, next) => {
 
             //get flock
             let flock = [];
-            flock = await fetch(`https://${urlIOT}/api/flock/kandang/` + item._id, {
+            flock = await fetch(`http://${urlIOT}/api/flock/kandang/` + item._id, {
                 method: 'get',
                 headers: {
                     'Authorization': token,
@@ -1891,7 +1891,7 @@ exports.kelolaPeternak = async (req, res, next) => {
             const start = new Date(findPeriode[0].tanggalMulai)
             const umur = Math.round(Math.abs((now - start) / ONE_DAY))
 
-            const suhu = await fetch(`https://${urlIOT}/api/flock/kandang/${x._id}`,{
+            const suhu = await fetch(`http://${urlIOT}/api/flock/kandang/${x._id}`,{
                 method: 'GET',
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
@@ -1964,7 +1964,7 @@ exports.kelolaPPL = async (req, res, next) => {
             const bawah = FCR * (dataPakan.length-1)
             const IP = (atas/bawah) * 100
 
-            const suhu = await fetch(`https://${urlIOT}/api/flock/kandang/${x.kandang}`,{
+            const suhu = await fetch(`http://${urlIOT}/api/flock/kandang/${x.kandang}`,{
                 method: 'GET',
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
@@ -2033,7 +2033,7 @@ exports.detailKandang = async (req,res, next) => {
 
             return {...x.toObject(), umur: umur, estimasi: estimasi, user: findUser}
         }))
-        const suhu = await fetch(`https://${urlIOT}/api/flock/kandang/${id}`,{
+        const suhu = await fetch(`http://${urlIOT}/api/flock/kandang/${id}`,{
                 method: 'GET',
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}

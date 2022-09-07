@@ -10,7 +10,7 @@ const PeternakModel = require('../peternak/peternak.model');
 const fetch = require('node-fetch')
 const Promise = require("bluebird");
 const reducer = (acc, value) => acc + value;
-var urlIOT = process.env.DB_NAME === "chckin" ? `prod-iot.chickinindonesia.com` : `staging-iot.chickinindonesia.com`
+var urlIOT = process.env.DB_NAME === "chckin" ? `172.18.0.4:3103` : `172.19.0.2:3104`
 const handleQuerySort = (query) => {
     try{
       const toJSONString = ("{" + query + "}").replace(/(\w+:)|(\w+ :)/g, (matched => {
@@ -147,7 +147,7 @@ exports.findById = async (req, res, next) => {
                 // console.log(pendapatanPeternak)
                 const peternak = await PeternakModel.findById(findKandang.createdBy._id).select('fullname')
                 // fund flock iot
-                flock = await fetch(`https://${urlIOT}/api/flock/kandang/` + itemKandang._id, {
+                flock = await fetch(`http://${urlIOT}/api/flock/datapool/kandang/` + itemKandang._id, {
                     method: 'get',
                     headers: {
                         'Authorization': token,
@@ -162,7 +162,7 @@ exports.findById = async (req, res, next) => {
                     namaPemilik: findKandang.createdBy ? (peternak?.fullname ? peternak.fullname : "Not Registered") : null,
                     idKandang: findKandang._id,
                     namaKandang: findKandang.kode,
-                    isIoTInstalled:flock.data?.flock ? true : false,
+                    isIoTInstalled:flock.data?.flock.length!=0 ? true : false,
                     alamat: findKandang.alamat,
                     kota: findKandang.kota,
                     isActive: findKandang.isActive,
