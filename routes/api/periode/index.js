@@ -25,6 +25,6 @@ router.put('/:id', auth, paramCek, c.updateById);
 router.put('/', auth, c.updateWhere);
 router.delete('/', auth, c.remove);
 router.delete('/:id', auth, paramCek, c.removeById);
-router.post('/autoCloseCultivation', verifyApiKey, c.autoCloseCultivation );
+router.post('/autoClosingCultivate', verifyApiKey, c.autoClosingCultivation );
 module.exports = router;
 
