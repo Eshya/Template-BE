@@ -581,6 +581,20 @@ exports.findOneDataPool =  async (req, res, next) => {
             const STD = await DataSTD.findOne({day: usia})
             const peternak = await PeternakModel.findById(periode.kandang.createdBy._id).select('fullname phoneNumber')
             const findPPL = await PeternakModel.findById(periode?.ppl);
+
+            /// iot flock 
+            let flock = [];
+            flock = await fetch(`http://${urlIOT}/api/flock/datapool/kandang/` + periode.kandang._id, {
+                method: 'get',
+                headers: {
+                    'Authorization': token,
+                    "Content-Type": "application/json" }
+            }).then(result => {
+                if (result.ok) {
+                    return result.json();
+                }
+            });
+
             dataKandang = {
                 idPemilik: periode.kandang.createdBy ? periode.kandang.createdBy._id : null,
                 namaPemilik: peternak?.fullname,
@@ -589,6 +603,7 @@ exports.findOneDataPool =  async (req, res, next) => {
                 namaPPL: periode?.isActivePPL ? findPPL.fullname : "PPL Not Active",
                 phonePPL: periode?.isActivePPL ? findPPL.phoneNumber : null,
                 idKandang: periode.kandang._id,
+                isIoTInstalled:flock.data?.flock.length!=0 ? true : false,
                 namaKandang: periode.kandang.kode,
                 alamat: periode.kandang.alamat,
                 kota: periode.kandang.kota,
