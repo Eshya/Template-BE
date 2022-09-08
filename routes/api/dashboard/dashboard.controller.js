@@ -184,7 +184,7 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
 
         const dataKandang = await Kandang.find(filter).sort(sort).select('_id');
         const resultPeriods = await handlePeriode(true, token, dataKandang, populasi, kemitraan, req.user, role, usiaFrom, usiaTo, bobotFrom, bobotTo);
-        resultPeriode.push(...resultPeriods);
+        resultPeriode.push(...resultPeriods.filter(result => result));
 
         let countPopulasi = resultPeriode.reduce((a, {populasi}) => a + populasi, 0);
         let countUsia = (resultPeriode.reduce((a, {usia}) => a + usia, 0) / resultPeriode.length);
@@ -249,7 +249,7 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
         const dataKandang = await Kandang.find(filter).sort(sort).select('_id');
 
         const resultPeriods = await handlePeriode(true, token, dataKandang, populasi, kemitraan, req.user, role, usiaFrom, usiaTo, bobotFrom, bobotTo);
-        resultPeriode.push(...resultPeriods)
+        resultPeriode.push(...resultPeriods.filter(result => result))
 
         let countPopulasi = resultPeriode.reduce((a, {populasi}) => a + populasi, 0);
         let countUsia = (resultPeriode.reduce((a, {usia}) => a + usia, 0) / resultPeriode.length);
@@ -452,7 +452,7 @@ const handlePeriode = async(isKemitraan, token, dataKandang, populasi, kemitraan
                 //find detail peternak
                 const findUser = users.find(user => user._id.toString() === periode?.kandang?.createdBy.toString());
                 const namaPemilik = findUser ? findUser.fullname : "";
-                const namaPemilikSTR = namaPemilik.toLowerCase().replace(/\b[a-z]/g, function (letter) {
+                const namaPemilikSTR = namaPemilik.toLowerCase().replace(/\b[a-z]/g, (letter) => {
                     return letter.toUpperCase();
                 });
 
@@ -475,6 +475,6 @@ const handlePeriode = async(isKemitraan, token, dataKandang, populasi, kemitraan
                 });
             }
         }
-    }).filter(result => result);
+    });
 }
 
