@@ -380,6 +380,9 @@ exports.ringkasan = async (req, res, next) => {
         const bawah = FCR*(dataPakan.length-1)
         const IP = (atas / bawah) * 100
         // const populasiAktual = getPeriode.populasi - allPenjualan;
+        const std = await Data.findOne({day: umur})
+
+        const rgr = umur === 7 ? (avgBW7 - avgBW0) / avgBW0 * 100 : 0
 
         res.json({
             populasiAkhir: populasiAkhir,
@@ -394,7 +397,9 @@ exports.ringkasan = async (req, res, next) => {
             feedIntake: latestFeed * 1000 / populasiAkhir,
             ADG: 0,
             fcrAktual: FCR,
-            diffFcr: 0,
+            diffFcr: FCR - std.fcr,
+            RGR: rgr,
+            diffRgr: rgr - std.rgr,
             pakanMasuk: pakanMasuk,
             pakanPakai: allPakan,
             pakan: pakanMasuk - allPakan,
