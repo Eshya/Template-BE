@@ -51,7 +51,7 @@ function dynamicSort(property) {
 function removeDuplicatesData(array) {
     return [...new Set(array)];
 }
-// Total kemitraan dan total kandang
+
 exports.dashboardKemitraan =  async (req, res, next) => {
     try {
         const token = req.headers['authorization']
@@ -156,6 +156,10 @@ exports.dashboardKemitraanPopulasi =  async (req, res, next) => {
     }
 }
 
+/**
+ * TODO:
+ * Need more improvement for pagination and filter section
+*/
 exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
     try {
         const token = req.headers['authorization']
@@ -216,6 +220,10 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
     }
 }
 
+/**
+ * TODO:
+ * Need more improvement for pagination and filter section
+*/
 exports.dashboardSalesKetersediaan =  async (req, res, next) => {
     try {
         const token = req.headers['authorization']
