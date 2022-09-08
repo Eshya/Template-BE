@@ -548,3 +548,28 @@ exports.validateTambah = async (req,res, next) => {
         next(error)
     }
 }
+
+exports.autoClosingCultivation = async(req, res, next) => {
+    const periods = await Model.find({}).sort('updatedAt');
+    try {
+        for (const periode of periods) {
+            const oneDay = 24 * 60 * 60 * 1000;
+            const now = new Date(Date.now());
+            const start = new Date(periode.tanggalMulai);
+            const chickenAge = Math.round(Math.abs((now - start) / oneDay))
+            const kandang = await Kandang.findById(periode.kandang);
+        
+            if (chickenAge >= 50) {
+                periode.isEnd = true
+                kandang.isActive = false
+            }
+    
+            await periode.save();
+        }
+
+        return res.json({ status: 200, message: 'Successfully Auto Closing' });
+    } catch (error) {
+        return res.json({ status: 500, message: error })
+    }
+    
+}
