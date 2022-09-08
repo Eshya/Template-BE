@@ -19,7 +19,8 @@ const moment = require('moment');
 const excelJS = require("exceljs");
 
 var urlIOT = process.env.DB_NAME === "chckin" ? `prod-iot.chickinindonesia.com` : `staging-iot.chickinindonesia.com`
-var urlAuth = process.env.DB_NAME === "chckin" ? `auth.chickinindonesia.com` : `staging-auth.chickinindonesia.com`
+// var urlAuth = process.env.DB_NAME === "chckin" ? `auth.chickinindonesia.com` : `staging-auth.chickinindonesia.com`
+var urlAuth = 'http://localhost:3105'
 const handleQuerySort = (query) => {
     try{
       const toJSONString = ("{" + query + "}").replace(/(\w+:)|(\w+ :)/g, (matched => {
@@ -79,183 +80,189 @@ function paginate(array, page_size, page_number) {
     return array.slice((page_number - 1) * page_size, page_number * page_size);
 }
 
-exports.findAllDataPool =  async (req, res, next) => {
-    try {
-        const token = req.headers['authorization']
-        const {limit, offset} = parseQuery(req.query);
-        const { name, address, city, isActive } = req.query;
-        let sort = handleQuerySort(req.query.sort);
-        let role = req.user.role ? req.user.role.name : '';
-        let kemitraanId = req.user.kemitraanUser ? req.user.kemitraanUser._id : '';
-        const filter = {}
-        if (name) {
-            filter.kode = new RegExp(name, 'i') 
-        }
-        if (address) {
-            filter.alamat = new RegExp(address, 'i') 
-        }
-        if (city) {
-            filter.kota = new RegExp(city, 'i') 
-        }
-        if (isActive) {
-            filter.isActive = isActive
-        }
-        filter.deleted = false;
+/**
+ * Sanja Remark
+ * This is old endpoint for get all data pool 
+ */
 
-        if (!req.query.sort) {
-            sort = { kode: 1 }
-        }
+// exports.findAllDataPool =  async (req, res, next) => {
+//     try {
+//         const token = req.headers['authorization']
+//         const {limit, offset} = parseQuery(req.query);
+//         const { name, address, city, isActive } = req.query;
+//         let sort = handleQuerySort(req.query.sort);
+//         let role = req.user.role ? req.user.role.name : '';
+//         let kemitraanId = req.user.kemitraanUser ? req.user.kemitraanUser._id : '';
+//         const filter = {}
+//         if (name) {
+//             filter.kode = new RegExp(name, 'i') 
+//         }
+//         if (address) {
+//             filter.alamat = new RegExp(address, 'i') 
+//         }
+//         if (city) {
+//             filter.kota = new RegExp(city, 'i') 
+//         }
+//         if (isActive) {
+//             filter.isActive = isActive
+//         }
+//         filter.deleted = false;
 
-        let count;
-        let result = [];
-        if (role === "adminkemitraan") {
-            const data = await Model.find(filter).sort(sort)
-            for (let i = 0; i < data.length; i++) {
-                let filterPeriod = {};
-                filterPeriod.kandang = data[i].id;
-                filterPeriod.kemitraan = kemitraanId
-                const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 })
-                if (periode && periode.kandang) {
-                    // get periode ke
-                    const kandang = await Periode.find(filterPeriod).sort('tanggalMulai')
-                    let dataPeriode = [];
-                    await Promise.map(kandang, async (itemKandang, index) => {
-                        if (itemKandang._id.toString() === periode._id.toString()) {
-                            dataPeriode.push(index + 1);
-                        }
-                    });
+//         if (!req.query.sort) {
+//             sort = { kode: 1 }
+//         }
+
+//         let count;
+//         let result = [];
+//         if (role === "adminkemitraan") {
+//             const data = await Model.find(filter).sort(sort)
+//             for (let i = 0; i < data.length; i++) {
+//                 let filterPeriod = {};
+//                 filterPeriod.kandang = data[i].id;
+//                 filterPeriod.kemitraan = kemitraanId
+//                 const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 });
+//                 if (periode && periode.kandang) {
+//                     // get periode ke
+//                     const kandang = await Periode.find(filterPeriod).sort('tanggalMulai')
+//                     let dataPeriode = [];
+//                     await Promise.map(kandang, async (itemKandang, index) => {
+//                         if (itemKandang._id.toString() === periode._id.toString()) {
+//                             dataPeriode.push(index + 1);
+//                         }
+//                     });
     
-                    // get usia
-                    const now = new Date(Date.now());
-                    const start = new Date(periode.tanggalMulai);
-                    const usia = periode.isEnd ? Math.round(Math.abs((periode.tanggalAkhir - start) / ONE_DAY)) :  Math.round(Math.abs((now - start) / ONE_DAY))
+//                     // get usia
+//                     const now = new Date(Date.now());
+//                     const start = new Date(periode.tanggalMulai);
+//                     const usia = periode.isEnd ? Math.round(Math.abs((periode.tanggalAkhir - start) / ONE_DAY)) :  Math.round(Math.abs((now - start) / ONE_DAY))
 
-                    //find detail peternak
-                    const findUser = await fetch(`https://${urlAuth}/api/users/${data[i].createdBy}`, {
-                        method: 'GET',
-                        headers: {'Authorization': token,
-                        "Content-Type": "application/json"}
-                    }).then(res => res.json()).then(data => data.data)
-                    let namaPemilik = findUser ? findUser.fullname : ""
+//                     //find detail peternak
+//                     const findUser = await fetch(`${urlAuth}/api/users/${data[i].createdBy}`, {
+//                         method: 'GET',
+//                         headers: {'Authorization': token,
+//                         "Content-Type": "application/json"}
+//                     }).then(res => res.json()).then(data => data.data)
+//                     let namaPemilik = findUser ? findUser.fullname : ""
 
-                    // sort by nama kandang
-                    let namaKandang = data[i].kode ? data[i].kode : ""
-                    let namaKandangSTR = namaKandang.toLowerCase().replace(/\b[a-z]/g, function(letter) {
-                        return letter.toUpperCase();
-                    });
+//                     // sort by nama kandang
+//                     let namaKandang = data[i].kode ? data[i].kode : ""
+//                     let namaKandangSTR = namaKandang.toLowerCase().replace(/\b[a-z]/g, function(letter) {
+//                         return letter.toUpperCase();
+//                     });
 
-                    if (namaPemilik !== "") {
-                        result.push({
-                            idPemilik: data[i].createdBy ? data[i].createdBy._id : null,
-                            namaPemilik: namaPemilik,
-                            idKandang: data[i]._id,
-                            namaKandang: namaKandangSTR,
-                            kota: data[i].kota,
-                            isActive: data[i].isActive ? "Aktif" : "Rehat",
-                            usia: usia,
-                            periodeKe: dataPeriode[0]
-                        });
-                    }
-                }
-            }
-            count = result.length
-            let offsetPaging;
-            if (offset == 0) {
-                offsetPaging = 1
-            } else {
-                offsetPaging = (offset / 10 + 1)
-            }
-            let resultSort = result.sort(dynamicSort("namaKandang"));
-            result = paginate(resultSort, limit, offsetPaging)
-        } else {
-            count = await Model.countDocuments(filter)
-            const data = await Model.find(filter).limit(limit).skip(offset).sort(sort)
-            for (let i = 0; i < data.length; i++) {
-                let filterPeriod = {};
-                filterPeriod.kandang = data[i].id;
-                const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 })
-                if (periode && periode.kandang) {
-                    // get periode ke
-                    const kandang = await Periode.find(filterPeriod).sort('tanggalMulai')
-                    let dataPeriode = [];
-                    await Promise.map(kandang, async (itemKandang, index) => {
-                        if (itemKandang._id.toString() === periode._id.toString()) {
-                            dataPeriode.push(index + 1);
-                        }
-                    });
+//                     if (namaPemilik !== "") {
+//                         result.push({
+//                             idPemilik: data[i].createdBy ? data[i].createdBy._id : null,
+//                             namaPemilik: namaPemilik,
+//                             idKandang: data[i]._id,
+//                             namaKandang: namaKandangSTR,
+//                             kota: data[i].kota,
+//                             isActive: data[i].isActive ? "Aktif" : "Rehat",
+//                             usia: usia,
+//                             periodeKe: dataPeriode[0]
+//                         });
+//                     }
+//                 }
+//             }
+//             count = result.length
+//             let offsetPaging;
+//             if (offset == 0) {
+//                 offsetPaging = 1
+//             } else {
+//                 offsetPaging = (offset / 10 + 1)
+//             }
+//             let resultSort = result.sort(dynamicSort("namaKandang"));
+//             result = paginate(resultSort, limit, offsetPaging)
+//         } else {
+//             count = await Model.countDocuments(filter)
+//             const data = await Model.find(filter).limit(limit).skip(offset).sort(sort)
+//             for (let i = 0; i < data.length; i++) {
+//                 let filterPeriod = {};
+//                 filterPeriod.kandang = data[i].id;
+//                 const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 })
+//                 if (periode && periode.kandang) {
+//                     // get periode ke
+//                     const kandang = await Periode.find(filterPeriod).sort('tanggalMulai')
+//                     let dataPeriode = [];
+//                     await Promise.map(kandang, async (itemKandang, index) => {
+//                         if (itemKandang._id.toString() === periode._id.toString()) {
+//                             dataPeriode.push(index + 1);
+//                         }
+//                     });
     
-                    // get usia
-                    const now = new Date(Date.now());
-                    const start = new Date(periode.tanggalMulai);
-                    const usia = periode.isEnd ? Math.round(Math.abs((periode.tanggalAkhir - start) / ONE_DAY)) :  Math.round(Math.abs((now - start) / ONE_DAY))
+//                     // get usia
+//                     const now = new Date(Date.now());
+//                     const start = new Date(periode.tanggalMulai);
+//                     const usia = periode.isEnd ? Math.round(Math.abs((periode.tanggalAkhir - start) / ONE_DAY)) :  Math.round(Math.abs((now - start) / ONE_DAY))
 
-                    //find detail peternak
-                    const findUser = await fetch(`https://${urlAuth}/api/users/${data[i].createdBy}`, {
-                        method: 'GET',
-                        headers: {'Authorization': token,
-                        "Content-Type": "application/json"}
-                    }).then(res => res.json()).then(data => data.data)
-                    let namaPemilik = findUser ? findUser.fullname : ""
+//                     //find detail peternak
+//                     const findUser = await fetch(`${urlAuth}/api/users/${data[i].createdBy}`, {
+//                         method: 'GET',
+//                         headers: {'Authorization': token,
+//                         "Content-Type": "application/json"}
+//                     }).then(res => res.json()).then(data => data.data)
+//                     let namaPemilik = findUser ? findUser.fullname : ""
 
-                    // sort by nama kandang
-                    let namaKandang = data[i].kode ? data[i].kode : ""
-                    let namaKandangSTR = namaKandang.toLowerCase().replace(/\b[a-z]/g, function(letter) {
-                        return letter.toUpperCase();
-                    });
+//                     // sort by nama kandang
+//                     let namaKandang = data[i].kode ? data[i].kode : ""
+//                     let namaKandangSTR = namaKandang.toLowerCase().replace(/\b[a-z]/g, function(letter) {
+//                         return letter.toUpperCase();
+//                     });
     
-                    // if (namaPemilik !== "") {
-                        result.push({
-                            idPemilik: data[i].createdBy ? data[i].createdBy._id : null,
-                            namaPemilik: namaPemilik,
-                            idKandang: data[i]._id,
-                            namaKandang: namaKandangSTR,
-                            kota: data[i].kota,
-                            isActive: data[i].isActive ? "Aktif" : "Rehat",
-                            usia: usia,
-                            periodeKe: dataPeriode[0]
-                        });
-                    // }
-                } else {
-                    //find detail peternak
-                    const findUser = await fetch(`https://${urlAuth}/api/users/${data[i].createdBy}`, {
-                        method: 'GET',
-                        headers: {'Authorization': token,
-                        "Content-Type": "application/json"}
-                    }).then(res => res.json()).then(data => data.data)
-                    let namaPemilik = findUser ? findUser.fullname : ""
+//                     // if (namaPemilik !== "") {
+//                         result.push({
+//                             idPemilik: data[i].createdBy ? data[i].createdBy._id : null,
+//                             namaPemilik: namaPemilik,
+//                             idKandang: data[i]._id,
+//                             namaKandang: namaKandangSTR,
+//                             kota: data[i].kota,
+//                             isActive: data[i].isActive ? "Aktif" : "Rehat",
+//                             usia: usia,
+//                             periodeKe: dataPeriode[0]
+//                         });
+//                     // }
+//                 } else {
+//                     //find detail peternak
+//                     const findUser = await fetch(`${urlAuth}/api/users/${data[i].createdBy}`, {
+//                         method: 'GET',
+//                         headers: {'Authorization': token,
+//                         "Content-Type": "application/json"}
+//                     }).then(res => res.json()).then(data => data.data)
+//                     let namaPemilik = findUser ? findUser.fullname : ""
 
-                    // sort by nama kandang
-                    let namaKandang = data[i].kode ? data[i].kode : ""
-                    let namaKandangSTR = namaKandang.toLowerCase().replace(/\b[a-z]/g, function(letter) {
-                        return letter.toUpperCase();
-                    });
+//                     // sort by nama kandang
+//                     let namaKandang = data[i].kode ? data[i].kode : ""
+//                     let namaKandangSTR = namaKandang.toLowerCase().replace(/\b[a-z]/g, function(letter) {
+//                         return letter.toUpperCase();
+//                     });
 
-                    // if (namaPemilik !== "") {
-                        result.push({
-                            idPemilik: data[i].createdBy ? data[i].createdBy._id : null,
-                            namaPemilik: namaPemilik,
-                            idKandang: data[i]._id,
-                            namaKandang: namaKandangSTR,
-                            kota: data[i].kota,
-                            isActive: data[i].isActive ? "Aktif" : "Rehat",
-                            usia: 0,
-                            periodeKe: "Belum mulai Periode"
-                        });
-                    // }
-                }
-            }
-            result.sort(dynamicSort("namaKandang"));
-        }
+//                     // if (namaPemilik !== "") {
+//                         result.push({
+//                             idPemilik: data[i].createdBy ? data[i].createdBy._id : null,
+//                             namaPemilik: namaPemilik,
+//                             idKandang: data[i]._id,
+//                             namaKandang: namaKandangSTR,
+//                             kota: data[i].kota,
+//                             isActive: data[i].isActive ? "Aktif" : "Rehat",
+//                             usia: 0,
+//                             periodeKe: "Belum mulai Periode"
+//                         });
+//                     // }
+//                 }
+//             }
+//             result.sort(dynamicSort("namaKandang"));
+//         }
 
-        res.json({
-            message: 'Ok',
-            length: count,
-            data: result
-        })
-    } catch (error) {
-        next(error)
-    }
-}
+//         console.log(count)
+//         res.json({
+//             message: 'Ok',
+//             length: count,
+//             data: result
+//         })
+//     } catch (error) {
+//         next(error)
+//     }
+// }
 
 exports.dropdownPeriodeDataPool =  async (req, res, next) => {
     try {
@@ -2014,3 +2021,207 @@ exports.detailKandang = async (req,res, next) => {
         next(error)
     }
 }
+
+/**
+ * TODO:
+ * - Split the code to small method
+ * - Refactor DRY code
+ */
+exports.findDataPools = async (req, res, next) => {
+  try {
+    const token = req.headers["authorization"];
+    const { limit, offset } = parseQuery(req.query);
+    const { name, address, city, isActive } = req.query;
+    let sort = handleQuerySort(req.query.sort);
+    let role = req.user.role ? req.user.role.name : "";
+    let kemitraanId = req.user.kemitraanUser ? req.user.kemitraanUser._id : "";
+    const filter = {};
+    if (name) {
+      filter.kode = new RegExp(name, "i");
+    }
+    if (address) {
+      filter.alamat = new RegExp(address, "i");
+    }
+    if (city) {
+      filter.kota = new RegExp(city, "i");
+    }
+    if (isActive) {
+      filter.isActive = isActive;
+    }
+    filter.deleted = false;
+
+    if (!req.query.sort) {
+      sort = { kode: 1 };
+    }
+
+    let count;
+    let result = [];
+    let filterPeriod = {};
+    filterPeriod.kandang = chickenShed.id;
+
+    const users = await fetch(`${urlAuth}/api/users/`, {
+      method: "GET",
+      headers: { Authorization: token, "Content-Type": "application/json" },
+    })
+      .then((res) => res.json())
+      .then((data) => data.data);
+
+    switch (role) {
+      case "adminkemitraan":
+        const chickenSheds = await Model.find(filter).sort();
+        for (const chickenShed of chickenSheds) {
+          filterPeriod.kemitraan = kemitraanId;
+          const periode = await Periode.findOne(filterPeriod).sort({
+            createdAt: -1,
+          });
+
+          if (periode && periode?.kandang) {
+            const chickenShedPeriods = await Periode.find(filterPeriod).sort(
+              "tanggalMulai"
+            );
+            let dataPeriode = [];
+            await Promise.map(
+              chickenShedPeriods,
+              async (chickenShedItem, index) => {
+                if (chickenShedItem._id.toString() === periode._id.toString()) {
+                  dataPeriode.push(index + 1);
+                }
+              }
+            );
+
+            // get usia
+            const now = new Date(Date.now());
+            const start = new Date(periode.tanggalMulai);
+            const age = periode.isEnd
+              ? Math.round(Math.abs((periode.tanggalAkhir - start) / ONE_DAY))
+              : Math.round(Math.abs((now - start) / ONE_DAY));
+            const user = await users.find(
+              (userData) =>
+                userData._id.toString() === chickenShed.createdBy.toString()
+            );
+            const username = user ? user.fullname : "";
+
+            // sort by nama kandang
+            const chickenShedName = chickenShed.kode ? chickenShed.kode : "";
+            const chickenShedNameSTR = chickenShedName
+              .toLowerCase()
+              .replace(/\b[a-z]/g, function (letter) {
+                return letter.toUpperCase();
+              });
+
+            if (username) {
+              result.push({
+                idPemilik: chickenShed.createdBy
+                  ? chickenShed.createdBy._id
+                  : null,
+                namaPemilik: username,
+                idKandang: chickenShed._id,
+                namaKandang: chickenShedNameSTR,
+                kota: chickenShed.kota,
+                isActive: chickenShed.isActive ? "Aktif" : "Rehat",
+                usia: age,
+                periodeKe: dataPeriode[0],
+              });
+            }
+          }
+        }
+
+        count = result.length;
+        let offsetPaging;
+        if (offset == 0) {
+          offsetPaging = 1;
+        } else {
+          offsetPaging = offset / 10 + 1;
+        }
+        let resultSort = result.sort(dynamicSort("namaKandang"));
+        result = paginate(resultSort, limit, offsetPaging);
+        break;
+
+    default:
+        count = await Model.countDocuments(filter);
+        const chickenShedsData = await Model.find(filter).limit(limit).sort(sort);
+        for (const chickenShed of chickenShedsData) {
+            const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 });
+            const user = await users.find(
+                (userData) =>
+                  userData._id.toString() === chickenShed.createdBy.toString()
+              );
+            const username = user ? user.fullname : "";
+
+            // sort by nama kandang
+            const chickenShedName = chickenShed.kode ? chickenShed.kode : "";
+            const chickenShedNameSTR = chickenShedName
+              .toLowerCase()
+              .replace(/\b[a-z]/g, function (letter) {
+                return letter.toUpperCase();
+              });
+
+            if (periode && periode.kandang) {
+                // get periode ke
+                const chickenShedPeriods = await Periode.find(filterPeriod).sort('tanggalMulai')
+                let dataPeriode = [];
+                await Promise.map(chickenShedPeriods, async (itemKandang, index) => {
+                    if (itemKandang._id.toString() === periode._id.toString()) {
+                        dataPeriode.push(index + 1);
+                    }
+                });
+
+                // get usia
+                const now = new Date(Date.now());
+                const start = new Date(periode.tanggalMulai);
+                const usia = periode.isEnd ? Math.round(Math.abs((periode.tanggalAkhir - start) / ONE_DAY)) :  Math.round(Math.abs((now - start) / ONE_DAY))
+
+                //find detail peternak
+                const user = await users.find(
+                    (userData) =>
+                      userData._id.toString() === chickenShed.createdBy.toString()
+                  );
+                const username = user ? user.fullname : "";
+
+                // sort by nama kandang
+                const chickenShedName = chickenShed.kode ? chickenShed.kode : "";
+                const chickenShedNameSTR = chickenShedName
+                  .toLowerCase()
+                  .replace(/\b[a-z]/g, function (letter) {
+                    return letter.toUpperCase();
+                  });
+
+                // if (namaPemilik !== "") {
+                    result.push({
+                        idPemilik: chickenShed.createdBy ? chickenShed.createdBy._id : null,
+                        namaPemilik: username,
+                        idKandang: chickenShed._id,
+                        namaKandang: chickenShedNameSTR,
+                        kota: chickenShed.kota,
+                        isActive: chickenShed.isActive ? "Aktif" : "Rehat",
+                        usia: usia,
+                        periodeKe: dataPeriode[0]
+                    });
+                // }
+            } else {
+                result.push({
+                    idPemilik: chickenShed.createdBy ? chickenShed.createdBy._id : null,
+                    namaPemilik: username,
+                    idKandang: chickenShed._id,
+                    namaKandang: chickenShedNameSTR,
+                    kota: chickenShed.kota,
+                    isActive: chickenShed.isActive ? "Aktif" : "Rehat",
+                    usia: 0,
+                    periodeKe: "Belum mulai Periode"
+                });
+            }
+            result.sort(dynamicSort("namaKandang"));
+        }
+        break;
+    }
+
+    console.log(count);
+    return res.json({
+      message: "Ok",
+      length: count,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
