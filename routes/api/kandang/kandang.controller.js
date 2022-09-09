@@ -18,7 +18,7 @@ const ONE_DAY = 24 * 60 * 60 * 1000;
 const moment = require('moment');
 const excelJS = require("exceljs");
 
-var urlIOT = process.env.DB_NAME === "chckin" ? `172.18.0.4:3103` : `172.19.0.2:3104`
+var urlIOT = process.env.DB_NAME === "chckin" ? `172.18.0.4:3103` : `172.19.0.3:3104`
 var urlAuth = process.env.DB_NAME === "chckin" ? `auth.chickinindonesia.com` : `staging-auth.chickinindonesia.com`
 const handleQuerySort = (query) => {
     try{
@@ -472,6 +472,7 @@ exports.grafikBobotDataPool =  async (req, res, next) => {
 
 exports.findOneDataPool =  async (req, res, next) => {
     try {
+        const token = req.headers['authorization']
         const periode = await Periode.findOne({kandang: req.params.id}).sort({ createdAt: -1 })
         let dataKandang;
         let dataHarian = [];
@@ -518,7 +519,7 @@ exports.findOneDataPool =  async (req, res, next) => {
                 const latestSampling = findBerat[0] ? findBerat[0].berat.reduce((a, {populasi}) => a + populasi, 0) : 0
 
             const latestFeed = getKegiatanHarian[0] ? getKegiatanHarian[0].pakanPakai.reduce((a, {beratPakan}) => a + beratPakan, 0) : 0
-
+            // console.log(getKegiatanHarian)
             const avgLatestWeight = latestWeight/latestSampling
 
             const allDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
@@ -602,6 +603,9 @@ exports.findOneDataPool =  async (req, res, next) => {
                 idPPL: findPPL?._id,
                 namaPPL: periode?.isActivePPL ? findPPL.fullname : "PPL Not Active",
                 phonePPL: periode?.isActivePPL ? findPPL.phoneNumber : null,
+                start:periode.tanggalMulai,
+                closing:periode?.tanggalAkhir === null ? "Periode Berjalan" : periode.tanggalAkhir,
+                lastUpdate:getKegiatanHarian[0]?.tanggal,
                 idKandang: periode.kandang._id,
                 isIoTInstalled:flock.data?.flock.length!=0 ? true : false,
                 namaKandang: periode.kandang.kode,
