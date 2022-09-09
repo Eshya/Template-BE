@@ -178,7 +178,7 @@ exports.uploadRHPP =  async (req, res, next) => {
         // const kandang = periode.kandang;
         // const dataPeriode = [];
 
-        // if (kandang){
+        // if (kandang && req.user.tokenFcm){
         //     const cages = await Periode.find({kandang: periode.kandang._id}).sort('tanggalMulai')
         //     await Promise.map(cages, async (itemKandang, index) => {
         //         if (itemKandang._id.toString() === periode._id.toString()) {
@@ -190,6 +190,7 @@ exports.uploadRHPP =  async (req, res, next) => {
         //       id_user: req.user._id,
         //       id_periode: idPeriode,
         //       id_kandang: kandang._id,
+        //       tokenFcm: req.user.tokenFcm,
         //       urutan_periode: periode ? dataPeriode[0] : 0,
         //       nama_kandang: kandang.kode,
         //     };
