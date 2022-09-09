@@ -6,7 +6,7 @@ const User = require('../peternak/peternak.model')
 const Promise = require("bluebird");
 const ONE_DAY = 24 * 60 * 60 * 1000;
 const fetch = require('node-fetch')
-var urlAuth = process.env.DB_NAME === "chckin" ? `https://auth.chickinindonesia.com` : `https://staging-auth.chickinindonesia.com`
+var urlAuth =`${process.env.AUTH_URL}`
 
 // This URL is for development purpose only
 // var urlAuth = `http://localhost:3105`
