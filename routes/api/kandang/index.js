@@ -5,8 +5,7 @@ const {schema} = require('./kandang.validation');
 const {auth, queryCek, schemaCek, paramCek, after, permition, permitionPPL} = require('../../helpers');
 
 router.get('/', auth, queryCek, c.findAll);
-// router.get('/data-pool', auth, queryCek, c.findAllDataPool);
-router.get('/data-pool', auth, queryCek, c.findDataPools);
+router.get('/data-pool', auth, queryCek, c.findAllDataPool);
 router.get('/data-pool/export/:id', auth, queryCek, c.exportDataPool);
 router.get('/data-pool/dropdown/:id', auth, queryCek, c.dropdownPeriodeDataPool);
 router.get('/data-pool/:id', auth, queryCek, c.findOneDataPool);
