@@ -4,7 +4,6 @@ services:
     image: ${APP_IMAGE_STG}:${APP_IMAGE_STG_TAG}
     container_name: smartfarm-staging
     environment:
-      MONGO_CONNECTIONSTRING: $MONGO_CONNECTIONSTRING
       SERVER_PORT: 3102
       NODE_ENV: staging
       DB_HOST: $DB_HOST

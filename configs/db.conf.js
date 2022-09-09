@@ -31,7 +31,13 @@ const options = {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     useCreateIndex: true,
-    dbName
+    dbName,
+    user,
+    pass,
+    auth: {
+        authSource: 'admin'
+        // authdb: 'admin'
+    }
 }
 
 let initialRetry = 0;
