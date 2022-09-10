@@ -356,7 +356,7 @@ exports.ringkasan = async (req, res, next) => {
         const getKegiatan = await KegiatanHarian.find({periode: getPeriode.id, berat: {$exists: true, $not:{$size: 0}}, pakanPakai: {$exists: true, $not:{$size: 0}}}).sort({'tanggal': -1}).limit(1).select('-periode')
         const now = new Date(Date.now());
         const start = new Date(getPeriode.tanggalMulai);
-        const umur = Math.round(Math.abs((now - start) / ONE_DAY))
+        var umur = Math.round(Math.abs((now - start) / ONE_DAY)) 
         
         const latestWeight = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0) : 0
         const latestSampling = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {populasi}) => a + populasi, 0) : 0
@@ -383,10 +383,10 @@ exports.ringkasan = async (req, res, next) => {
             panen: data.terjual,
             tanggal: data.tanggal[0]
         }});
-
+        if (umur >= 50){ umur = 50 }
         // const populasiAktual = getPeriode.populasi - allPenjualan;
         const std = await Data.findOne({day: umur})
-
+        
         const rgr = umur === 7 ? (avgBW7 - avgBW0) / avgBW0 * 100 : 0
 
         res.json({
