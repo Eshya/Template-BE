@@ -23,8 +23,6 @@ const handleQuerySort = (query) => {
 
 exports.findAll = async (req, res, next) => {
     try {
-      const periodeObject = [];
-      const partnershipsObject = [];
       const { limit, offset } = parseQuery(req.query);
       const { name, alamat, email, phoneNumber } = req.query;
       let sort = handleQuerySort(req.query.sort);
@@ -47,6 +45,7 @@ exports.findAll = async (req, res, next) => {
         sort = { name: 1 };
       }
   
+      const partnershipsObject = [];
       const count = await Model.countDocuments(filter);
       const partnerships = await Model.find(filter)
         .limit(limit)
