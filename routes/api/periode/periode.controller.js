@@ -383,6 +383,8 @@ exports.ringkasan = async (req, res, next) => {
             tanggal: data.tanggal[0]
         }});
 
+        const sortedDetailPanen = detailPanen.sort((a,b) => b.tanggal - a.tanggal)
+
         // const populasiAktual = getPeriode.populasi - allPenjualan;
 
         res.json({
@@ -390,7 +392,7 @@ exports.ringkasan = async (req, res, next) => {
             populasiAktual,
             populasiAwal: getPeriode.populasi,
             populasiAktual,
-            detailPanen: detailPanen,
+            detailPanen: sortedDetailPanen,
             panen: allPenjualan,
             jenisDoc: getPeriode.jenisDOC ? getPeriode.jenisDOC.name : "",
             IP: IP,
