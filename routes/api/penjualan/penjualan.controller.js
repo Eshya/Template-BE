@@ -31,6 +31,16 @@ exports.findById = async (req, res, next) => {
     }
 }
 
+const _MS_PER_DAY = 1000 * 60 * 60 * 24;
+let dateDiffInDays = (a, b) => {
+    // Discard the time and time-zone information.
+    const utc1 = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
+    const utc2 = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
+  
+    return Math.floor((utc2 - utc1) / _MS_PER_DAY);
+}
+
+
 exports.insert = async (req, res, next) => {
     const data = req.body;
     try {
@@ -57,10 +67,9 @@ exports.insert = async (req, res, next) => {
 
         const date1 = new Date(data.tanggal)
         const date2 = new Date(findKegiatan[0].tanggal)
-        
-       
-        
-        if(date1.getMonth() >= date2.getMonth() && date1.getDate() > date2.getDate() ) return res.json({error: 1006, message: 'isi kegiatan harian terlebih dahulu!'})
+        const diffDay = dateDiffInDays(date2,date1)
+
+        if(diffDay >=1 ) return res.json({error: 1006, message: 'isi kegiatan harian terlebih dahulu!'})
         if(populasiAkhir < data.qty) return res.json({error: 1007, data: { populasiAktual: populasiAkhir }, message: 'kuantiti melebihi populasi akhir!'})
 
         const results = await Model.create(data);
@@ -99,8 +108,14 @@ exports.updateById = async (req, res, next) => {
             const populasiAkhir = populasi - (totalDeplesi + totalKematian + allPenjualan);
             const tempPopulasi = populasiAkhir + penjualan.qty;
 
+            const date1 = new Date(data.tanggal)
+            const date2 = new Date(kegiatanHarian[0].tanggal)
+            const diffDay = dateDiffInDays(date2,date1)
+            
+            if(diffDay >=1 ) return res.json({error: 1006, message: 'Edit Tidak Bisa Melebihi Data Harian'})
+
             if(tempPopulasi < data.qty) {
-                return res.json({error: 1007, message: 'kuantiti melebihi populasi akhir!', data: { populasiAktual: tempPopulasi } })  
+                return res.json({error: 1007, message: 'kuantiti melebihi populasi akhir!', data: { populasiAktual: tempPopulasi } });
             }
 
             const results = await Model.findByIdAndUpdate(id, data, {new: true}).exec();
