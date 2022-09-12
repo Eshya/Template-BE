@@ -1345,13 +1345,13 @@ exports.findPeriode = async (req, res, next) => {
             const start = new Date(results[results.length - 1].tanggalMulai);
             const umurAyam = Math.round(Math.abs((now - start) / oneDay))
             const tmp = results[results.length - 1]
-            const findUser = await fetch(`https://${urlAuth}/api/users/${tmp.ppl}`, {
+            const findUser = await fetch(`${urlAuth}/api/users/${tmp.ppl}`, {
                 method: 'GET',
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
             }).then(res => res.json()).then(data => data.data)
 
-            const findPemilik = await fetch(`https://${urlAuth}/api/users/${kandang.createdBy}`, {
+            const findPemilik = await fetch(`${urlAuth}/api/users/${kandang.createdBy}`, {
                 method: 'GET',
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
@@ -1616,7 +1616,7 @@ const _findPeternak = async (req, isActive) => {
     if (findKandang.length === 0) return findKandang
     const map = await Promise.all(findKandang.map(async(x) => {
         const tmp = x
-        const findUser = await fetch(`https://${urlAuth}/api/users/${x.createdBy}`, {
+        const findUser = await fetch(`${urlAuth}/api/users/${x.createdBy}`, {
             method: 'GET',
             headers: {'Authorization': token,
             "Content-Type": "application/json"}
@@ -1682,7 +1682,7 @@ const _findPPL = async (req, isActive) => {
     const map = await Promise.all(findPeriode.map(async (x) => {
         const findPeriode = await Periode.findById(x.periode[0])
         const findKandang = await Model.findOneWithDeleted({_id: x._id})
-        const findUser = await fetch(`https://${urlAuth}/api/users/${findKandang.createdBy}`, {
+        const findUser = await fetch(`${urlAuth}/api/users/${findKandang.createdBy}`, {
             method: 'GET',
             headers: {'Authorization': token,
             "Content-Type": "application/json"}
@@ -1745,7 +1745,7 @@ exports.kelolaPeternak = async (req, res, next) => {
 
         const mapAktif = await Promise.all(results.aktif.map(async(x) => {
             const tmp = x
-            const findUser = await fetch(`https://${urlAuth}/api/users/${x.createdBy}`, {
+            const findUser = await fetch(`${urlAuth}/api/users/${x.createdBy}`, {
                 method: 'GET',
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
@@ -1789,7 +1789,7 @@ exports.kelolaPPL = async (req, res, next) => {
         console.log(findPeriode)
         const map = await Promise.all(findPeriode.map(async(x) => {
             const findKandang = await Model.findOneWithDeleted({_id: x.kandang})
-            const findUser = await fetch(`https://${urlAuth}/api/users/${findKandang.createdBy}`, {
+            const findUser = await fetch(`${urlAuth}/api/users/${findKandang.createdBy}`, {
                 method: 'GET',
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
@@ -1868,7 +1868,7 @@ exports.detailKandang = async (req,res, next) => {
         // const findPeriode = await Periode.find({ppl: user, isActivePPL: true}, {}, {autopopulate: false}).populate({path: 'kandang', options: {withDeleted: true}})
 
         const map = await Promise.all(findPeriode.map(async(x) => {
-            const findUser = await fetch(`https://${urlAuth}/api/users/${x.createdBy}`, {
+            const findUser = await fetch(`${urlAuth}/api/users/${x.createdBy}`, {
                 method: 'GET',
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}

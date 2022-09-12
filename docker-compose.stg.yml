@@ -12,6 +12,7 @@ services:
       DB_PASS: $DB_PASS
       DB_NAME: chckin-stagging
       DB_NAME_AUTH: chickin-auth-stagging
+      AUTH_URL: https://auth.chickinindonesia.com
     volumes:
       - /sites/apps/smartfarm/uploads:/app/uploads
     networks:
