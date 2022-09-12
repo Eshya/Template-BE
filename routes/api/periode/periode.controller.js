@@ -383,6 +383,7 @@ exports.ringkasan = async (req, res, next) => {
             panen: data.terjual,
             tanggal: data.tanggal[0]
         }});
+        const sortedDetailPanen = detailPanen.sort((a,b) => b.tanggal - a.tanggal);
         if (umur >= 50){ umur = 50 }
         // const populasiAktual = getPeriode.populasi - allPenjualan;
         const std = await Data.findOne({day: umur})
@@ -394,7 +395,7 @@ exports.ringkasan = async (req, res, next) => {
             populasiAktual,
             populasiAwal: getPeriode.populasi,
             populasiAktual,
-            detailPanen: detailPanen,
+            detailPanen: sortedDetailPanen,
             panen: allPenjualan,
             jenisDoc: getPeriode.jenisDOC ? getPeriode.jenisDOC.name : "",
             IP: IP,
