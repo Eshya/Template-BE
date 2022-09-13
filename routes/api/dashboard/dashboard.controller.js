@@ -6,7 +6,7 @@ const User = require('../peternak/peternak.model')
 const Promise = require("bluebird");
 const ONE_DAY = 24 * 60 * 60 * 1000;
 const fetch = require('node-fetch')
-var urlAuth = process.env.DB_NAME === "chckin" ? `auth.chickinindonesia.com` : `staging-auth.chickinindonesia.com`
+var urlAuth = `${process.env.AUTH_URL}`;
 var urlIOT = process.env.DB_NAME === "chckin" ? `iot-production:3103` : `iot-staging:3104`
 const handleQuerySort = (query) => {
     try{
