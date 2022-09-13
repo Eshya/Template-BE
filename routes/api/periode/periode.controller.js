@@ -275,8 +275,9 @@ exports.getBudidaya = async (req, res, next) => {
         // const penjualanAyamBesar = await 
         for (let i = 0; i < getSapronak.length; i++) {
             if (getSapronak[i]?.produk?.jenis === 'PAKAN') {
-                const compliment = getSapronak[i].zak * 50 * getSapronak[i].hargaSatuan
+                const compliment = getSapronak[i].zak  * getSapronak[i].hargaSatuan
                 pembelianPakan += compliment
+                // console.log(`${getSapronak[i].zak} :: ${getSapronak[i].hargaSatuan} :: ${compliment} :: ${pembelianPakan}  `)
             } else {
                 const compliment = getSapronak[i].kuantitas * getSapronak[i].hargaSatuan
                 pembelianOVK += compliment
@@ -293,19 +294,25 @@ exports.getBudidaya = async (req, res, next) => {
             {$project: {penjualan: {$multiply: ['$qty', '$harga', '$beratBadan']}}},
             {$group: {_id: '$periode', totalPenjualan: {$sum: '$penjualan'}}}
         ])
-        console.log(akumulasiPenjualan)
-        const pembelianSapronak = await Sapronak.aggregate([
-            {$match: {periode: mongoose.Types.ObjectId(id)}},
-            {$unwind: '$produk'},
-            {$project: {pembelianSapronak: {$cond: {if: '$product.jenis' === 'PAKAN', then: {$multiply: ['$zak', '$hargaSatuan']}, else: {$multiply: ['$kuantitas', '$hargaSatuan']}}}}},
-            {$group: {_id: '$periode', totalSapronak: {$sum: '$pembelianSapronak'}}}
-        ])
-        const sapronak = pembelianSapronak.length === 0 ? 0 : pembelianSapronak[0].totalSapronak
+       
+        // const pembelianSapronak = await Sapronak.aggregate([
+        //     {$match: {periode: mongoose.Types.ObjectId(id)}},
+        //     {$unwind: '$produk'},
+        //     {$project: {pembelianSapronak: {$cond: {if: '$product.jenis' === 'PAKAN', then: {$multiply: ['$zak', '$hargaSatuan']}, else: {$multiply: ['$kuantitas', '$hargaSatuan']}}}}},
+        //     {$group: {_id: '$periode', totalSapronak: {$sum: '$pembelianSapronak'}}}
+        // ])
+        const sapronak = pembelianPakan + pembelianOVK;
         const penjualanAyamBesar = akumulasiPenjualan[0] ? akumulasiPenjualan[0].totalPenjualan : 0
         const pendapatanPeternak = penjualanAyamBesar -pembelianDoc - sapronak
         const pendapatanPerEkor = pendapatanPeternak / populasiAkhir
         const totalPembelianSapronak = sapronak + pembelianDoc
-
+        // console.log(penjualanAyamBesar)
+        // console.log(pembelianPakan)
+        // console.log(pembelianOVK)
+        // console.log(pembelianDoc)
+        // console.log(pendapatanPeternak)
+        // console.log(pendapatanPerEkor)
+        // console.log(totalPembelianSapronak)
         res.json({
             'penjualanAyamBesar': penjualanAyamBesar,
             'pembelianPakan': pembelianPakan,
@@ -383,23 +390,20 @@ exports.ringkasan = async (req, res, next) => {
             panen: data.terjual,
             tanggal: data.tanggal[0]
         }});
-        const sortedDetailPanen = detailPanen.sort((a,b) => b.tanggal - a.tanggal);
         if (umur >= 50){ umur = 50 }
         // const populasiAktual = getPeriode.populasi - allPenjualan;
         const std = await Data.findOne({day: umur})
         
         const rgr = umur === 7 ? (avgBW7 - avgBW0) / avgBW0 * 100 : 0
 
-        console.log(dataDeplesi, dataDeplesi?.totalKematian)
-
         res.json({
             totalMortality: dataDeplesi.totalDeplesi ? dataDeplesi.totalDeplesi : 0,
-            totalCulling: dataDeplesi.totalKematian ? dataDeplesi.totalKematian : 0,
+            totalCulling: dataDeplesi.totalKematian ? dataDeplesi.totalKematiani : 0,
             populasiAkhir: populasiAkhir,
             populasiAktual,
             populasiAwal: getPeriode.populasi,
             populasiAktual,
-            detailPanen: sortedDetailPanen,
+            detailPanen: detailPanen,
             panen: allPenjualan,
             jenisDoc: getPeriode.jenisDOC ? getPeriode.jenisDOC.name : "",
             IP: IP,
@@ -414,6 +418,7 @@ exports.ringkasan = async (req, res, next) => {
             pakanMasuk: pakanMasuk,
             pakanPakai: allPakan,
             pakan: pakanMasuk - allPakan,
+            
         })
     } catch (error) {
         next(error)
