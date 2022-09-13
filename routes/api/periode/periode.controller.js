@@ -390,6 +390,8 @@ exports.ringkasan = async (req, res, next) => {
         
         const rgr = umur === 7 ? (avgBW7 - avgBW0) / avgBW0 * 100 : 0
 
+        console.log(dataDeplesi.totalDeplesi, dataDeplesi.totalKematian)
+
         res.json({
             populasiAkhir: populasiAkhir,
             populasiAktual,
