@@ -405,7 +405,7 @@ exports.ringkasan = async (req, res, next) => {
             populasiAktual,
             populasiAwal: getPeriode.populasi,
             populasiAktual,
-            detailPanen: detailPanen,
+            detailPanen: sortedDetailPanen,
             panen: allPenjualan,
             jenisDoc: getPeriode.jenisDOC ? getPeriode.jenisDOC.name : "",
             IP: IP,
