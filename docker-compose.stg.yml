@@ -1,4 +1,4 @@
-version: '3.7'
+version: "3.7"
 services:
   smartfarm-stg:
     image: ${APP_IMAGE_STG}:${APP_IMAGE_STG_TAG}
@@ -12,6 +12,7 @@ services:
       DB_PASS: $DB_PASS
       DB_NAME: chckin-stagging
       DB_NAME_AUTH: chickin-auth-stagging
+      AUTH_URL: https://staging-auth.chickinindonesia.com
     volumes:
       - /sites/apps/smartfarm/uploads:/app/uploads
     networks:

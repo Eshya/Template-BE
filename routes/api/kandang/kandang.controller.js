@@ -18,8 +18,8 @@ const ONE_DAY = 24 * 60 * 60 * 1000;
 const moment = require('moment');
 const excelJS = require("exceljs");
 
-var urlIOT = process.env.DB_NAME === "chckin" ? `prod-iot.chickinindonesia.com` : `staging-iot.chickinindonesia.com`
-var urlAuth = process.env.DB_NAME === "chckin" ? `auth.chickinindonesia.com` : `staging-auth.chickinindonesia.com`
+var urlIOT = process.env.DB_NAME === "chckin" ? `iot-production:3103` : `iot-staging:3104`
+var urlAuth =`${process.env.AUTH_URL}`
 const handleQuerySort = (query) => {
     try{
       const toJSONString = ("{" + query + "}").replace(/(\w+:)|(\w+ :)/g, (matched => {
@@ -81,180 +81,92 @@ function paginate(array, page_size, page_number) {
 
 exports.findAllDataPool =  async (req, res, next) => {
     try {
-        const token = req.headers['authorization']
-        const {limit, offset} = parseQuery(req.query);
+        const token = req.headers["authorization"];
+        const { limit, offset } = parseQuery(req.query);
         const { name, address, city, isActive } = req.query;
         let sort = handleQuerySort(req.query.sort);
-        let role = req.user.role ? req.user.role.name : '';
-        let kemitraanId = req.user.kemitraanUser ? req.user.kemitraanUser._id : '';
-        const filter = {}
+        let role = req.user.role ? req.user.role.name : "";
+        let kemitraanId = req.user.kemitraanUser ? req.user.kemitraanUser._id : "";
+    
+        const filter = {};
         if (name) {
-            filter.kode = new RegExp(name, 'i') 
+          filter.kode = new RegExp(name, "i");
         }
         if (address) {
-            filter.alamat = new RegExp(address, 'i') 
+          filter.alamat = new RegExp(address, "i");
         }
         if (city) {
-            filter.kota = new RegExp(city, 'i') 
+          filter.kota = new RegExp(city, "i");
         }
         if (isActive) {
-            filter.isActive = isActive
+          filter.isActive = isActive;
         }
         filter.deleted = false;
-
+    
         if (!req.query.sort) {
-            sort = { kode: 1 }
+          sort = { kode: 1 };
         }
-
+    
         let count;
         let result = [];
-        if (role === "adminkemitraan") {
-            const data = await Model.find(filter).sort(sort)
-            for (let i = 0; i < data.length; i++) {
-                let filterPeriod = {};
-                filterPeriod.kandang = data[i].id;
-                filterPeriod.kemitraan = kemitraanId
-                const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 })
-                if (periode && periode.kandang) {
-                    // get periode ke
-                    const kandang = await Periode.find(filterPeriod).sort('tanggalMulai')
-                    let dataPeriode = [];
-                    await Promise.map(kandang, async (itemKandang, index) => {
-                        if (itemKandang._id.toString() === periode._id.toString()) {
-                            dataPeriode.push(index + 1);
-                        }
-                    });
     
-                    // get usia
-                    const now = new Date(Date.now());
-                    const start = new Date(periode.tanggalMulai);
-                    const usia = periode.isEnd ? Math.round(Math.abs((periode.tanggalAkhir - start) / ONE_DAY)) :  Math.round(Math.abs((now - start) / ONE_DAY))
-
-                    //find detail peternak
-                    const findUser = await fetch(`https://${urlAuth}/api/users/${data[i].createdBy}`, {
-                        method: 'GET',
-                        headers: {'Authorization': token,
-                        "Content-Type": "application/json"}
-                    }).then(res => res.json()).then(data => data.data)
-                    let namaPemilik = findUser ? findUser.fullname : ""
-
-                    // sort by nama kandang
-                    let namaKandang = data[i].kode ? data[i].kode : ""
-                    let namaKandangSTR = namaKandang.toLowerCase().replace(/\b[a-z]/g, function(letter) {
-                        return letter.toUpperCase();
-                    });
-
-                    if (namaPemilik !== "") {
-                        result.push({
-                            idPemilik: data[i].createdBy ? data[i].createdBy._id : null,
-                            namaPemilik: namaPemilik,
-                            idKandang: data[i]._id,
-                            namaKandang: namaKandangSTR,
-                            kota: data[i].kota,
-                            isActive: data[i].isActive ? "Aktif" : "Rehat",
-                            usia: usia,
-                            periodeKe: dataPeriode[0]
-                        });
-                    }
-                }
-            }
-            count = result.length
-            let offsetPaging;
-            if (offset == 0) {
-                offsetPaging = 1
-            } else {
-                offsetPaging = (offset / 10 + 1)
-            }
-            let resultSort = result.sort(dynamicSort("namaKandang"));
-            result = paginate(resultSort, limit, offsetPaging)
-        } else {
-            count = await Model.countDocuments(filter)
-            const data = await Model.find(filter).limit(limit).skip(offset).sort(sort)
-            for (let i = 0; i < data.length; i++) {
-                let filterPeriod = {};
-                filterPeriod.kandang = data[i].id;
-                const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 })
-                if (periode && periode.kandang) {
-                    // get periode ke
-                    const kandang = await Periode.find(filterPeriod).sort('tanggalMulai')
-                    let dataPeriode = [];
-                    await Promise.map(kandang, async (itemKandang, index) => {
-                        if (itemKandang._id.toString() === periode._id.toString()) {
-                            dataPeriode.push(index + 1);
-                        }
-                    });
-    
-                    // get usia
-                    const now = new Date(Date.now());
-                    const start = new Date(periode.tanggalMulai);
-                    const usia = periode.isEnd ? Math.round(Math.abs((periode.tanggalAkhir - start) / ONE_DAY)) :  Math.round(Math.abs((now - start) / ONE_DAY))
-
-                    //find detail peternak
-                    const findUser = await fetch(`https://${urlAuth}/api/users/${data[i].createdBy}`, {
-                        method: 'GET',
-                        headers: {'Authorization': token,
-                        "Content-Type": "application/json"}
-                    }).then(res => res.json()).then(data => data.data)
-                    let namaPemilik = findUser ? findUser.fullname : ""
-
-                    // sort by nama kandang
-                    let namaKandang = data[i].kode ? data[i].kode : ""
-                    let namaKandangSTR = namaKandang.toLowerCase().replace(/\b[a-z]/g, function(letter) {
-                        return letter.toUpperCase();
-                    });
-    
-                    // if (namaPemilik !== "") {
-                        result.push({
-                            idPemilik: data[i].createdBy ? data[i].createdBy._id : null,
-                            namaPemilik: namaPemilik,
-                            idKandang: data[i]._id,
-                            namaKandang: namaKandangSTR,
-                            kota: data[i].kota,
-                            isActive: data[i].isActive ? "Aktif" : "Rehat",
-                            usia: usia,
-                            periodeKe: dataPeriode[0]
-                        });
-                    // }
-                } else {
-                    //find detail peternak
-                    const findUser = await fetch(`https://${urlAuth}/api/users/${data[i].createdBy}`, {
-                        method: 'GET',
-                        headers: {'Authorization': token,
-                        "Content-Type": "application/json"}
-                    }).then(res => res.json()).then(data => data.data)
-                    let namaPemilik = findUser ? findUser.fullname : ""
-
-                    // sort by nama kandang
-                    let namaKandang = data[i].kode ? data[i].kode : ""
-                    let namaKandangSTR = namaKandang.toLowerCase().replace(/\b[a-z]/g, function(letter) {
-                        return letter.toUpperCase();
-                    });
-
-                    // if (namaPemilik !== "") {
-                        result.push({
-                            idPemilik: data[i].createdBy ? data[i].createdBy._id : null,
-                            namaPemilik: namaPemilik,
-                            idKandang: data[i]._id,
-                            namaKandang: namaKandangSTR,
-                            kota: data[i].kota,
-                            isActive: data[i].isActive ? "Aktif" : "Rehat",
-                            usia: 0,
-                            periodeKe: "Belum mulai Periode"
-                        });
-                    // }
-                }
-            }
-            result.sort(dynamicSort("namaKandang"));
-        }
-
-        res.json({
-            message: 'Ok',
-            length: count,
-            data: result
+        const users = await fetch(`${urlAuth}/api/users/`, {
+          method: "GET",
+          headers: { Authorization: token, "Content-Type": "application/json" },
         })
+          .then((res) => res.json())
+          .then((data) => data.data);
+    
+        switch (role) {
+          case "adminkemitraan":
+            let offsetPaging;
+            const chickenSheds = await Model.find(filter).sort();
+            const resultKemitraan = await handleChickenSheds(
+              true,
+              chickenSheds,
+              kemitraanId,
+              users
+            );
+            result = resultKemitraan.resultKemitraan;
+            count = result.length;
+    
+            if (offset == 0) {
+              offsetPaging = 1;
+            } else {
+              offsetPaging = offset / 10 + 1;
+            }
+    
+            let resultSort = result.sort(dynamicSort("namaKandang"));
+            result = paginate(resultSort, limit, offsetPaging);
+            break;
+    
+          default:
+            count = await Model.countDocuments(filter);
+            const chickenShedsData = await Model.find(filter)
+              .limit(limit)
+              .skip(offset)
+              .sort(sort);
+    
+            const resultNonKemitraan = await handleChickenSheds(
+              false,
+              chickenShedsData,
+              kemitraanId,
+              users
+            );
+            result = resultNonKemitraan.resultNonKemitraan;
+            result.sort(dynamicSort("namaKandang"));
+            break;
+        }
+    
+        return res.json({
+          message: "Ok",
+          length: count,
+          data: result,
+        });
+
     } catch (error) {
-        next(error)
-    }
+        next(error);
+      }
 }
 
 exports.dropdownPeriodeDataPool =  async (req, res, next) => {
@@ -430,6 +342,7 @@ exports.grafikBobotDataPool =  async (req, res, next) => {
 
 exports.findOneDataPool =  async (req, res, next) => {
     try {
+        const token = req.headers['authorization']
         const periode = await Periode.findOne({kandang: req.params.id}).sort({ createdAt: -1 })
         let dataKandang;
         let dataHarian = [];
@@ -476,7 +389,7 @@ exports.findOneDataPool =  async (req, res, next) => {
                 const latestSampling = findBerat[0] ? findBerat[0].berat.reduce((a, {populasi}) => a + populasi, 0) : 0
 
             const latestFeed = getKegiatanHarian[0] ? getKegiatanHarian[0].pakanPakai.reduce((a, {beratPakan}) => a + beratPakan, 0) : 0
-
+            // console.log(getKegiatanHarian)
             const avgLatestWeight = latestWeight/latestSampling
 
             const allDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
@@ -539,6 +452,20 @@ exports.findOneDataPool =  async (req, res, next) => {
             const STD = await DataSTD.findOne({day: usia})
             const peternak = await PeternakModel.findById(periode.kandang.createdBy._id).select('fullname phoneNumber')
             const findPPL = await PeternakModel.findById(periode?.ppl);
+
+            /// iot flock 
+            let flock = [];
+            flock = await fetch(`http://${urlIOT}/api/flock/datapool/kandang/` + periode.kandang._id, {
+                method: 'get',
+                headers: {
+                    'Authorization': token,
+                    "Content-Type": "application/json" }
+            }).then(result => {
+                if (result.ok) {
+                    return result.json();
+                }
+            });
+
             dataKandang = {
                 idPemilik: periode.kandang.createdBy ? periode.kandang.createdBy._id : null,
                 namaPemilik: peternak?.fullname,
@@ -546,7 +473,11 @@ exports.findOneDataPool =  async (req, res, next) => {
                 idPPL: findPPL?._id,
                 namaPPL: periode?.isActivePPL ? findPPL.fullname : "PPL Not Active",
                 phonePPL: periode?.isActivePPL ? findPPL.phoneNumber : null,
+                start:periode.tanggalMulai,
+                closing:periode?.tanggalAkhir === null ? "Periode Berjalan" : periode.tanggalAkhir,
+                lastUpdate:getKegiatanHarian[0]?.tanggal,
                 idKandang: periode.kandang._id,
+                isIoTInstalled:flock.data?.flock.length!=0 ? true : false,
                 namaKandang: periode.kandang.kode,
                 alamat: periode.kandang.alamat,
                 kota: periode.kandang.kota,
@@ -1433,13 +1364,13 @@ exports.findPeriode = async (req, res, next) => {
             const start = new Date(results[results.length - 1].tanggalMulai);
             const umurAyam = Math.round(Math.abs((now - start) / oneDay))
             const tmp = results[results.length - 1]
-            const findUser = await fetch(`https://${urlAuth}/api/users/${tmp.ppl}`, {
+            const findUser = await fetch(`${urlAuth}/api/users/${tmp.ppl}`, {
                 method: 'GET',
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
             }).then(res => res.json()).then(data => data.data)
 
-            const findPemilik = await fetch(`https://${urlAuth}/api/users/${kandang.createdBy}`, {
+            const findPemilik = await fetch(`${urlAuth}/api/users/${kandang.createdBy}`, {
                 method: 'GET',
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
@@ -1665,7 +1596,7 @@ exports.getKelola = async (req, res, next) => {
 
             //get flock
             let flock = [];
-            flock = await fetch(`https://${urlIOT}/api/flock/kandang/` + item._id, {
+            flock = await fetch(`http://${urlIOT}/api/flock/kandang/` + item._id, {
                 method: 'get',
                 headers: {
                     'Authorization': token,
@@ -1704,7 +1635,7 @@ const _findPeternak = async (req, isActive) => {
     if (findKandang.length === 0) return findKandang
     const map = await Promise.all(findKandang.map(async(x) => {
         const tmp = x
-        const findUser = await fetch(`https://${urlAuth}/api/users/${x.createdBy}`, {
+        const findUser = await fetch(`${urlAuth}/api/users/${x.createdBy}`, {
             method: 'GET',
             headers: {'Authorization': token,
             "Content-Type": "application/json"}
@@ -1770,7 +1701,7 @@ const _findPPL = async (req, isActive) => {
     const map = await Promise.all(findPeriode.map(async (x) => {
         const findPeriode = await Periode.findById(x.periode[0])
         const findKandang = await Model.findOneWithDeleted({_id: x._id})
-        const findUser = await fetch(`https://${urlAuth}/api/users/${findKandang.createdBy}`, {
+        const findUser = await fetch(`${urlAuth}/api/users/${findKandang.createdBy}`, {
             method: 'GET',
             headers: {'Authorization': token,
             "Content-Type": "application/json"}
@@ -1833,7 +1764,7 @@ exports.kelolaPeternak = async (req, res, next) => {
 
         const mapAktif = await Promise.all(results.aktif.map(async(x) => {
             const tmp = x
-            const findUser = await fetch(`https://${urlAuth}/api/users/${x.createdBy}`, {
+            const findUser = await fetch(`${urlAuth}/api/users/${x.createdBy}`, {
                 method: 'GET',
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
@@ -1849,7 +1780,7 @@ exports.kelolaPeternak = async (req, res, next) => {
             const start = new Date(findPeriode[0].tanggalMulai)
             const umur = Math.round(Math.abs((now - start) / ONE_DAY))
 
-            const suhu = await fetch(`https://${urlIOT}/api/flock/kandang/${x._id}`,{
+            const suhu = await fetch(`http://${urlIOT}/api/flock/kandang/${x._id}`,{
                 method: 'GET',
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
@@ -1877,7 +1808,7 @@ exports.kelolaPPL = async (req, res, next) => {
         console.log(findPeriode)
         const map = await Promise.all(findPeriode.map(async(x) => {
             const findKandang = await Model.findOneWithDeleted({_id: x.kandang})
-            const findUser = await fetch(`https://${urlAuth}/api/users/${findKandang.createdBy}`, {
+            const findUser = await fetch(`${urlAuth}/api/users/${findKandang.createdBy}`, {
                 method: 'GET',
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
@@ -1922,7 +1853,7 @@ exports.kelolaPPL = async (req, res, next) => {
             const bawah = FCR * (dataPakan.length-1)
             const IP = (atas/bawah) * 100
 
-            const suhu = await fetch(`https://${urlIOT}/api/flock/kandang/${x.kandang}`,{
+            const suhu = await fetch(`http://${urlIOT}/api/flock/kandang/${x.kandang}`,{
                 method: 'GET',
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
@@ -1956,7 +1887,7 @@ exports.detailKandang = async (req,res, next) => {
         // const findPeriode = await Periode.find({ppl: user, isActivePPL: true}, {}, {autopopulate: false}).populate({path: 'kandang', options: {withDeleted: true}})
 
         const map = await Promise.all(findPeriode.map(async(x) => {
-            const findUser = await fetch(`https://${urlAuth}/api/users/${x.createdBy}`, {
+            const findUser = await fetch(`${urlAuth}/api/users/${x.createdBy}`, {
                 method: 'GET',
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
@@ -1991,7 +1922,7 @@ exports.detailKandang = async (req,res, next) => {
 
             return {...x.toObject(), umur: umur, estimasi: estimasi, user: findUser}
         }))
-        const suhu = await fetch(`https://${urlIOT}/api/flock/kandang/${id}`,{
+        const suhu = await fetch(`http://${urlIOT}/api/flock/kandang/${id}`,{
                 method: 'GET',
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
@@ -2014,3 +1945,115 @@ exports.detailKandang = async (req,res, next) => {
         next(error)
     }
 }
+
+const handleChickenSheds = async (
+  isKemitraan,
+  chickenSheds,
+  kemitraanId,
+  users
+) => {
+  let filterPeriod = {};
+  let resultObject = {};
+  const resultKemitraan = [];
+  const resultNonKemitraan = [];
+
+  for (const chickenShed of chickenSheds) {
+    filterPeriod.kandang = chickenShed.id;
+    if (isKemitraan) {
+      filterPeriod.kemitraan = kemitraanId;
+    }
+
+    const periode = await Periode.findOne(filterPeriod).sort({
+      createdAt: -1,
+    });
+
+    const user = await users.find(
+      (userData) => userData._id.toString() === chickenShed.createdBy.toString()
+    );
+
+    const username = user ? user.fullname : "";
+
+    // sort by nama kandang
+    const chickenShedName = chickenShed.kode ? chickenShed.kode : "";
+    const chickenShedNameSTR = chickenShedName
+      .toLowerCase()
+      .replace(/\b[a-z]/g, (letter) => {
+        return letter.toUpperCase();
+      });
+
+    let data;
+    let age = 0;
+
+    if (periode && periode?.kandang) {
+      const chickenShedPeriods = await Periode.find(filterPeriod).sort(
+        "tanggalMulai"
+      );
+
+      let dataPeriode = [];
+      await Promise.map(chickenShedPeriods, async (chickenShedItem, index) => {
+        if (chickenShedItem._id.toString() === periode._id.toString()) {
+          dataPeriode.push(index + 1);
+        }
+      });
+
+      data = dataPeriode;
+
+      // get usia
+      const now = new Date(Date.now());
+      const start = new Date(periode.tanggalMulai);
+      age = periode.isEnd
+        ? Math.round(Math.abs((periode.tanggalAkhir - start) / ONE_DAY))
+        : Math.round(Math.abs((now - start) / ONE_DAY));
+
+      let flock = [];
+      flock = await fetch(
+        `http://${urlIOT}/api/flock/datapool/kandang/` + chickenShed._id,
+        {
+          method: "get",
+          headers: {
+            Authorization: token,
+            "Content-Type": "application/json",
+          },
+        }
+      ).then((result) => {
+        if (result.ok) {
+          return result.json();
+        }
+      });
+
+      resultObject = {
+        idPemilik: chickenShed.createdBy ? chickenShed.createdBy._id : null,
+        namaPemilik: username,
+        idKandang: chickenShed._id,
+        namaKandang: chickenShedNameSTR,
+        isIoTInstalled: flock.data?.flock.length != 0 ? true : false,
+        kota: chickenShed.kota,
+        isActive: chickenShed.isActive ? "Aktif" : "Rehat",
+        usia: age,
+        periodeKe: !dataPeriode.length ? "Belum mulai Periode" : dataPeriode[0],
+      };
+
+      if (isKemitraan && username) {
+        resultKemitraan.push(resultObject);
+      }
+
+      if (!isKemitraan) {
+        resultNonKemitraan.push(resultObject);
+      }
+    } else {
+      resultNonKemitraan.push({
+        idPemilik: chickenShed.createdBy ? chickenShed.createdBy._id : null,
+        namaPemilik: username,
+        idKandang: chickenShed._id,
+        namaKandang: chickenShedNameSTR,
+        isIoTInstalled: flock.data?.flock.length != 0 ? true : false,
+        kota: chickenShed.kota,
+        isActive: chickenShed.isActive ? "Aktif" : "Rehat",
+        usia: age,
+        periodeKe: !data?.length ? "Belum mulai Periode" : data[0],
+      });
+    }
+  }
+
+  return { resultKemitraan, resultNonKemitraan };
+};
