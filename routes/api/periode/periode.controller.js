@@ -551,7 +551,7 @@ exports.autoClosingCultivation = async(req, res, next) => {
             const chickenAge = Math.round(Math.abs((now - start) / oneDay))
             const kandang = await Kandang.findById(periode.kandang);
         
-            if (chickenAge >= 50) {
+            if (chickenAge >= 50 && kandang) {
                 periode.isEnd = true
                 kandang.isActive = false
             }
