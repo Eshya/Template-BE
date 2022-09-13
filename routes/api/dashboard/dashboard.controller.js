@@ -6,8 +6,8 @@ const User = require('../peternak/peternak.model')
 const Promise = require("bluebird");
 const ONE_DAY = 24 * 60 * 60 * 1000;
 const fetch = require('node-fetch')
-var urlAuth = process.env.DB_NAME === "chckin" ? `auth.chickinindonesia.com` : `staging-auth.chickinindonesia.com`
-
+var urlAuth = `${process.env.AUTH_URL}`;
+var urlIOT = process.env.DB_NAME === "chckin" ? `iot-production:3103` : `iot-staging:3104`
 const handleQuerySort = (query) => {
     try{
       const toJSONString = ("{" + query + "}").replace(/(\w+:)|(\w+ :)/g, (matched => {
@@ -52,68 +52,39 @@ function removeDuplicatesData(array) {
 exports.dashboardKemitraan =  async (req, res, next) => {
     try {
         const token = req.headers['authorization']
-        let role = req.user.role ? req.user.role.name : '';
-        let kemitraanId = req.user.kemitraanUser ? req.user.kemitraanUser._id : '';
-        let { kemitraan } = req.query;
-        let filter = {}
-        let resultKandangActive = [];
-        let resultPeternak = [];
+        const role = req.user.role ? req.user.role.name : '';
+        const kemitraanId = req.user.kemitraanUser ? req.user.kemitraanUser._id : '';
+        const { kemitraan } = req.query;
+        const filter = {};
+        const resultPeternak = [];
+        const resultKandangActive = [];
+        
         filter.deleted = false;
+        const filterPPL = {};
 
-        let getKandang = await Kandang.find(filter).exec();
-        await Promise.map(getKandang, async (dataItem, index) => {
-            let filterPeriod = {};
-            filterPeriod.kandang = dataItem.id;
-
-            if (kemitraan) {
-                filterPeriod.kemitraan = kemitraan
-            }
-            if (role === "adminkemitraan") {
-                filterPeriod.kemitraan = kemitraanId
-            }
-
-            let periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 })
-            if (periode && periode.kandang && periode.kemitraan && periode.kandang.createdBy) {
-                //find detail peternak
-                const findUser = await fetch(`https://${urlAuth}/api/users/${periode.kandang.createdBy}`, {
-                    method: 'GET',
-                    headers: {'Authorization': token,
-                    "Content-Type": "application/json"}
-                }).then(res => res.json()).then(data => data.data)
-
-                let namaPemilik = findUser ? findUser.fullname : ""
-                let idPemilik = findUser ? findUser._id : ""
-                if (namaPemilik !== "") {
-                    if (periode.kandang.isActive === true) {
-                        resultPeternak.push(idPemilik);
-                        resultKandangActive.push({
-                            periodeId: periode.id,
-                            kandangId: periode.kandang.id,
-                            user: periode.kandang.createdBy
-                        });
-                    }
-                }
-            }
-        });
+        const getKandang = await Kandang.find(filter);
+        if (getKandang.length) {
+            const result = await handleResultKandang(token, getKandang, kemitraan, filterPPL, role, kemitraanId);
+            resultPeternak.push(...result.peternak);
+            resultKandangActive.push(...result.kandangActive);
+        }
 
         // get total peternak
-        let totalPeternak = removeDuplicatesData(resultPeternak)
+        const totalPeternak = removeDuplicatesData(resultPeternak)
 
         // get total PPL
-        let filterPPL = {};
+        const totalKemitraan = await User.countDocuments(filterPPL);
+
         filterPPL.role = '61d5608d4a7ba5b05c9c7ae3';
         filterPPL.deleted = false;
-        if (kemitraan) {
-            filterPPL.kemitraanUser = kemitraan
-        }
-        if (role === "adminkemitraan") {
-            filterPPL.kemitraanUser = kemitraanId
-        }
-        let totalPPl = await User.countDocuments(filterPPL).exec();
-        res.json({
+
+        const totalPPl = await User.countDocuments(filterPPL);
+        return res.json({
             totalKandangActive: resultKandangActive.length,
             totalPPL: totalPPl,
             totalPeternak: totalPeternak.length,
+            totalKandang: getKandang.length,
+            totalKemitraan: totalKemitraan
         })
     } catch (error) {
         next(error)
@@ -132,7 +103,13 @@ exports.dashboardKemitraanPopulasi =  async (req, res, next) => {
         }
         filter.deleted = false;
 
-        let getKandang = await Kandang.find(filter).exec();
+        const getKandang = await Kandang.find(filter);
+        const users = await fetch(`${urlAuth}/api/users/`, {
+            method: 'GET',
+            headers: {'Authorization': token,
+            "Content-Type": "application/json"}
+        }).then(res => res.json()).then(data => data.data)
+
         await Promise.map(getKandang, async (dataItem, index) => {
             let filterPeriod = {};
             filterPeriod.kandang = dataItem.id;
@@ -154,12 +131,7 @@ exports.dashboardKemitraanPopulasi =  async (req, res, next) => {
                 let usia = Math.round(Math.abs((now - start) / ONE_DAY))
 
                 //find detail peternak
-                const findUser = await fetch(`https://${urlAuth}/api/users/${periode.kandang.createdBy}`, {
-                    method: 'GET',
-                    headers: {'Authorization': token,
-                    "Content-Type": "application/json"}
-                }).then(res => res.json()).then(data => data.data)
-
+                const findUser = users.find(user => user._id.toString() === periode.kandang.createdBy.toString())                
                 let namaPemilik = findUser ? findUser.fullname : ""
                 if (namaPemilik !== "") {
                     resultPeriode.push({
@@ -181,6 +153,10 @@ exports.dashboardKemitraanPopulasi =  async (req, res, next) => {
     }
 }
 
+/**
+ * TODO:
+ * Need more improvement for pagination and filter section
+*/
 exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
     try {
         const token = req.headers['authorization']
@@ -317,10 +293,23 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
                     let namaPemilikSTR = namaPemilik.toLowerCase().replace(/\b[a-z]/g, function(letter) {
                         return letter.toUpperCase();
                     });
+                    let flock = [];
+                    flock = await fetch(`http://${urlIOT}/api/flock/datapool/kandang/` + periode.kandang.id, {
+                        method: 'get',
+                        headers: {
+                            'Authorization': token,
+                            "Content-Type": "application/json" }
+                    }).then(result => {
+                        if (result.ok) {
+                            return result.json();
+                        }
+                    });
+                    // console.log(flock.data?.flock.length!=0 ? true : false)
                     if (namaPemilik !== "") {
                         resultPeriode.push({
                             idKandang: periode.kandang.id,
                             namaKandang: periode.kandang.kode,
+                            isIoTInstalled:flock.data?.flock.length!=0 ? true : false,
                             kota: periode.kandang.kota,
                             DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
                             bobot: avgLatestWeight,
@@ -353,11 +342,12 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
             offsetPaging = (offset / 10 + 1)
         }
 
-        let resultPeriodeSort = resultPeriode.sort(dynamicSort("namaPemilik"));
+        const resultPeriodeSort = resultPeriode.sort(dynamicSort("namaPemilik"));
+        const resultPagination = paginate(resultPeriodeSort, limit, offsetPaging)
 
-        res.json({
+        return res.json({
             count: resultPeriode.length,
-            ketersediaan: paginate(resultPeriodeSort, limit, offsetPaging),
+            ketersediaan: resultPagination,
             summary: {
                 totalPopulasi: Math.ceil(countPopulasi),
                 averageUsia: Math.ceil(countUsia),
@@ -369,6 +359,10 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
     }
 }
 
+/**
+ * TODO:
+ * Need more improvement for pagination and filter section
+*/
 exports.dashboardSalesKetersediaan =  async (req, res, next) => {
     try {
         const token = req.headers['authorization']
@@ -381,7 +375,7 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
         let bobotFrom = req.query.bobotFrom ? req.query.bobotFrom : '';
         let bobotTo = req.query.bobotTo ? req.query.bobotTo : '';
         let filter = {}
-        let resultPeriode = [];
+        let resultPeriode = []
         if (city) {
             filter.kota = new RegExp(city, 'i')
         }
@@ -492,10 +486,24 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
                     let namaPemilikSTR = namaPemilik.toLowerCase().replace(/\b[a-z]/g, function(letter) {
                         return letter.toUpperCase();
                     });
+                    // find flock iot
+                    let flock = [];
+                    flock = await fetch(`http://${urlIOT}/api/flock/datapool/kandang/` + periode.kandang.id, {
+                        method: 'get',
+                        headers: {
+                            'Authorization': token,
+                            "Content-Type": "application/json" }
+                    }).then(result => {
+                        if (result.ok) {
+                            return result.json();
+                        }
+                    });
+                    // console.log(flock.data?.flock.length!=0 ? true : false)
                     if (namaPemilik !== "") {
                         resultPeriode.push({
                             idKandang: periode.kandang.id,
                             namaKandang: periode.kandang.kode,
+                            isIoTInstalled:flock.data?.flock.length!=0 ? true : false,
                             kota: periode.kandang.kota,
                             DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
                             bobot: avgLatestWeight,
