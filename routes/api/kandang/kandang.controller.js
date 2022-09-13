@@ -2007,7 +2007,7 @@ const handleChickenSheds = async (
 
       let flock = [];
       flock = await fetch(
-        `http://${urlIOT}/api/flock/datapool/kandang/` + data[i]._id,
+        `http://${urlIOT}/api/flock/datapool/kandang/` + chickenShed._id,
         {
           method: "get",
           headers: {
