@@ -150,6 +150,7 @@ exports.findAllDataPool =  async (req, res, next) => {
     
             const resultNonKemitraan = await handleChickenSheds(
               false,
+              token,
               chickenShedsData,
               kemitraanId,
               users
