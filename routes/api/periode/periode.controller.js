@@ -390,9 +390,11 @@ exports.ringkasan = async (req, res, next) => {
         
         const rgr = umur === 7 ? (avgBW7 - avgBW0) / avgBW0 * 100 : 0
 
-        console.log(dataDeplesi.totalDeplesi, dataDeplesi.totalKematian)
+        console.log(dataDeplesi, dataDeplesi?.totalKematian)
 
         res.json({
+            totalMortality: dataDeplesi.totalDeplesi ? dataDeplesi.totalDeplesi : 0,
+            totalCulling: dataDeplesi.totalKematian ? dataDeplesi.totalKematian : 0,
             populasiAkhir: populasiAkhir,
             populasiAktual,
             populasiAwal: getPeriode.populasi,
@@ -412,8 +414,6 @@ exports.ringkasan = async (req, res, next) => {
             pakanMasuk: pakanMasuk,
             pakanPakai: allPakan,
             pakan: pakanMasuk - allPakan,
-            totalMortality: dataDeplesi.totalDeplesi,
-            totalCulling: dataDeplesi.totalKematian
         })
     } catch (error) {
         next(error)

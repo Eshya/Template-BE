@@ -6,11 +6,8 @@ const User = require('../peternak/peternak.model')
 const Promise = require("bluebird");
 const ONE_DAY = 24 * 60 * 60 * 1000;
 const fetch = require('node-fetch')
-var urlAuth =`${process.env.AUTH_URL}`
-
-// This URL is for development purpose only
-// var urlAuth = `http://localhost:3105`
-
+var urlAuth = `${process.env.AUTH_URL}`;
+var urlIOT = process.env.DB_NAME === "chckin" ? `iot-production:3103` : `iot-staging:3104`
 const handleQuerySort = (query) => {
     try{
       const toJSONString = ("{" + query + "}").replace(/(\w+:)|(\w+ :)/g, (matched => {
