@@ -123,6 +123,7 @@ exports.findAllDataPool =  async (req, res, next) => {
             const chickenSheds = await Model.find(filter).sort();
             const resultKemitraan = await handleChickenSheds(
               true,
+              token,
               chickenSheds,
               kemitraanId,
               users
@@ -1948,6 +1949,7 @@ exports.detailKandang = async (req,res, next) => {
 
 const handleChickenSheds = async (
   isKemitraan,
+  token,
   chickenSheds,
   kemitraanId,
   users
