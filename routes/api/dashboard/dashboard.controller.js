@@ -6,8 +6,8 @@ const User = require('../peternak/peternak.model')
 const Promise = require("bluebird");
 const ONE_DAY = 24 * 60 * 60 * 1000;
 const fetch = require('node-fetch')
-var urlAuth = process.env.DB_NAME === "chckin" ? `auth.chickinindonesia.com` : `staging-auth.chickinindonesia.com`
-
+var urlAuth = `${process.env.AUTH_URL}`;
+var urlIOT = process.env.DB_NAME === "chckin" ? `iot-production:3103` : `iot-staging:3104`
 const handleQuerySort = (query) => {
     try{
       const toJSONString = ("{" + query + "}").replace(/(\w+:)|(\w+ :)/g, (matched => {
@@ -317,10 +317,23 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
                     let namaPemilikSTR = namaPemilik.toLowerCase().replace(/\b[a-z]/g, function(letter) {
                         return letter.toUpperCase();
                     });
+                    let flock = [];
+                    flock = await fetch(`http://${urlIOT}/api/flock/datapool/kandang/` + periode.kandang.id, {
+                        method: 'get',
+                        headers: {
+                            'Authorization': token,
+                            "Content-Type": "application/json" }
+                    }).then(result => {
+                        if (result.ok) {
+                            return result.json();
+                        }
+                    });
+                    // console.log(flock.data?.flock.length!=0 ? true : false)
                     if (namaPemilik !== "") {
                         resultPeriode.push({
                             idKandang: periode.kandang.id,
                             namaKandang: periode.kandang.kode,
+                            isIoTInstalled:flock.data?.flock.length!=0 ? true : false,
                             kota: periode.kandang.kota,
                             DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
                             bobot: avgLatestWeight,
@@ -492,10 +505,24 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
                     let namaPemilikSTR = namaPemilik.toLowerCase().replace(/\b[a-z]/g, function(letter) {
                         return letter.toUpperCase();
                     });
+                    // find flock iot
+                    let flock = [];
+                    flock = await fetch(`http://${urlIOT}/api/flock/datapool/kandang/` + periode.kandang.id, {
+                        method: 'get',
+                        headers: {
+                            'Authorization': token,
+                            "Content-Type": "application/json" }
+                    }).then(result => {
+                        if (result.ok) {
+                            return result.json();
+                        }
+                    });
+                    // console.log(flock.data?.flock.length!=0 ? true : false)
                     if (namaPemilik !== "") {
                         resultPeriode.push({
                             idKandang: periode.kandang.id,
                             namaKandang: periode.kandang.kode,
+                            isIoTInstalled:flock.data?.flock.length!=0 ? true : false,
                             kota: periode.kandang.kota,
                             DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
                             bobot: avgLatestWeight,

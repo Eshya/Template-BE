@@ -342,6 +342,7 @@ exports.grafikBobotDataPool =  async (req, res, next) => {
 
 exports.findOneDataPool =  async (req, res, next) => {
     try {
+        const token = req.headers['authorization']
         const periode = await Periode.findOne({kandang: req.params.id}).sort({ createdAt: -1 })
         let dataKandang;
         let dataHarian = [];
@@ -388,7 +389,7 @@ exports.findOneDataPool =  async (req, res, next) => {
                 const latestSampling = findBerat[0] ? findBerat[0].berat.reduce((a, {populasi}) => a + populasi, 0) : 0
 
             const latestFeed = getKegiatanHarian[0] ? getKegiatanHarian[0].pakanPakai.reduce((a, {beratPakan}) => a + beratPakan, 0) : 0
-
+            // console.log(getKegiatanHarian)
             const avgLatestWeight = latestWeight/latestSampling
 
             const allDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
@@ -451,6 +452,20 @@ exports.findOneDataPool =  async (req, res, next) => {
             const STD = await DataSTD.findOne({day: usia})
             const peternak = await PeternakModel.findById(periode.kandang.createdBy._id).select('fullname phoneNumber')
             const findPPL = await PeternakModel.findById(periode?.ppl);
+
+            /// iot flock 
+            let flock = [];
+            flock = await fetch(`http://${urlIOT}/api/flock/datapool/kandang/` + periode.kandang._id, {
+                method: 'get',
+                headers: {
+                    'Authorization': token,
+                    "Content-Type": "application/json" }
+            }).then(result => {
+                if (result.ok) {
+                    return result.json();
+                }
+            });
+
             dataKandang = {
                 idPemilik: periode.kandang.createdBy ? periode.kandang.createdBy._id : null,
                 namaPemilik: peternak?.fullname,
@@ -458,7 +473,11 @@ exports.findOneDataPool =  async (req, res, next) => {
                 idPPL: findPPL?._id,
                 namaPPL: periode?.isActivePPL ? findPPL.fullname : "PPL Not Active",
                 phonePPL: periode?.isActivePPL ? findPPL.phoneNumber : null,
+                start:periode.tanggalMulai,
+                closing:periode?.tanggalAkhir === null ? "Periode Berjalan" : periode.tanggalAkhir,
+                lastUpdate:getKegiatanHarian[0]?.tanggal,
                 idKandang: periode.kandang._id,
+                isIoTInstalled:flock.data?.flock.length!=0 ? true : false,
                 namaKandang: periode.kandang.kode,
                 alamat: periode.kandang.alamat,
                 kota: periode.kandang.kota,
@@ -1577,7 +1596,7 @@ exports.getKelola = async (req, res, next) => {
 
             //get flock
             let flock = [];
-            flock = await fetch(`https://${urlIOT}/api/flock/kandang/` + item._id, {
+            flock = await fetch(`http://${urlIOT}/api/flock/kandang/` + item._id, {
                 method: 'get',
                 headers: {
                     'Authorization': token,
@@ -1761,7 +1780,7 @@ exports.kelolaPeternak = async (req, res, next) => {
             const start = new Date(findPeriode[0].tanggalMulai)
             const umur = Math.round(Math.abs((now - start) / ONE_DAY))
 
-            const suhu = await fetch(`https://${urlIOT}/api/flock/kandang/${x._id}`,{
+            const suhu = await fetch(`http://${urlIOT}/api/flock/kandang/${x._id}`,{
                 method: 'GET',
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
@@ -1834,7 +1853,7 @@ exports.kelolaPPL = async (req, res, next) => {
             const bawah = FCR * (dataPakan.length-1)
             const IP = (atas/bawah) * 100
 
-            const suhu = await fetch(`https://${urlIOT}/api/flock/kandang/${x.kandang}`,{
+            const suhu = await fetch(`http://${urlIOT}/api/flock/kandang/${x.kandang}`,{
                 method: 'GET',
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
@@ -1903,7 +1922,7 @@ exports.detailKandang = async (req,res, next) => {
 
             return {...x.toObject(), umur: umur, estimasi: estimasi, user: findUser}
         }))
-        const suhu = await fetch(`https://${urlIOT}/api/flock/kandang/${id}`,{
+        const suhu = await fetch(`http://${urlIOT}/api/flock/kandang/${id}`,{
                 method: 'GET',
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
@@ -1986,11 +2005,28 @@ const handleChickenSheds = async (
         ? Math.round(Math.abs((periode.tanggalAkhir - start) / ONE_DAY))
         : Math.round(Math.abs((now - start) / ONE_DAY));
 
+      let flock = [];
+      flock = await fetch(
+        `http://${urlIOT}/api/flock/datapool/kandang/` + data[i]._id,
+        {
+          method: "get",
+          headers: {
+            Authorization: token,
+            "Content-Type": "application/json",
+          },
+        }
+      ).then((result) => {
+        if (result.ok) {
+          return result.json();
+        }
+      });
+
       resultObject = {
         idPemilik: chickenShed.createdBy ? chickenShed.createdBy._id : null,
         namaPemilik: username,
         idKandang: chickenShed._id,
         namaKandang: chickenShedNameSTR,
+        isIoTInstalled: flock.data?.flock.length != 0 ? true : false,
         kota: chickenShed.kota,
         isActive: chickenShed.isActive ? "Aktif" : "Rehat",
         usia: age,
@@ -2010,6 +2046,7 @@ const handleChickenSheds = async (
         namaPemilik: username,
         idKandang: chickenShed._id,
         namaKandang: chickenShedNameSTR,
+        isIoTInstalled: flock.data?.flock.length != 0 ? true : false,
         kota: chickenShed.kota,
         isActive: chickenShed.isActive ? "Aktif" : "Rehat",
         usia: age,
