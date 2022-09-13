@@ -179,151 +179,9 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
             sort = { createdAt: -1 }
         }
 
-        let dataKandang = await Kandang.find(filter).sort(sort);
-        await Promise.map(dataKandang, async (dataItem, index) => {
-            let filterPeriod = {};
-            filterPeriod.kandang = dataItem.id;
-            filterPeriod.isEnd = false;
-
-            if (populasi === '10000') {
-                filterPeriod.populasi = {$gte: 0, $lte: 10000}
-            } else if (populasi === '20000') {
-                filterPeriod.populasi = {$gte: 10001, $lte: 20000}
-            } else if (populasi === '30000') {
-                filterPeriod.populasi = {$gte: 20001, $lte: 30000}
-            } else if (populasi === '40000') {
-                filterPeriod.populasi = {$gte: 30001, $lte: 40000}
-            } else if (populasi === '50000') {
-                filterPeriod.populasi = {$gte: 40001, $lte: 50000}
-            } else if (populasi === '50001') {
-                filterPeriod.populasi = {$gte: 50001}
-            }
-
-            if (kemitraan) {
-                filterPeriod.kemitraan = kemitraan
-            }
-            let kemitraanId = req.user.kemitraanUser ? req.user.kemitraanUser._id : '';
-            if (role === "adminkemitraan") {
-                filterPeriod.kemitraan = kemitraanId
-            }
-
-            const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 })
-            if (periode && periode.kandang && periode.kemitraan && periode.kandang.createdBy) {
-                // get usia
-                let now = new Date(Date.now());
-                let start = new Date(periode.tanggalMulai);
-                let age = Math.round(Math.abs((now - start) / ONE_DAY))
-
-                // get weight actual
-                let getKegiatan = await KegiatanHarian.findOne({periode: periode.id, berat: { $exists: true, $ne: [] }}).select('-periode').sort({'tanggal': -1})
-                let avgLatestWeight = 0;
-                if (getKegiatan)  {
-                    let totalBerat = [];
-                    for (let x = 0; x < getKegiatan.berat.length; x++) {
-                        let populasi = 0;
-                        if (getKegiatan.berat[x].populasi == 0) {
-                            populasi = 1
-                        } else {
-                            populasi = getKegiatan.berat[x].populasi
-                        }
-                        totalBerat.push(getKegiatan.berat[x].beratTimbang / populasi)
-                    }
-                    let totalberatSum = totalBerat.reduce(function(acc, val) { return acc + val; }, 0)
-                    let bobotResult = totalberatSum/getKegiatan.berat.length
-                    let bobotFixed = Number.isInteger(bobotResult) ? bobotResult : bobotResult.toFixed(2);
-                    avgLatestWeight = isFinite(bobotFixed) && bobotFixed || 0;
-                }
-
-                let pushData = false;
-                if (usiaFrom && usiaTo && bobotFrom && bobotTo) {
-                    if (age >= usiaFrom && age <= usiaTo && avgLatestWeight >= bobotFrom && avgLatestWeight <= bobotTo) {
-                        pushData = true;
-                    }
-                }
-
-                if (usiaFrom && !usiaTo && !bobotFrom && !bobotTo) {
-                    if (age >= usiaFrom) {
-                        pushData = true;
-                    }
-                }
-
-                if (!usiaFrom && usiaTo && !bobotFrom && !bobotTo) {
-                    if (age <= usiaTo) {
-                        pushData = true;
-                    }
-                }
-
-                if (usiaFrom && usiaTo && !bobotFrom && !bobotTo) {
-                    if (age >= usiaFrom && age <= usiaTo) {
-                        pushData = true;
-                    }
-                }
-
-                if (!usiaFrom && !usiaTo && bobotFrom && !bobotTo) {
-                    if (avgLatestWeight >= bobotFrom) {
-                        pushData = true;
-                    }
-                }
-
-                if (!usiaFrom && !usiaTo && !bobotFrom && bobotTo) {
-                    if (avgLatestWeight <= bobotTo) {
-                        pushData = true;
-                    }
-                }
-
-                if (!usiaFrom && !usiaTo && bobotFrom && bobotTo) {
-                    if (avgLatestWeight >= bobotFrom && avgLatestWeight <= bobotTo) {
-                        pushData = true;
-                    }
-                }
-
-                if (usiaFrom === "" && usiaTo === "" && bobotFrom === "" && bobotTo === "") {
-                    pushData = true;
-                }
-
-                if (pushData) {
-                    //find detail peternak
-                    const findUser = await fetch(`https://${urlAuth}/api/users/${periode.kandang.createdBy}`, {
-                        method: 'GET',
-                        headers: {'Authorization': token,
-                        "Content-Type": "application/json"}
-                    }).then(res => res.json()).then(data => data.data)
-
-                    let namaPemilik = findUser ? findUser.fullname : ""
-                    let namaPemilikSTR = namaPemilik.toLowerCase().replace(/\b[a-z]/g, function(letter) {
-                        return letter.toUpperCase();
-                    });
-                    let flock = [];
-                    flock = await fetch(`http://${urlIOT}/api/flock/datapool/kandang/` + periode.kandang.id, {
-                        method: 'get',
-                        headers: {
-                            'Authorization': token,
-                            "Content-Type": "application/json" }
-                    }).then(result => {
-                        if (result.ok) {
-                            return result.json();
-                        }
-                    });
-                    // console.log(flock.data?.flock.length!=0 ? true : false)
-                    if (namaPemilik !== "") {
-                        resultPeriode.push({
-                            idKandang: periode.kandang.id,
-                            namaKandang: periode.kandang.kode,
-                            isIoTInstalled:flock.data?.flock.length!=0 ? true : false,
-                            kota: periode.kandang.kota,
-                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                            bobot: avgLatestWeight,
-                            usia: age,
-                            populasi: periode.populasi,
-                            IdKemitraan: periode.kemitraan ? periode.kemitraan.id : null,
-                            namaKemitraan: periode.kemitraan ? periode.kemitraan.name : "",
-                            idPemilik: periode.kandang.createdBy ? periode.kandang.createdBy._id : null,
-                            namaPemilik: namaPemilikSTR,
-                        });
-                    }
-                }
-            }
-        });
+        const dataKandang = await Kandang.find(filter).sort(sort).select('_id');
+        const resultPeriods = await handlePeriode(true, token, dataKandang, populasi, kemitraan, req.user, role, usiaFrom, usiaTo, bobotFrom, bobotTo);
+        resultPeriode.push(...resultPeriods.filter(result => result));
 
         let countPopulasi = resultPeriode.reduce((a, {populasi}) => a + populasi, 0);
         let countUsia = (resultPeriode.reduce((a, {usia}) => a + usia, 0) / resultPeriode.length);
@@ -385,139 +243,10 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
             sort = { createdAt: -1 }
         }
 
-        let dataKandang = await Kandang.find(filter).sort(sort);
-        await Promise.map(dataKandang, async (dataItem, index) => {
-            let filterPeriod = {};
-            filterPeriod.kandang = dataItem.id;
-            filterPeriod.isEnd = false;
+        const dataKandang = await Kandang.find(filter).sort(sort).select('_id');
 
-            if (populasi === '10000') {
-                filterPeriod.populasi = {$gte: 0, $lte: 10000}
-            } else if (populasi === '20000') {
-                filterPeriod.populasi = {$gte: 10001, $lte: 20000}
-            } else if (populasi === '30000') {
-                filterPeriod.populasi = {$gte: 20001, $lte: 30000}
-            } else if (populasi === '40000') {
-                filterPeriod.populasi = {$gte: 30001, $lte: 40000}
-            } else if (populasi === '50000') {
-                filterPeriod.populasi = {$gte: 40001, $lte: 50000}
-            } else if (populasi === '50001') {
-                filterPeriod.populasi = {$gte: 50001}
-            }
-
-            if (kemitraan) {
-                filterPeriod.kemitraan = kemitraan
-            }
-            let kemitraanId = req.user.kemitraanUser ? req.user.kemitraanUser._id : '';
-            if (role === "adminkemitraan") {
-                filterPeriod.kemitraan = kemitraanId
-            }
-
-            const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 })
-            if (periode && periode.kandang && periode.kemitraan && periode.kandang.createdBy) {
-                // get usia
-                let now = new Date(Date.now());
-                let start = new Date(periode.tanggalMulai);
-                let age = Math.round(Math.abs((now - start) / ONE_DAY))
-
-                // get weight actual
-                const getKegiatan = await KegiatanHarian.find({periode: periode.id}).sort({'tanggal': -1}).limit(1).select('-periode')
-                const latestWeight = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0) : 0
-                const latestSampling = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {populasi}) => a + populasi, 0) : 0
-                const totalAvgLatestWeight = latestWeight/latestSampling
-                const avgLatestWeight = totalAvgLatestWeight ? totalAvgLatestWeight : 0
-
-                let pushData = false;
-                if (usiaFrom && usiaTo && bobotFrom && bobotTo) {
-                    if (age >= usiaFrom && age <= usiaTo && avgLatestWeight >= bobotFrom && avgLatestWeight <= bobotTo) {
-                        pushData = true;
-                    }
-                }
-
-                if (usiaFrom && !usiaTo && !bobotFrom && !bobotTo) {
-                    if (age >= usiaFrom) {
-                        pushData = true;
-                    }
-                }
-
-                if (!usiaFrom && usiaTo && !bobotFrom && !bobotTo) {
-                    if (age <= usiaTo) {
-                        pushData = true;
-                    }
-                }
-
-                if (usiaFrom && usiaTo && !bobotFrom && !bobotTo) {
-                    if (age >= usiaFrom && age <= usiaTo) {
-                        pushData = true;
-                    }
-                }
-
-                if (!usiaFrom && !usiaTo && bobotFrom && !bobotTo) {
-                    if (avgLatestWeight >= bobotFrom) {
-                        pushData = true;
-                    }
-                }
-
-                if (!usiaFrom && !usiaTo && !bobotFrom && bobotTo) {
-                    if (avgLatestWeight <= bobotTo) {
-                        pushData = true;
-                    }
-                }
-
-                if (!usiaFrom && !usiaTo && bobotFrom && bobotTo) {
-                    if (avgLatestWeight >= bobotFrom && avgLatestWeight <= bobotTo) {
-                        pushData = true;
-                    }
-                }
-
-                if (usiaFrom === "" && usiaTo === "" && bobotFrom === "" && bobotTo === "") {
-                    pushData = true;
-                }
-
-                if (pushData) {
-                    //find detail peternak
-                    const findUser = await fetch(`https://${urlAuth}/api/users/${periode.kandang.createdBy}`, {
-                        method: 'GET',
-                        headers: {'Authorization': token,
-                        "Content-Type": "application/json"}
-                    }).then(res => res.json()).then(data => data.data)
-
-                    let namaPemilik = findUser ? findUser.fullname : ""
-                    let namaPemilikSTR = namaPemilik.toLowerCase().replace(/\b[a-z]/g, function(letter) {
-                        return letter.toUpperCase();
-                    });
-                    // find flock iot
-                    let flock = [];
-                    flock = await fetch(`http://${urlIOT}/api/flock/datapool/kandang/` + periode.kandang.id, {
-                        method: 'get',
-                        headers: {
-                            'Authorization': token,
-                            "Content-Type": "application/json" }
-                    }).then(result => {
-                        if (result.ok) {
-                            return result.json();
-                        }
-                    });
-                    // console.log(flock.data?.flock.length!=0 ? true : false)
-                    if (namaPemilik !== "") {
-                        resultPeriode.push({
-                            idKandang: periode.kandang.id,
-                            namaKandang: periode.kandang.kode,
-                            isIoTInstalled:flock.data?.flock.length!=0 ? true : false,
-                            kota: periode.kandang.kota,
-                            DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
-                            bobot: avgLatestWeight,
-                            usia: age,
-                            populasi: periode.populasi,
-                            IdKemitraan: periode.kemitraan ? periode.kemitraan.id : null,
-                            namaKemitraan: periode.kemitraan ? periode.kemitraan.name : "",
-                            idPemilik: periode.kandang.createdBy ? periode.kandang.createdBy._id : null,
-                            namaPemilik: namaPemilikSTR,
-                        });
-                    }
-                }
-            }
-        });
+        const resultPeriods = await handlePeriode(true, token, dataKandang, populasi, kemitraan, req.user, role, usiaFrom, usiaTo, bobotFrom, bobotTo);
+        resultPeriode.push(...resultPeriods.filter(result => result))
 
         let countPopulasi = resultPeriode.reduce((a, {populasi}) => a + populasi, 0);
         let countUsia = (resultPeriode.reduce((a, {usia}) => a + usia, 0) / resultPeriode.length);
@@ -536,18 +265,225 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
             offsetPaging = (offset / 10 + 1)
         }
 
-        let resultPeriodeSort = resultPeriode.sort(dynamicSort("namaPemilik"));
+        const resultPeriodeSort = resultPeriode.sort(dynamicSort("namaPemilik"));
+        const paginateResult = paginate(resultPeriodeSort, limit, offsetPaging); 
 
-        res.json({
+        return res.json({
             count: resultPeriode.length,
-            ketersediaan: paginate(resultPeriodeSort, limit, offsetPaging),
+            ketersediaan: paginateResult,
             summary: {
                 totalPopulasi: Math.ceil(countPopulasi),
                 averageUsia: Math.ceil(countUsia),
                 averageBobot: Math.ceil(countBobot)
             }
         })
+        
     } catch (error) {
         next(error)
     }
 }
+
+const handleResultKandang = async(token, getKandang, kemitraan, filterPPL, role, kemitraanId) => {
+    const kandangActive = [];
+    const peternak = [];
+    const users = await fetch(`${urlAuth}/api/users/`, {
+        method: 'GET',
+        headers: {'Authorization': token,
+        "Content-Type": "application/json"}
+    }).then(res => res.json()).then(data => data.data);
+
+    await Promise.map(getKandang, async (dataItem, index) => {
+        const filterPeriod = {};
+        filterPeriod.kandang = dataItem.id;
+
+        if (kemitraan) {
+            filterPeriod.kemitraan = kemitraan;
+            filterPPL.kemitraanUser = kemitraan;
+        }
+        if (role === "adminkemitraan") {
+            filterPeriod.kemitraan = kemitraanId;
+            filterPPL.kemitraanUser = kemitraanId;
+        }
+
+        const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 });
+        if (periode?.kandang && periode?.kemitraan && periode?.kandang?.createdBy) {
+            //find detail peternak
+            const findUser = users.find(user => user._id.toString() === periode?.kandang?.createdBy.toString());
+            const namaPemilik = findUser ? findUser.fullname : "";
+            const idPemilik = findUser ? findUser._id : "";
+
+            if (namaPemilik) {
+                if (periode?.kandang?.isActive) {
+                    peternak.push(idPemilik);
+                    kandangActive.push({
+                        periodeId: periode.id,
+                        kandangId: periode.kandang.id,
+                        user: periode.kandang.createdBy
+                    });
+                }
+            }
+        }
+    });
+    
+    return {kandangActive, peternak}
+}
+
+const handlePeriode = async(isKemitraan, token, dataKandang, populasi, kemitraan, user, role, usiaFrom, usiaTo, bobotFrom, bobotTo) => {
+    const users = await fetch(`${urlAuth}/api/users/`, {
+        method: 'GET',
+        headers: {'Authorization': token,
+        "Content-Type": "application/json"}
+    }).then(res => res.json()).then(data => data.data)
+
+    return Promise.map(dataKandang, async (dataItem, index) => {
+        const filterPeriod = {};
+        filterPeriod.kandang = dataItem.id;
+        filterPeriod.isEnd = false;
+
+        if (populasi === '10000') filterPeriod.populasi = {$gte: 0, $lte: 10000}
+        if (populasi === '20000') filterPeriod.populasi = {$gte: 10001, $lte: 20000}
+        if (populasi === '30000') filterPeriod.populasi = {$gte: 20001, $lte: 30000}
+        if (populasi === '40000') filterPeriod.populasi = {$gte: 30001, $lte: 40000}
+        if (populasi === '50000') filterPeriod.populasi = {$gte: 40001, $lte: 50000}
+        if (populasi === '50001') filterPeriod.populasi = {$gte: 50001}
+
+        if (kemitraan) {
+            filterPeriod.kemitraan = kemitraan;
+        }
+
+        const kemitraanId = user.kemitraanUser ? user.kemitraanUser._id : '';
+        if (role === "adminkemitraan") {
+            filterPeriod.kemitraan = kemitraanId;
+        }
+
+        const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 });
+        if (periode?.kandang && periode?.kemitraan && periode?.kandang?.createdBy) {
+            // get usia
+            const now = new Date(Date.now());
+            const start = new Date(periode.tanggalMulai);
+            const age = Math.round(Math.abs((now - start) / ONE_DAY));
+
+            const query = {periode: periode.id}
+            if (isKemitraan) {
+                query.berat = { $exists: true, $ne: [] }
+            }
+
+            // get weight actual
+            const getKegiatan = await KegiatanHarian.findOne(query).sort({'tanggal': -1}).select('-periode')
+            /**
+             * Sanja Remark
+             * Old logic to calculate avg latest weight
+             * 
+             */
+            // let avgLatestWeight = 0;
+            // if (getKegiatan) {
+            //     let totalBerat = [];
+            //     for (let x = 0; x < getKegiatan.berat.length; x++) {
+            //         let populasi = 0;
+            //         if (getKegiatan.berat[x].populasi == 0) {
+            //             populasi = 1;
+            //         } else {
+            //             populasi = getKegiatan.berat[x].populasi;
+            //         }
+            //         totalBerat.push(getKegiatan.berat[x].beratTimbang / populasi);
+            //     }
+            //     const totalberatSum = totalBerat.reduce(function (acc, val) { return acc + val; }, 0);
+            //     const bobotResult = totalberatSum / getKegiatan.berat.length;
+            //     const bobotFixed = Number.isInteger(bobotResult) ? bobotResult : bobotResult.toFixed(2);
+            //     avgLatestWeight = isFinite(bobotFixed) && bobotFixed || 0;
+            // }
+
+            const latestWeight = getKegiatan ? getKegiatan.berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0) : 0
+            const latestSampling = getKegiatan ? getKegiatan.berat.reduce((a, {populasi}) => a + populasi, 0) : 0
+            const totalAvgLatestWeight = latestWeight/latestSampling
+            const avgLatestWeight = totalAvgLatestWeight ? totalAvgLatestWeight : 0
+
+            let pushData = false;
+            if (usiaFrom && usiaTo && bobotFrom && bobotTo) {
+                if (age >= usiaFrom && age <= usiaTo && avgLatestWeight >= bobotFrom && avgLatestWeight <= bobotTo) {
+                    pushData = true;
+                }
+            }
+
+            if (usiaFrom && !usiaTo && !bobotFrom && !bobotTo) {
+                if (age >= usiaFrom) {
+                    pushData = true;
+                }
+            }
+
+            if (!usiaFrom && usiaTo && !bobotFrom && !bobotTo) {
+                if (age <= usiaTo) {
+                    pushData = true;
+                }
+            }
+
+            if (usiaFrom && usiaTo && !bobotFrom && !bobotTo) {
+                if (age >= usiaFrom && age <= usiaTo) {
+                    pushData = true;
+                }
+            }
+
+            if (!usiaFrom && !usiaTo && bobotFrom && !bobotTo) {
+                if (avgLatestWeight >= bobotFrom) {
+                    pushData = true;
+                }
+            }
+
+            if (!usiaFrom && !usiaTo && !bobotFrom && bobotTo) {
+                if (avgLatestWeight <= bobotTo) {
+                    pushData = true;
+                }
+            }
+
+            if (!usiaFrom && !usiaTo && bobotFrom && bobotTo) {
+                if (avgLatestWeight >= bobotFrom && avgLatestWeight <= bobotTo) {
+                    pushData = true;
+                }
+            }
+
+            if (usiaFrom === "" && usiaTo === "" && bobotFrom === "" && bobotTo === "") {
+                pushData = true;
+            }
+
+            if (pushData) {
+                let flock = [];
+                flock = await fetch(`http://${urlIOT}/api/flock/datapool/kandang/` + periode.kandang.id, {
+                    method: 'get',
+                    headers: {
+                        'Authorization': token,
+                        "Content-Type": "application/json" }
+                }).then(result => {
+                    if (result.ok) {
+                        return result.json();
+                    }
+                });
+
+                //find detail peternak
+                const findUser = users.find(user => user._id.toString() === periode?.kandang?.createdBy.toString());
+                const namaPemilik = findUser ? findUser.fullname : "";
+                const namaPemilikSTR = namaPemilik.toLowerCase().replace(/\b[a-z]/g, (letter) => {
+                    return letter.toUpperCase();
+                });
+
+                if (!namaPemilik) {
+                    return
+                }
+
+                return({
+                    idKandang: periode.kandang.id,
+                    namaKandang: periode.kandang.kode,
+                    kota: periode.kandang.kota,
+                    DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
+                    bobot: avgLatestWeight,
+                    usia: age,
+                    populasi: periode.populasi,
+                    IdKemitraan: periode.kemitraan ? periode.kemitraan.id : null,
+                    namaKemitraan: periode.kemitraan ? periode.kemitraan.name : "",
+                    idPemilik: periode.kandang.createdBy ? periode.kandang.createdBy._id : null,
+                    namaPemilik: namaPemilikSTR,
+                });
+            }
+        }
+    });
+}
+
