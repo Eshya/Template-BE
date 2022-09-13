@@ -1987,6 +1987,22 @@ const handleChickenSheds = async (
     let data;
     let age = 0;
 
+    let flock = [];
+    flock = await fetch(
+      `http://${urlIOT}/api/flock/datapool/kandang/` + chickenShed._id,
+      {
+        method: "get",
+        headers: {
+          Authorization: token,
+          "Content-Type": "application/json",
+        },
+      }
+    ).then((result) => {
+      if (result.ok) {
+        return result.json();
+      }
+    });
+
     if (periode && periode?.kandang) {
       const chickenShedPeriods = await Periode.find(filterPeriod).sort(
         "tanggalMulai"
@@ -2007,22 +2023,6 @@ const handleChickenSheds = async (
       age = periode.isEnd
         ? Math.round(Math.abs((periode.tanggalAkhir - start) / ONE_DAY))
         : Math.round(Math.abs((now - start) / ONE_DAY));
-
-      let flock = [];
-      flock = await fetch(
-        `http://${urlIOT}/api/flock/datapool/kandang/` + chickenShed._id,
-        {
-          method: "get",
-          headers: {
-            Authorization: token,
-            "Content-Type": "application/json",
-          },
-        }
-      ).then((result) => {
-        if (result.ok) {
-          return result.json();
-        }
-      });
 
       resultObject = {
         idPemilik: chickenShed.createdBy ? chickenShed.createdBy._id : null,
