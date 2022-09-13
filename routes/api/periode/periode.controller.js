@@ -398,6 +398,7 @@ exports.ringkasan = async (req, res, next) => {
         res.json({
             totalMortality: allDeplesi,
             totalCulling: allKematian,
+            totalDeplesi: allDeplesi + allKematian,
             populasiAkhir: populasiAkhir,
             populasiAktual,
             populasiAwal: getPeriode.populasi,
