@@ -472,6 +472,7 @@ const handlePeriode = async(isKemitraan, token, dataKandang, populasi, kemitraan
                 return({
                     idKandang: periode.kandang.id,
                     namaKandang: periode.kandang.kode,
+                    isIoTInstalled:flock.data?.flock.length!=0 ? true : false,
                     kota: periode.kandang.kota,
                     DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
                     bobot: avgLatestWeight,
