@@ -416,8 +416,7 @@ exports.ringkasan = async (req, res, next) => {
             pakanMasuk: pakanMasuk,
             pakanPakai: allPakan,
             pakan: pakanMasuk - allPakan,
-            totalMortality: dataDeplesi.totalDeplesi,
-            totalCulling: dataDeplesi.totalKematian
+            
         })
     } catch (error) {
         next(error)
