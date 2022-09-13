@@ -18,7 +18,7 @@ const ONE_DAY = 24 * 60 * 60 * 1000;
 const moment = require('moment');
 const excelJS = require("exceljs");
 
-var urlIOT = process.env.DB_NAME === "chckin" ? `prod-iot.chickinindonesia.com` : `staging-iot.chickinindonesia.com`
+var urlIOT = process.env.DB_NAME === "chckin" ? `iot-production:3103` : `iot-staging:3104`
 var urlAuth =`${process.env.AUTH_URL}`
 const handleQuerySort = (query) => {
     try{
