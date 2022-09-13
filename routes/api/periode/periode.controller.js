@@ -80,7 +80,7 @@ exports.findKegiatan = async (req, res, next) => {
     const id = req.params.id
     try {
         const periode = await Model.findById(id)
-        const start = new Date(periode.tanggalMulai);
+        const start = !periode?.tanggalMulai ? new Date() : new Date(periode.tanggalMulai);
         // console.log(periode.populasi);
         const data = await KegiatanHarian.find({periode: id}).select('-periode').sort({'tanggal': -1})
 
@@ -120,8 +120,9 @@ exports.findKegiatan = async (req, res, next) => {
             return {...tmp.toObject(), std: std == null ? null : std.toObject(), deplesiEkor: deplesiEkor, prosentaseDeplesi: deplesi, age: umur, populasi: populasiNow, rgr: rgr} // Join all of them in coolest way :-* - Atha
         }))
 
+        const sortedData = map.sort((a, b) => b.age - a.age);
         res.json({
-            data: map,
+            data: sortedData,
             message: 'Ok'
         })
     } catch (error) {
@@ -273,7 +274,7 @@ exports.getBudidaya = async (req, res, next) => {
         const getSapronak = await Sapronak.find({periode: id});
         // const penjualanAyamBesar = await 
         for (let i = 0; i < getSapronak.length; i++) {
-            if (getSapronak[i].produk.jenis === 'PAKAN') {
+            if (getSapronak[i]?.produk?.jenis === 'PAKAN') {
                 const compliment = getSapronak[i].zak * 50 * getSapronak[i].hargaSatuan
                 pembelianPakan += compliment
             } else {
@@ -300,7 +301,7 @@ exports.getBudidaya = async (req, res, next) => {
             {$group: {_id: '$periode', totalSapronak: {$sum: '$pembelianSapronak'}}}
         ])
         const sapronak = pembelianSapronak.length === 0 ? 0 : pembelianSapronak[0].totalSapronak
-        const penjualanAyamBesar = akumulasiPenjualan[0].totalPenjualan
+        const penjualanAyamBesar = akumulasiPenjualan[0] ? akumulasiPenjualan[0].totalPenjualan : 0
         const pendapatanPeternak = penjualanAyamBesar -pembelianDoc - sapronak
         const pendapatanPerEkor = pendapatanPeternak / populasiAkhir
         const totalPembelianSapronak = sapronak + pembelianDoc
@@ -338,7 +339,7 @@ exports.ringkasan = async (req, res, next) => {
 
         const penjualan = await Penjualan.aggregate([
             {$match: {periode: mongoose.Types.ObjectId(getPeriode.id)}},
-            {$group: {_id: '$_id', terjual: {$sum: '$qty'}}}
+            {$group: {_id: '$_id', tanggal: {$push: '$tanggal'}, terjual: {$sum: '$qty'}}}
         ])
 
         const dataPakan = await KegiatanHarian.aggregate([
@@ -355,7 +356,7 @@ exports.ringkasan = async (req, res, next) => {
         const getKegiatan = await KegiatanHarian.find({periode: getPeriode.id, berat: {$exists: true, $not:{$size: 0}}, pakanPakai: {$exists: true, $not:{$size: 0}}}).sort({'tanggal': -1}).limit(1).select('-periode')
         const now = new Date(Date.now());
         const start = new Date(getPeriode.tanggalMulai);
-        const umur = Math.round(Math.abs((now - start) / ONE_DAY))
+        var umur = Math.round(Math.abs((now - start) / ONE_DAY)) 
         
         const latestWeight = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0) : 0
         const latestSampling = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {populasi}) => a + populasi, 0) : 0
@@ -378,13 +379,27 @@ exports.ringkasan = async (req, res, next) => {
         const atas = presentaseAyamHidup * (avgLatestWeight/1000)
         const bawah = FCR*(dataPakan.length-1)
         const IP = (atas / bawah) * 100
+        const detailPanen = penjualan.map(data => { return {
+            panen: data.terjual,
+            tanggal: data.tanggal[0]
+        }});
+        const sortedDetailPanen = detailPanen.sort((a,b) => b.tanggal - a.tanggal);
+        if (umur >= 50){ umur = 50 }
         // const populasiAktual = getPeriode.populasi - allPenjualan;
+        const std = await Data.findOne({day: umur})
+        
+        const rgr = umur === 7 ? (avgBW7 - avgBW0) / avgBW0 * 100 : 0
+
+        console.log(dataDeplesi, dataDeplesi?.totalKematian)
 
         res.json({
+            totalMortality: dataDeplesi.totalDeplesi ? dataDeplesi.totalDeplesi : 0,
+            totalCulling: dataDeplesi.totalKematian ? dataDeplesi.totalKematian : 0,
             populasiAkhir: populasiAkhir,
             populasiAktual,
             populasiAwal: getPeriode.populasi,
             populasiAktual,
+            detailPanen: sortedDetailPanen,
             panen: allPenjualan,
             jenisDoc: getPeriode.jenisDOC ? getPeriode.jenisDOC.name : "",
             IP: IP,
@@ -393,10 +408,12 @@ exports.ringkasan = async (req, res, next) => {
             feedIntake: latestFeed * 1000 / populasiAkhir,
             ADG: 0,
             fcrAktual: FCR,
-            diffFcr: 0,
+            diffFcr: FCR - std.fcr,
+            RGR: rgr,
+            diffRgr: rgr - std.rgr,
             pakanMasuk: pakanMasuk,
             pakanPakai: allPakan,
-            pakan: pakanMasuk - allPakan
+            pakan: pakanMasuk - allPakan,
         })
     } catch (error) {
         next(error)
@@ -539,4 +556,29 @@ exports.validateTambah = async (req,res, next) => {
     } catch(error) {
         next(error)
     }
+}
+
+exports.autoClosingCultivation = async(req, res, next) => {
+    const periods = await Model.find({}).sort('updatedAt');
+    try {
+        for (const periode of periods) {
+            const oneDay = 24 * 60 * 60 * 1000;
+            const now = new Date(Date.now());
+            const start = new Date(periode.tanggalMulai);
+            const chickenAge = Math.round(Math.abs((now - start) / oneDay))
+            const kandang = await Kandang.findById(periode.kandang);
+        
+            if (chickenAge >= 50) {
+                periode.isEnd = true
+                kandang.isActive = false
+            }
+    
+            await periode.save();
+        }
+
+        return res.json({ status: 200, message: 'Successfully Auto Closing' });
+    } catch (error) {
+        return res.json({ status: 500, message: error })
+    }
+    
 }

@@ -170,7 +170,7 @@ exports.uploadRHPP =  async (req, res, next) => {
         let rhpp_path = path + "/" + filename
         await Periode.findByIdAndUpdate(idPeriode, {rhpp_path: rhpp_path});
  
-        const periode = await Periode.findById(idPeriode);
+        // const periode = await Periode.findById(idPeriode);
         if (periode.downloadedDate) {
             await Periode.updateOne({ _id: idPeriode }, {$unset: {downloadedDate: "" }});
         }
@@ -179,33 +179,34 @@ exports.uploadRHPP =  async (req, res, next) => {
             return res.status(400).send({ message: "Please upload a file!" });
         }
 
-        // const periode = await Periode.findById(idPeriode);
-        const kandang = periode.kandang;
-        const dataPeriode = [];
+        const periode = await Periode.findById(idPeriode);
+        // const kandang = periode.kandang;
+        // const dataPeriode = [];
 
-        if (kandang){
-            const cages = await Periode.find({kandang: periode.kandang._id}).sort('tanggalMulai')
-            await Promise.map(cages, async (itemKandang, index) => {
-                if (itemKandang._id.toString() === periode._id.toString()) {
-                    dataPeriode.push(index + 1);
-                }
-            });
+        // if (kandang && req.user.tokenFcm){
+        //     const cages = await Periode.find({kandang: periode.kandang._id}).sort('tanggalMulai')
+        //     await Promise.map(cages, async (itemKandang, index) => {
+        //         if (itemKandang._id.toString() === periode._id.toString()) {
+        //             dataPeriode.push(index + 1);
+        //         }
+        //     });
 
-            const objectEntry = {
-              id_user: req.user._id,
-              id_periode: idPeriode,
-              id_kandang: kandang._id,
-              urutan_periode: periode ? dataPeriode[0] : 0,
-              nama_kandang: kandang.kode,
-            };
+        //     const objectEntry = {
+        //       id_user: req.user._id,
+        //       id_periode: idPeriode,
+        //       id_kandang: kandang._id,
+        //       tokenFcm: req.user.tokenFcm,
+        //       urutan_periode: periode ? dataPeriode[0] : 0,
+        //       nama_kandang: kandang.kode,
+        //     };
 
-          await axios({
-            method: "POST",
-            headers: { "content-type": "application/x-www-form-urlencoded" },
-            params: objectEntry,
-            url: `${notificationUrl}/api/rhpp`
-          });
-        }
+        //   await axios({
+        //     method: "POST",
+        //     headers: { "content-type": "application/x-www-form-urlencoded" },
+        //     params: objectEntry,
+        //     url: `${notificationUrl}/api/rhpp`
+        //   });
+        // }
 
         res.status(200).send({
             message: "RHPP successfully uploaded.",
@@ -273,21 +274,47 @@ exports.deleteRHPP =  async (req, res, next) => {
 }
 
 exports.downloadedRHPP = async(req, res, next) => {
+    const query = req.query;
     const periodsData = [];
-    try {
-        const periods = await Periode.find({});
-        for (const periode of periods) {
-            if (periode.downloadedDate) {
-                periodsData.push({
-                    user_id: periode.kandang.createdBy,
-                    periode: periode._id,
-                    downloaded_date: periode.downloadedDate
-                })
+    if (query.periode) {
+        findQuery = { _id : query.periode }
+        try {
+            const periods = await Periode.find(findQuery);
+            for (const periode of periods) {
+                if (periode.downloadedDate ) {
+                    periodsData.push({
+                        user_id: periode.kandang.createdBy,
+                         periode: periode._id,
+                        downloaded_date: periode.downloadedDate
+                    })
+                }
             }
-        }
             
-        return res.json({ status: 200, message: 'OK', data: periodsData })
-    } catch(err) {
-        return res.json({ status: 500, message: err });
+            return res.json({ status: 200, message: 'OK', data: periodsData })
+        } catch(err) {
+            return res.json({ status: 500, message: err });
+        }
+    }
+
+    if (!query.periode) {
+        try {
+            const chickenSheds = await Kandang.find({ createdBy: req.user._id });
+            for (const chickenShed of chickenSheds) {
+                const periods = await Periode.find({kandang: chickenShed._id});
+                for (const periode of periods) {
+                    if (periode.downloadedDate ) {
+                        periodsData.push({
+                            user_id: periode.kandang.createdBy,
+                            periode: periode._id,
+                            downloaded_date: periode.downloadedDate
+                        })
+                    }
+                }
+            }
+
+            return res.json({ status: 200, message: 'OK', data: periodsData })
+        } catch (err) {
+            return res.json({ status: 500, message: err });
+        }
     }
 }

@@ -1,4 +1,4 @@
-version: '3.7'
+version: "3.7"
 services:
   smartfarm-stg:
     image: ${APP_IMAGE_STG}:${APP_IMAGE_STG_TAG}
@@ -23,3 +23,6 @@ services:
 networks:
   chickinnetwork:
     external: true
+
+
+
