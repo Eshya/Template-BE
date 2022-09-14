@@ -581,11 +581,12 @@ exports.autoClosingCultivation = async(req, res, next) => {
             }
     
             await periode.save();
+            await kandang.save();
         }
 
         return res.json({ status: 200, message: 'Successfully Auto Closing' });
     } catch (error) {
-        return res.json({ status: 500, message: error })
+        return res.json({ status: 500, message: error.message })
     }
     
 }
