@@ -2,11 +2,13 @@ const {parseQuery} = require('../../helpers');
 const Kandang = require('../kandang/kandang.model');
 const Periode = require('../periode/periode.model');
 const KegiatanHarian = require('../kegiatan-harian/kegiatan-harian.model')
+const Kemitraan = require('../kemitraan/kemitraan.model')
 const User = require('../peternak/peternak.model')
 const Promise = require("bluebird");
 const ONE_DAY = 24 * 60 * 60 * 1000;
 const fetch = require('node-fetch')
-var urlAuth = `${process.env.AUTH_URL}`;
+var urlAuth = `https://staging-auth.chickinindonesia.com`
+// var urlAuth = `${process.env.AUTH_URL}`;
 var urlIOT = process.env.DB_NAME === "chckin" ? `iot-production:3103` : `iot-staging:3104`
 const handleQuerySort = (query) => {
     try{
@@ -244,6 +246,7 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
         }
 
         const dataKandang = await Kandang.find(filter).sort(sort).select('_id');
+        const dataKemitraan = await Kemitraan.countDocuments(filter)
 
         const resultPeriods = await handlePeriode(true, token, dataKandang, populasi, kemitraan, req.user, role, usiaFrom, usiaTo, bobotFrom, bobotTo);
         resultPeriode.push(...resultPeriods.filter(result => result))
@@ -266,7 +269,7 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
         }
 
         const resultPeriodeSort = resultPeriode.sort(dynamicSort("namaPemilik"));
-        const paginateResult = paginate(resultPeriodeSort, limit, offsetPaging); 
+        const paginateResult = paginate(resultPeriodeSort, limit, offsetPaging);
 
         return res.json({
             count: resultPeriode.length,
@@ -274,7 +277,9 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
             summary: {
                 totalPopulasi: Math.ceil(countPopulasi),
                 averageUsia: Math.ceil(countUsia),
-                averageBobot: Math.ceil(countBobot)
+                averageBobot: Math.ceil(countBobot),
+                totalKandang: Math.ceil(dataKandang.length),
+                totalKemitraan: Math.ceil(dataKemitraan)
             }
         })
         
@@ -286,7 +291,7 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
 const handleResultKandang = async(token, getKandang, kemitraan, filterPPL, role, kemitraanId) => {
     const kandangActive = [];
     const peternak = [];
-    const users = await fetch(`${urlAuth}/api/users/`, {
+    const users = await fetch(`http://${urlAuth}/api/users/`, {
         method: 'GET',
         headers: {'Authorization': token,
         "Content-Type": "application/json"}
@@ -456,7 +461,7 @@ const handlePeriode = async(isKemitraan, token, dataKandang, populasi, kemitraan
                     if (result.ok) {
                         return result.json();
                     }
-                });
+                })
 
                 //find detail peternak
                 const findUser = users.find(user => user._id.toString() === periode?.kandang?.createdBy.toString());
@@ -472,7 +477,7 @@ const handlePeriode = async(isKemitraan, token, dataKandang, populasi, kemitraan
                 return({
                     idKandang: periode.kandang.id,
                     namaKandang: periode.kandang.kode,
-                    isIoTInstalled:flock.data?.flock.length!=0 ? true : false,
+                    isIoTInstalled:flock?.data?.flock.length!=0 ? true : false,
                     kota: periode.kandang.kota,
                     DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
                     bobot: avgLatestWeight,
