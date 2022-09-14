@@ -1779,7 +1779,7 @@ exports.kelolaPeternak = async (req, res, next) => {
                 {$limit: 1}
             ])
             const now = new Date(Date.now())
-            const start = new Date(findPeriode[0].tanggalMulai)
+            const start = new Date(findPeriode[0]?.tanggalMulai)
             const umur = Math.round(Math.abs((now - start) / ONE_DAY))
 
             const suhu = await fetch(`http://${urlIOT}/api/flock/kandang/${x._id}`,{
