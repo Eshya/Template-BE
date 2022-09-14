@@ -147,7 +147,7 @@ exports.findById = async (req, res, next) => {
                 // console.log(pendapatanPeternak)
                 const peternak = await PeternakModel.findById(findKandang.createdBy._id).select('fullname')
                 // fund flock iot
-                flock = await fetch(`http://${urlIOT}/api/flock/datapool/kandang/` + itemKandang._id, {
+                flock = await fetch(`http://${urlIOT}/api/flock/datapool/kandang/` + findKandang._id, {
                     method: 'get',
                     headers: {
                         'Authorization': token,
