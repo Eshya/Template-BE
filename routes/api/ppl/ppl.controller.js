@@ -152,7 +152,11 @@ exports.findById = async (req, res, next) => {
                     headers: {
                         'Authorization': token,
                         "Content-Type": "application/json" }
-                }).then(result => result.json).catch((error) => {console.log(error)})
+                }).then(result => {
+                    if (result.ok) {
+                        return result.json();
+                    }
+                });
                 dataKandangPeriode.push({
                     idPemilik: findKandang.createdBy ? findKandang.createdBy._id : null,
                     namaPemilik: findKandang.createdBy ? (peternak?.fullname ? peternak.fullname : "Not Registered") : null,
