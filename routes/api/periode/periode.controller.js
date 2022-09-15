@@ -10,6 +10,7 @@ const Data = require('../data/data.model');
 const selectPublic = '-createdAt -updatedAt'
 const mongoose = require('mongoose')
 const fetch = require('node-fetch')
+const dayjs = require('dayjs');
 
 const ONE_DAY = 24 * 60 * 60 * 1000;
 const reducer = (acc, value) => acc + value
@@ -569,24 +570,29 @@ exports.autoClosingCultivation = async(req, res, next) => {
     const periods = await Model.find({}).sort('updatedAt');
     try {
         for (const periode of periods) {
-            const oneDay = 24 * 60 * 60 * 1000;
-            const now = new Date(Date.now());
-            const start = new Date(periode.tanggalMulai);
-            const chickenAge = Math.round(Math.abs((now - start) / oneDay))
+            // Continue to next periode when periode is undefined or empty
+            if (!periode) {
+                continue
+            }
+
+            const today = dayjs(Date.now());
+            const startDate = dayjs(new Date(periode.tanggalMulai));
             const kandang = await Kandang.findById(periode.kandang);
-        
-            if (chickenAge >= 50 && kandang) {
-                periode.isEnd = true
-                kandang.isActive = false
+            const chickenShedAge = Math.round(Math.abs(today.diff(startDate, 'day')));
+            
+            // Add 10 days from created date periode
+            const periodeActiveDate = dayjs(periode.createdAt).add(10, 'day');
+            
+            if (kandang && chickenShedAge >= 50 && today.format("YYYY-MM-DD") >= periodeActiveDate.format("YYYY-MM-DD")) {
+                periode.isEnd = true;
+                kandang.isActive = false;
+                await periode.save();
                 await kandang.save();
             }
-    
-            await periode.save();
         }
 
         return res.json({ status: 200, message: 'Successfully Auto Closing' });
     } catch (error) {
         return res.json({ status: 500, message: error.message })
     }
-    
 }
