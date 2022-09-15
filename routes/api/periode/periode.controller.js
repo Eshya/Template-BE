@@ -578,6 +578,7 @@ exports.autoClosingCultivation = async(req, res, next) => {
             if (chickenAge >= 50 && kandang) {
                 periode.isEnd = true
                 kandang.isActive = false
+                await kandang.save();
             }
     
             await periode.save();
@@ -585,7 +586,7 @@ exports.autoClosingCultivation = async(req, res, next) => {
 
         return res.json({ status: 200, message: 'Successfully Auto Closing' });
     } catch (error) {
-        return res.json({ status: 500, message: error })
+        return res.json({ status: 500, message: error.message })
     }
     
 }

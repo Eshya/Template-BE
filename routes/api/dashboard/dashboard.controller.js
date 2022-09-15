@@ -291,7 +291,7 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
 const handleResultKandang = async(token, getKandang, kemitraan, filterPPL, role, kemitraanId) => {
     const kandangActive = [];
     const peternak = [];
-    const users = await fetch(`http://${urlAuth}/api/users/`, {
+    const users = await fetch(`${urlAuth}/api/users/`, {
         method: 'GET',
         headers: {'Authorization': token,
         "Content-Type": "application/json"}
