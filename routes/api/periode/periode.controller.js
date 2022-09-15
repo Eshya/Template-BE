@@ -94,7 +94,7 @@ exports.findKegiatan = async (req, res, next) => {
         const BW0 = !findBW0 ? 0 : findBW0.berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0);
         const sampleBW0 = !findBW0 ? 0 : findBW0.berat.reduce((a, {populasi}) => a + populasi, 0);
         const avgBW0 = BW0 / sampleBW0
-        //mappingData
+        //mappingData 
         const map = await Promise.all(data.map(async (x) => {
             var tmp = x
             //findUmur
@@ -329,6 +329,23 @@ exports.getBudidaya = async (req, res, next) => {
     }
 }
 
+const rataBW = async (req, day) => {
+    const getPeriode = await Model.findById(req)
+    const start = new Date(getPeriode.tanggalMulai);
+    
+    const findKegiatan = await KegiatanHarian.find({periode: getPeriode._id})
+    const BW = findKegiatan.find((e) => {
+        const tanggal = new Date(e.tanggal)
+        var umur = Math.round(Math.abs((tanggal - start) / ONE_DAY))
+        if (umur === day) return e
+    })
+    const akumulasiBW = !BW ? 0 : BW.berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0);
+    const sampleBW = !BW ? 0 : BW.berat.reduce((a, {populasi}) => a + populasi, 0);
+    var avgBW = akumulasiBW / sampleBW
+    const umur = findKegiatan.length
+    return {avgBW, umur}
+}
+
 exports.ringkasan = async (req, res, next) => {
     const id = req.params.id
     try {
@@ -362,9 +379,6 @@ exports.ringkasan = async (req, res, next) => {
         ])
 
         const getKegiatan = await KegiatanHarian.find({periode: getPeriode.id, berat: {$exists: true, $not:{$size: 0}}, pakanPakai: {$exists: true, $not:{$size: 0}}}).sort({'tanggal': -1}).limit(1).select('-periode')
-        const now = new Date(Date.now());
-        const start = new Date(getPeriode.tanggalMulai);
-        var umur = Math.round(Math.abs((now - start) / ONE_DAY)) 
         
         const latestWeight = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0) : 0
         const latestSampling = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {populasi}) => a + populasi, 0) : 0
@@ -392,12 +406,13 @@ exports.ringkasan = async (req, res, next) => {
             tanggal: data.tanggal[0]
         }});
         const sortedDetailPanen = detailPanen.sort((a,b) => b.tanggal - a.tanggal);
-
-        if (umur >= 50){ umur = 50 }
+        const umur = await rataBW(req.params.id, 0)
+        if (umur.umur >= 50){ umur.umur = 50 }
         // const populasiAktual = getPeriode.populasi - allPenjualan;
-        const std = await Data.findOne({day: umur})
-        
-        const rgr = umur === 7 ? (avgBW7 - avgBW0) / avgBW0 * 100 : 0
+        const avgBW0 = await rataBW(req.params.id, 0)
+        const avgBW7 = await rataBW(req.params.id, 7)
+        const std = await Data.findOne({day: umur.umur})
+        const rgr = umur.umur >= 7 ? (avgBW7.avgBW - avgBW0.avgBW) / avgBW0.avgBW * 100 : 0
         res.json({
             totalMortality: allDeplesi,
             totalCulling: allKematian,
