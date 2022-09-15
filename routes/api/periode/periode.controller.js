@@ -412,6 +412,7 @@ exports.ringkasan = async (req, res, next) => {
         const avgBW0 = await rataBW(req.params.id, 0)
         const avgBW7 = await rataBW(req.params.id, 7)
         const std = await Data.findOne({day: umur.umur})
+        const stdRGR = await Data.findOne({day: 7}).select('rgr')
         const rgr = umur.umur >= 7 ? (avgBW7.avgBW - avgBW0.avgBW) / avgBW0.avgBW * 100 : 0
         res.json({
             totalMortality: allDeplesi,
@@ -432,7 +433,7 @@ exports.ringkasan = async (req, res, next) => {
             fcrAktual: FCR,
             diffFcr: FCR - std.fcr,
             RGR: rgr,
-            diffRgr: rgr - std.rgr,
+            diffRgr: rgr - stdRGR.rgr,
             pakanMasuk: pakanMasuk,
             pakanPakai: allPakan,
             pakan: pakanMasuk - allPakan,
