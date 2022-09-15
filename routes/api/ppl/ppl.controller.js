@@ -147,22 +147,18 @@ exports.findById = async (req, res, next) => {
                 // console.log(pendapatanPeternak)
                 const peternak = await PeternakModel.findById(findKandang.createdBy._id).select('fullname')
                 // fund flock iot
-                flock = await fetch(`http://${urlIOT}/api/flock/datapool/kandang/` + itemKandang._id, {
+                flock = await fetch(`http://${urlIOT}/api/flock/datapool/kandang/` + findKandang._id, {
                     method: 'get',
                     headers: {
                         'Authorization': token,
                         "Content-Type": "application/json" }
-                }).then(result => {
-                    if (result.ok) {
-                        return result.json();
-                    }
-                });
+                }).then(result => result.json).catch((error) => {console.log(error)})
                 dataKandangPeriode.push({
                     idPemilik: findKandang.createdBy ? findKandang.createdBy._id : null,
                     namaPemilik: findKandang.createdBy ? (peternak?.fullname ? peternak.fullname : "Not Registered") : null,
                     idKandang: findKandang._id,
                     namaKandang: findKandang.kode,
-                    isIoTInstalled:flock.data?.flock.length!=0 ? true : false,
+                    isIoTInstalled:flock?.data?.flock.length!=0 ? true : false,
                     alamat: findKandang.alamat,
                     kota: findKandang.kota,
                     isActive: findKandang.isActive,

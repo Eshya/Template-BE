@@ -123,6 +123,7 @@ exports.findAllDataPool =  async (req, res, next) => {
             const chickenSheds = await Model.find(filter).sort();
             const resultKemitraan = await handleChickenSheds(
               true,
+              token,
               chickenSheds,
               kemitraanId,
               users
@@ -149,6 +150,7 @@ exports.findAllDataPool =  async (req, res, next) => {
     
             const resultNonKemitraan = await handleChickenSheds(
               false,
+              token,
               chickenShedsData,
               kemitraanId,
               users
@@ -1777,7 +1779,7 @@ exports.kelolaPeternak = async (req, res, next) => {
                 {$limit: 1}
             ])
             const now = new Date(Date.now())
-            const start = new Date(findPeriode[0].tanggalMulai)
+            const start = new Date(findPeriode[0]?.tanggalMulai)
             const umur = Math.round(Math.abs((now - start) / ONE_DAY))
 
             const suhu = await fetch(`http://${urlIOT}/api/flock/kandang/${x._id}`,{
@@ -1948,6 +1950,7 @@ exports.detailKandang = async (req,res, next) => {
 
 const handleChickenSheds = async (
   isKemitraan,
+  token,
   chickenSheds,
   kemitraanId,
   users
@@ -1984,6 +1987,22 @@ const handleChickenSheds = async (
     let data;
     let age = 0;
 
+    let flock = [];
+    flock = await fetch(
+      `http://${urlIOT}/api/flock/datapool/kandang/` + chickenShed._id,
+      {
+        method: "get",
+        headers: {
+          Authorization: token,
+          "Content-Type": "application/json",
+        },
+      }
+    ).then((result) => {
+      if (result.ok) {
+        return result.json();
+      }
+    });
+
     if (periode && periode?.kandang) {
       const chickenShedPeriods = await Periode.find(filterPeriod).sort(
         "tanggalMulai"
@@ -2004,22 +2023,6 @@ const handleChickenSheds = async (
       age = periode.isEnd
         ? Math.round(Math.abs((periode.tanggalAkhir - start) / ONE_DAY))
         : Math.round(Math.abs((now - start) / ONE_DAY));
-
-      let flock = [];
-      flock = await fetch(
-        `http://${urlIOT}/api/flock/datapool/kandang/` + chickenShed._id,
-        {
-          method: "get",
-          headers: {
-            Authorization: token,
-            "Content-Type": "application/json",
-          },
-        }
-      ).then((result) => {
-        if (result.ok) {
-          return result.json();
-        }
-      });
 
       resultObject = {
         idPemilik: chickenShed.createdBy ? chickenShed.createdBy._id : null,
