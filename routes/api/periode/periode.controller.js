@@ -437,7 +437,7 @@ exports.ringkasan = async (req, res, next) => {
             pakanMasuk: pakanMasuk,
             pakanPakai: allPakan,
             pakan: pakanMasuk - allPakan,
-            
+            stdRgr: stdRGR.rgr
         })
     } catch (error) {
         next(error)
