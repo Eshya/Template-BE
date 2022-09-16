@@ -10,6 +10,7 @@ const Data = require('../data/data.model');
 const selectPublic = '-createdAt -updatedAt'
 const mongoose = require('mongoose')
 const fetch = require('node-fetch')
+const dayjs = require('dayjs');
 
 const ONE_DAY = 24 * 60 * 60 * 1000;
 const reducer = (acc, value) => acc + value
@@ -93,7 +94,7 @@ exports.findKegiatan = async (req, res, next) => {
         const BW0 = !findBW0 ? 0 : findBW0.berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0);
         const sampleBW0 = !findBW0 ? 0 : findBW0.berat.reduce((a, {populasi}) => a + populasi, 0);
         const avgBW0 = BW0 / sampleBW0
-        //mappingData
+        //mappingData 
         const map = await Promise.all(data.map(async (x) => {
             var tmp = x
             //findUmur
@@ -328,6 +329,23 @@ exports.getBudidaya = async (req, res, next) => {
     }
 }
 
+const rataBW = async (req, day) => {
+    const getPeriode = await Model.findById(req)
+    const start = new Date(getPeriode.tanggalMulai);
+    
+    const findKegiatan = await KegiatanHarian.find({periode: getPeriode._id})
+    const BW = findKegiatan.find((e) => {
+        const tanggal = new Date(e.tanggal)
+        var umur = Math.round(Math.abs((tanggal - start) / ONE_DAY))
+        if (umur === day) return e
+    })
+    const akumulasiBW = !BW ? 0 : BW.berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0);
+    const sampleBW = !BW ? 0 : BW.berat.reduce((a, {populasi}) => a + populasi, 0);
+    var avgBW = akumulasiBW / sampleBW
+    const umur = findKegiatan.length
+    return {avgBW, umur}
+}
+
 exports.ringkasan = async (req, res, next) => {
     const id = req.params.id
     try {
@@ -361,9 +379,6 @@ exports.ringkasan = async (req, res, next) => {
         ])
 
         const getKegiatan = await KegiatanHarian.find({periode: getPeriode.id, berat: {$exists: true, $not:{$size: 0}}, pakanPakai: {$exists: true, $not:{$size: 0}}}).sort({'tanggal': -1}).limit(1).select('-periode')
-        const now = new Date(Date.now());
-        const start = new Date(getPeriode.tanggalMulai);
-        var umur = Math.round(Math.abs((now - start) / ONE_DAY)) 
         
         const latestWeight = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0) : 0
         const latestSampling = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {populasi}) => a + populasi, 0) : 0
@@ -391,12 +406,14 @@ exports.ringkasan = async (req, res, next) => {
             tanggal: data.tanggal[0]
         }});
         const sortedDetailPanen = detailPanen.sort((a,b) => b.tanggal - a.tanggal);
-
-        if (umur >= 50){ umur = 50 }
+        const umur = await rataBW(req.params.id, 0)
+        if (umur.umur >= 50){ umur.umur = 50 }
         // const populasiAktual = getPeriode.populasi - allPenjualan;
-        const std = await Data.findOne({day: umur})
-        
-        const rgr = umur === 7 ? (avgBW7 - avgBW0) / avgBW0 * 100 : 0
+        const avgBW0 = await rataBW(req.params.id, 0)
+        const avgBW7 = await rataBW(req.params.id, 7)
+        const std = await Data.findOne({day: umur.umur})
+        const stdRGR = await Data.findOne({day: 7}).select('rgr')
+        const rgr = umur.umur >= 7 ? (avgBW7.avgBW - avgBW0.avgBW) / avgBW0.avgBW * 100 : 0
         res.json({
             totalMortality: allDeplesi,
             totalCulling: allKematian,
@@ -416,11 +433,11 @@ exports.ringkasan = async (req, res, next) => {
             fcrAktual: FCR,
             diffFcr: FCR - std.fcr,
             RGR: rgr,
-            diffRgr: rgr - std.rgr,
+            diffRgr: rgr - stdRGR.rgr,
             pakanMasuk: pakanMasuk,
             pakanPakai: allPakan,
             pakan: pakanMasuk - allPakan,
-            
+            stdRgr: stdRGR.rgr
         })
     } catch (error) {
         next(error)
@@ -569,24 +586,29 @@ exports.autoClosingCultivation = async(req, res, next) => {
     const periods = await Model.find({}).sort('updatedAt');
     try {
         for (const periode of periods) {
-            const oneDay = 24 * 60 * 60 * 1000;
-            const now = new Date(Date.now());
-            const start = new Date(periode.tanggalMulai);
-            const chickenAge = Math.round(Math.abs((now - start) / oneDay))
+            // Continue to next periode when periode is undefined or empty
+            if (!periode) {
+                continue
+            }
+
+            const today = dayjs(Date.now());
+            const startDate = dayjs(new Date(periode.tanggalMulai));
             const kandang = await Kandang.findById(periode.kandang);
-        
-            if (chickenAge >= 50 && kandang) {
-                periode.isEnd = true
-                kandang.isActive = false
+            const chickenShedAge = Math.round(Math.abs(today.diff(startDate, 'day')));
+            
+            // Add 10 days from created date periode
+            const periodeActiveDate = dayjs(periode.createdAt).add(10, 'day');
+            
+            if (kandang && chickenShedAge >= 50 && today.format("YYYY-MM-DD") >= periodeActiveDate.format("YYYY-MM-DD")) {
+                periode.isEnd = true;
+                kandang.isActive = false;
+                await periode.save();
                 await kandang.save();
             }
-    
-            await periode.save();
         }
 
         return res.json({ status: 200, message: 'Successfully Auto Closing' });
     } catch (error) {
         return res.json({ status: 500, message: error.message })
     }
-    
 }
