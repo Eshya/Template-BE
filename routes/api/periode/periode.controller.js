@@ -583,32 +583,39 @@ exports.validateTambah = async (req,res, next) => {
 }
 
 exports.autoClosingCultivation = async(req, res, next) => {
-    const periods = await Model.find({}).sort('updatedAt');
+    const chickenSheds = await Kandang.find({});
     try {
-        for (const periode of periods) {
-            // Continue to next periode when periode is undefined or empty
-            if (!periode) {
-                continue
-            }
+      for (const chickenShed of chickenSheds) {
+        // Continue to next periode when periode is undefined or empty
+        const periode = await Model.findOne({ kandang: chickenShed._id }).sort({
+          updatedAt: -1,
+        });
 
-            const today = dayjs(Date.now());
-            const startDate = dayjs(new Date(periode.tanggalMulai));
-            const kandang = await Kandang.findById(periode.kandang);
-            const chickenShedAge = Math.round(Math.abs(today.diff(startDate, 'day')));
-            
-            // Add 10 days from created date periode
-            const periodeActiveDate = dayjs(periode.createdAt).add(10, 'day');
-            
-            if (kandang && chickenShedAge >= 50 && today.format("YYYY-MM-DD") >= periodeActiveDate.format("YYYY-MM-DD")) {
-                periode.isEnd = true;
-                kandang.isActive = false;
-                await periode.save();
-                await kandang.save();
-            }
+        if (periode) {
+          const today = dayjs(Date.now());
+          const startDate = dayjs(new Date(periode.tanggalMulai));
+          const chickenShedAge = Math.round(
+            Math.abs(today.diff(startDate, "day"))
+          );
+
+          // Add 10 days from created date periode
+          const periodeActiveDate = dayjs(periode.createdAt).add(10, "day");
+
+          if (
+            chickenShedAge >= 50 &&
+            today.format("YYYY-MM-DD") >= periodeActiveDate.format("YYYY-MM-DD")
+          ) {
+
+            periode.isEnd = true;
+            chickenShed.isActive = false;
+            await periode.save();
+            await chickenShed.save();
+          }
         }
+      }
 
-        return res.json({ status: 200, message: 'Successfully Auto Closing' });
+      return res.json({ status: 200, message: "Successfully Auto Closing" });
     } catch (error) {
-        return res.json({ status: 500, message: error.message })
+      return res.json({ status: 500, message: error.message });
     }
 }
