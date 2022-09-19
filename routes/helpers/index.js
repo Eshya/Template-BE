@@ -48,7 +48,7 @@ const verifyToken = async (req, res, next) => {
 }
 
 const verifyKey = async (req, res, next) => {
-  const apiKey = req.query.apiKey
+  const apiKey = !req.query.apiKey ? req.headers['apikey'] : req.query.apiKey
   console.log(apiKey)
   if (!apiKey || apiKey !== "74e48c8e3c0bc19f9e22dd7570037392e5d0bf80cf9dd51") return res.json({error: 401, message: "unathorized"})
   next()

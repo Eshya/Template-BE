@@ -53,4 +53,5 @@ const scheme = new Schema({
     },
 }, {versionKey: false, timestamps: true})
 scheme.plugin(require('mongoose-autopopulate'));
+scheme.plugin(require('mongoose-delete'), {deletedAt: true, overrideMethods: true})
 module.exports = model('Periode', scheme, 'periode');
