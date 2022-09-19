@@ -7,8 +7,10 @@ const KegiatanHarian = require('../kegiatan-harian/kegiatan-harian.model')
 const Penjualan = require("../penjualan/penjualan.model");
 const Sapronak = require("../sapronak/sapronak.model");
 const PeternakModel = require('../peternak/peternak.model');
+const fetch = require('node-fetch')
 const Promise = require("bluebird");
 const reducer = (acc, value) => acc + value;
+var urlIOT = process.env.DB_NAME === "chckin" ? `iot-production:3103` : `iot-staging:3104`
 const handleQuerySort = (query) => {
     try{
       const toJSONString = ("{" + query + "}").replace(/(\w+:)|(\w+ :)/g, (matched => {
@@ -69,6 +71,7 @@ exports.findAll =  async (req, res, next) => {
 
 exports.findById = async (req, res, next) => {
     try {
+        const token = req.headers['authorization']
         const ppl = await Model.findById(req.params.id).select('avatar image noKTP address fullname username email phoneNumber asalKemitraan kemitraanUser isPPLActive')
         const findPeriode = await Periode.aggregate([
             {$match: {ppl: mongoose.Types.ObjectId(req.params.id)}},
@@ -121,6 +124,7 @@ exports.findById = async (req, res, next) => {
                 // console.log(IP)
                 // get total penjualan
                 let harian = []
+                let flock = []
                 let pembelianPakan = 0
                 let pembelianOVK = 0
                 const getSapronak = await Sapronak.find({periode: itemPeriode.periode[0]});
@@ -142,11 +146,23 @@ exports.findById = async (req, res, next) => {
                 const pendapatanPeternak = penjualanAyamBesar - pembelianDoc - pembelianOVK - pembelianPakan
                 // console.log(pendapatanPeternak)
                 const peternak = await PeternakModel.findById(findKandang.createdBy._id).select('fullname')
+                // fund flock iot
+                flock = await fetch(`http://${urlIOT}/api/flock/datapool/kandang/` + findKandang._id, {
+                    method: 'get',
+                    headers: {
+                        'Authorization': token,
+                        "Content-Type": "application/json" }
+                }).then(result => {
+                    if (result.ok) {
+                        return result.json();
+                    }
+                });
                 dataKandangPeriode.push({
                     idPemilik: findKandang.createdBy ? findKandang.createdBy._id : null,
                     namaPemilik: findKandang.createdBy ? (peternak?.fullname ? peternak.fullname : "Not Registered") : null,
                     idKandang: findKandang._id,
                     namaKandang: findKandang.kode,
+                    isIoTInstalled:flock?.data?.flock.length!=0 ? true : false,
                     alamat: findKandang.alamat,
                     kota: findKandang.kota,
                     isActive: findKandang.isActive,
