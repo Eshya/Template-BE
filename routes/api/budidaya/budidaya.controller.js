@@ -29,12 +29,24 @@ const sortBy = (array,code) =>{
 function paginate(array, page_size, page_number) {
     return array.slice((page_number - 1) * page_size, page_number * page_size);
 }
+function searchByPeriode(array,search){
+    return array.filter(function(arr) {
+        let slice =  search.slice(1,search.length-1)
+        return JSON.stringify(arr.periodeString).includes(slice);
+    })
+}
 exports.riwayatBudidaya =  async (req, res, next) => {
     try {
-        const {limit, offset,sortcode} = req.query;
+        let {limit, offset,sortcode,search} = req.query;
         
         let periode = await Periode.find({kandang: req.params.id}).sort('tanggalMulai')
         let result = [];
+        if(isNaN(limit))limit=5;
+        if(isNaN(offset))offset=0;
+        if(isNaN(sortcode))sortcode=1;
+        if(search===undefined)search="";
+        
+        
         // console.log(periode)
         if (periode.length!=0) {
             await Promise.map(periode, async (periodeChild, index) => {
@@ -131,6 +143,7 @@ exports.riwayatBudidaya =  async (req, res, next) => {
                
                 result.push({
                     periodeKe:index+1,
+                    periodeString: `Periode ${index+1}`,
                     idPeriode: periodeChild._id,
                     start:periodeChild.tanggalMulai,
                     closing:periodeChild?.tanggalAkhir === null ? "Periode Berjalan" : periodeChild.tanggalAkhir,
@@ -138,6 +151,7 @@ exports.riwayatBudidaya =  async (req, res, next) => {
                     namaPPL: periodeChild?.isActivePPL ? findPPL.fullname : "PPL Not Active",
                     phonePPL: periodeChild?.isActivePPL ? findPPL.phoneNumber : null,
                     IP: IPResult,
+                    IPSTD: STD ? STD.ip: 0 ,
                     totalPenghasilanKandang: pendapatanPeternak,
                     DOC: periodeChild.jenisDOC ? periodeChild.jenisDOC.name : "",
                     populasiAwal: periodeChild.populasi,
@@ -167,7 +181,10 @@ exports.riwayatBudidaya =  async (req, res, next) => {
             offsetPaging = (offset / 5 + 1)
         }
         let resultSort = sortBy(result,parseInt(sortcode))
+        
         result = paginate(resultSort,parseInt(limit),parseInt(offsetPaging)) 
+        result = searchByPeriode(result,search)
+        // console.log(searchByPeriode(result,search))
         res.json({
             count: result.length,
             dataRiwayat: result,
