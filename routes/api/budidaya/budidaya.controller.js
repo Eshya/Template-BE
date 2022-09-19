@@ -32,7 +32,9 @@ function paginate(array, page_size, page_number) {
 function searchByPeriode(array,search){
     return array.filter(function(arr) {
         let slice =  search.slice(1,search.length-1)
-        return JSON.stringify(arr.periodeString).includes(slice);
+        let filter = JSON.stringify(arr.periodeString).includes(slice.toUpperCase());
+        delete arr.periodeString;
+        return filter;
     })
 }
 exports.riwayatBudidaya =  async (req, res, next) => {
@@ -143,7 +145,7 @@ exports.riwayatBudidaya =  async (req, res, next) => {
                
                 result.push({
                     periodeKe:index+1,
-                    periodeString: `Periode ${index+1}`,
+                    periodeString: `PERIODE ${index+1}`,
                     idPeriode: periodeChild._id,
                     start:periodeChild.tanggalMulai,
                     closing:periodeChild?.tanggalAkhir === null ? "Periode Berjalan" : periodeChild.tanggalAkhir,
