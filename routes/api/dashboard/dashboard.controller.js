@@ -470,16 +470,16 @@ const handlePeriode = async(isKemitraan, token, dataKandang, populasi, kemitraan
 
             if (pushData) {
                 let flock = [];
-                // flock = await fetch(`http://${urlIOT}/api/flock/datapool/kandang/` + periode.kandang.id, {
-                //     method: 'get',
-                //     headers: {
-                //         'Authorization': token,
-                //         "Content-Type": "application/json" }
-                // }).then(result => {
-                //     if (result.ok) {
-                //         return result.json();
-                //     }
-                // });
+                flock = await fetch(`http://${urlIOT}/api/flock/datapool/kandang/` + periode.kandang.id, {
+                    method: 'get',
+                    headers: {
+                        'Authorization': token,
+                        "Content-Type": "application/json" }
+                }).then(result => {
+                    if (result.ok) {
+                        return result.json();
+                    }
+                });
 
                 //find detail peternak
                 const findUser = users.find(user => user._id.toString() === periode?.kandang?.createdBy.toString());
