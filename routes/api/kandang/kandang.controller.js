@@ -2007,7 +2007,8 @@ const handleChickenSheds = async (
       const chickenShedPeriods = await Periode.find(filterPeriod).sort(
         "tanggalMulai"
       );
-
+      const lastKegiatanHarian = await KegiatanHarian.find({periode: periode.id}).sort({'tanggal': -1}).limit(1).select('-periode')
+            
       let dataPeriode = [];
       await Promise.map(chickenShedPeriods, async (chickenShedItem, index) => {
         if (chickenShedItem._id.toString() === periode._id.toString()) {
@@ -2016,7 +2017,7 @@ const handleChickenSheds = async (
       });
 
       data = dataPeriode;
-
+      
       // get usia
       const now = new Date(Date.now());
       const start = new Date(periode.tanggalMulai);
@@ -2034,6 +2035,7 @@ const handleChickenSheds = async (
         isActive: chickenShed.isActive ? "Aktif" : "Rehat",
         usia: age,
         periodeKe: !dataPeriode.length ? "Belum mulai Periode" : dataPeriode[0],
+        lastUpdate:lastKegiatanHarian[0]?.tanggal ? lastKegiatanHarian[0]?.tanggal : "No Updated Data"
       };
 
       if (isKemitraan && username) {
