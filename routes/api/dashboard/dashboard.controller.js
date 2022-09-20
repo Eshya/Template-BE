@@ -187,7 +187,18 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
         let countUsia = (resultPeriode.reduce((a, {usia}) => a + usia, 0) / resultPeriode.length);
         let countBobot = (resultPeriode.reduce((a, {bobot}) => a + bobot, 0) / resultPeriode.length);
         if (peternak) {
-            resultPeriode = resultPeriode.filter(item => item.namaPemilik.toLowerCase().indexOf(peternak) > -1);
+            resultPeriode = resultPeriode.filter(item => {
+                const owner = item.namaPemilik.toLowerCase().indexOf(peternak.toLowerCase()) > -1;
+                const chickenSheds = item.namaKandang.toLowerCase().indexOf(peternak.toLowerCase()) > -1;
+                if (owner) {
+                    return owner;
+                }
+
+                if (chickenSheds) {
+                    return chickenSheds
+                }
+            });
+
             countPopulasi = resultPeriode.reduce((a, {populasi}) => a + populasi, 0);
             countUsia = (resultPeriode.reduce((a, {usia}) => a + usia, 0) / resultPeriode.length);
             countBobot = (resultPeriode.reduce((a, {bobot}) => a + bobot, 0) / resultPeriode.length);
@@ -252,7 +263,19 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
         let countUsia = (resultPeriode.reduce((a, {usia}) => a + usia, 0) / resultPeriode.length);
         let countBobot = (resultPeriode.reduce((a, {bobot}) => a + bobot, 0) / resultPeriode.length);
         if (peternak) {
-            resultPeriode = resultPeriode.filter(item => item.namaPemilik.toLowerCase().indexOf(peternak) > -1);
+            resultPeriode = resultPeriode.filter(item => {
+                const findPemilik = item.namaPemilik.toLowerCase().indexOf(peternak.toLowerCase()) > -1;
+                const findKandang = item.namaKandang.toLowerCase().indexOf(peternak.toLowerCase()) > -1;
+                if (findPemilik) {
+                    return findPemilik;
+                }
+
+                if (findKandang) {
+                    return findKandang
+                }
+
+            });
+
             countPopulasi = resultPeriode.reduce((a, {populasi}) => a + populasi, 0);
             countUsia = (resultPeriode.reduce((a, {usia}) => a + usia, 0) / resultPeriode.length);
             countBobot = (resultPeriode.reduce((a, {bobot}) => a + bobot, 0) / resultPeriode.length);
@@ -447,16 +470,16 @@ const handlePeriode = async(isKemitraan, token, dataKandang, populasi, kemitraan
 
             if (pushData) {
                 let flock = [];
-                flock = await fetch(`http://${urlIOT}/api/flock/datapool/kandang/` + periode.kandang.id, {
-                    method: 'get',
-                    headers: {
-                        'Authorization': token,
-                        "Content-Type": "application/json" }
-                }).then(result => {
-                    if (result.ok) {
-                        return result.json();
-                    }
-                });
+                // flock = await fetch(`http://${urlIOT}/api/flock/datapool/kandang/` + periode.kandang.id, {
+                //     method: 'get',
+                //     headers: {
+                //         'Authorization': token,
+                //         "Content-Type": "application/json" }
+                // }).then(result => {
+                //     if (result.ok) {
+                //         return result.json();
+                //     }
+                // });
 
                 //find detail peternak
                 const findUser = users.find(user => user._id.toString() === periode?.kandang?.createdBy.toString());
