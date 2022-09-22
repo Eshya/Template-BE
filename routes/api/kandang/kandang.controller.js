@@ -1955,7 +1955,6 @@ exports.deplesiChart = async (req, res, next) => {
       createdAt: 1,
     });
 
-    console.log(periode);
     const standardData = await DataSTD.find()
       .sort({ day: 1 })
       .select("day deplesi");
@@ -1963,9 +1962,7 @@ exports.deplesiChart = async (req, res, next) => {
     const actual = [];
     const dailyActivities = await KegiatanHarian.find({
       periode: periode.id,
-    })
-      .select("-periode")
-      .sort({ tanggal: 1 });
+    }).select("-periode").sort({ tanggal: 1 });
 
     for (let i = 0; i < dailyActivities.length; i++) {
       actual.push({
@@ -1978,7 +1975,7 @@ exports.deplesiChart = async (req, res, next) => {
 
     return res.json({ data: actual });
   } catch (error) {
-    return res.json({ status: error.status, message: error.message });
+    return res.json({ status: 500, message: error.message });
   }
 };
 
@@ -2065,7 +2062,7 @@ exports.bobotChart = async (req, res, next) => {
 
     return res.json({ data: actual });
   } catch (error) {
-    return res.json({ status: error.status, message: error.message });
+    return res.json({ status: 500, message: error.message });
   }
 };
 
