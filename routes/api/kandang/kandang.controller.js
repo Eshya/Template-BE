@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 const {parseQuery} = require('../../helpers');
 const Model = require('./kandang.model');
-const Role = require('../roles/roles.model')
 // const Flock = require('../flock/flock.model');
 const Periode = require('../periode/periode.model');
 const KegiatanHarian = require('../kegiatan-harian/kegiatan-harian.model')
@@ -10,6 +9,7 @@ const Sapronak = require("../sapronak/sapronak.model");
 const Nekropsi = require("../nekropsi/nekropsi.model");
 const DataSTD = require('../data/data.model');
 const PeternakModel = require('../peternak/peternak.model');
+const Role = require('../roles/roles.model')
 const selectPublic = '-createdAt -updatedAt';
 const fetch = require('node-fetch')
 const Promise = require("bluebird");
