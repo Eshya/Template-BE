@@ -14,6 +14,7 @@ services:
       DB_NAME: chckin-stagging
       DB_NAME_AUTH: chickin-auth-stagging
       AUTH_URL: https://staging-auth.chickinindonesia.com
+      BE_URL: https://staging-smartfarm.chickinindonesia.com
     volumes:
       - /sites/apps/smartfarm/uploads:/app/uploads
     networks:
