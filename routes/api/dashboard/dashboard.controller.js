@@ -213,7 +213,7 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
             }
         })
     } catch (error) {
-        next(error)
+        return res.json({ status: 500, message: error.message})
     }
 }
 
@@ -279,7 +279,7 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
         })
         
     } catch (error) {
-        next(error)
+        return res.json({ status: 500, message: error.message})
     }
 }
 
@@ -342,6 +342,10 @@ const handlePeriode = async(isKemitraan, token, dataKandang, populasiFrom, popul
         filterPeriod.isEnd = false;
         const checkPopulasiFrom = Number.isInteger(populasiFrom) ? populasiFrom : !parseInt(populasiFrom) ? 0 : parseInt(populasiFrom);
         const checkPopulasiTo = Number.isInteger(populasiTo) ? populasiTo : !parseInt(populasiTo) ? 0 : parseInt(populasiTo);
+
+        if (checkPopulasiFrom > checkPopulasiTo) {
+            throw new Error('Populasi awal tidak boleh melebihi populasi akhir')
+        }
 
         if (populasiFrom) {
             query.$gte = checkPopulasiFrom;
