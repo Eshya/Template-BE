@@ -3,7 +3,7 @@ const router = express.Router();
 const c = require('./tipe-kandang.controller');
 const {schema} = require('./tipe-kandang.validation')
 const {auth, queryCek, schemaCek, paramCek, after, permition, permitionPPL} = require('../../helpers')
-const all = permition('superadmin', 'ppl', 'peternak', 'adminsales', 'adminkemitraan', 'adminiot')
+const all = permition('superadmin', 'ppl', 'peternak', 'adminsales', 'adminkemitraan', 'adminiot','adminaftersales')
 
 router.get('/', auth, all, permitionPPL, queryCek, c.findAll);
 router.get('/:id', auth, paramCek, c.findById);

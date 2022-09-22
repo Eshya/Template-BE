@@ -360,6 +360,7 @@ const handlePeriode = async(isKemitraan, token, dataKandang, populasi, kemitraan
         if (role === "adminkemitraan") {
             filterPeriod.kemitraan = kemitraanId;
         }
+        
 
         const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 });
         if (periode?.kandang && periode?.kemitraan && periode?.kandang?.createdBy) {
@@ -449,19 +450,25 @@ const handlePeriode = async(isKemitraan, token, dataKandang, populasi, kemitraan
             if (usiaFrom === "" && usiaTo === "" && bobotFrom === "" && bobotTo === "") {
                 pushData = true;
             }
-
+            let flock = [];
+            flock = await fetch(`http://${urlIOT}/api/flock/datapool/kandang/` + periode.kandang.id, {
+                method: 'get',
+                headers: {
+                    'Authorization': token,
+                    "Content-Type": "application/json" }
+            }).then(result => {
+                if (result.ok) {
+                    return result.json();
+                }
+            })
+            // filter adminaftersales -> block if flock not detected
+            if (role === "adminaftersales" && flock.data?.flock.length===0){
+                pushData = false;
+                
+            }
+            
             if (pushData) {
-                let flock = [];
-                flock = await fetch(`http://${urlIOT}/api/flock/datapool/kandang/` + periode.kandang.id, {
-                    method: 'get',
-                    headers: {
-                        'Authorization': token,
-                        "Content-Type": "application/json" }
-                }).then(result => {
-                    if (result.ok) {
-                        return result.json();
-                    }
-                })
+                
 
                 //find detail peternak
                 const findUser = users.find(user => user._id.toString() === periode?.kandang?.createdBy.toString());
