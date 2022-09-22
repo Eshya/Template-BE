@@ -490,6 +490,7 @@ exports.findOneDataPool =  async (req, res, next) => {
                 periodeEnd: periode.isEnd,
                 periodeKe: dataPeriode[0],
                 IP: IPResult,
+                IPSTD: STD ? STD.ip: 0 ,
                 totalPenghasilanKandang: pendapatanPeternak,
                 DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
                 populasiAwal: periode.populasi,
