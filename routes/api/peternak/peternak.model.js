@@ -1,5 +1,9 @@
 const { createConnection, Schema, model } = require('mongoose');
 const Kemitraan = require('../kemitraan/kemitraan.model');
+const Roles = require('../roles/roles.model')
+const UserImage = require('../user-image/user-image.model')
+const Provinces = require('../province/province.model')
+const Regencies = require('../regency/regency.model')
 // const host = process.env.DB_HOST || '103.31.39.17'
 // const dbPort = process.env.DB_PORT || 27018
 const dbName = process.env.DB_NAME_AUTH || 'chickin-auth-stagging'
@@ -39,12 +43,12 @@ const scheme = new Schema({
   },
   role: {
     type: Schema.Types.ObjectId,
-    ref: 'Roles', select: true,
+    ref: Roles, select: true,
     autopopulate: true
   },
   image: {
     type: Schema.Types.ObjectId,
-    ref: 'UserImage', select: true,
+    ref: UserImage, select: true,
     autopopulate: { maxDepth: 1 },
     default: null
   },
@@ -92,13 +96,13 @@ const scheme = new Schema({
   },
   province: {
     type: Schema.Types.ObjectId,
-    ref: 'Provinces',
+    ref: Provinces,
     select: true,
     autopopulate: true
   },
   regency: {
     type: Schema.Types.ObjectId,
-    ref: 'Regencies',
+    ref: Regencies,
     select: true,
     autopopulate: true
   },
