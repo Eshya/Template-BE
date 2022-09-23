@@ -1,9 +1,12 @@
 const { Schema, model } = require("mongoose");
+const Sapronak = require('../sapronak/sapronak.model')
+const Periode = require('../periode/periode.model')
+const KegiatanImage = require('../kegiatan-image/kegiatan-image.model')
 
 const pakanPakaiSchema = new Schema({
     jenisPakan: {
         type: Schema.Types.ObjectId,
-        ref: 'Sapronak',
+        ref: Sapronak,
         autopopulate: {maxDepth: 2}
     }, 
     beratPakan: {type: Number, required: true},
@@ -13,7 +16,7 @@ const pakanPakaiSchema = new Schema({
 const ovkPakaiSchema = new Schema({
     jenisOVK: {
         type: Schema.Types.ObjectId,
-        ref: 'Sapronak',
+        ref: Sapronak,
         autopopulate: {maxDepth: 2}
     },
     kuantitas: {type: Number, required: true}
@@ -27,7 +30,7 @@ const beratSchema = new Schema({
 const scheme = new Schema({
     periode: {
         type: Schema.Types.ObjectId,
-        ref: 'Periode',
+        ref: Periode,
         autopopulate: {maxDepth: 1}
     },
     tanggal: {
@@ -53,7 +56,7 @@ const scheme = new Schema({
     },
     image: [{
         type: Schema.Types.ObjectId,
-        ref: 'KegiatanImage', select: true,
+        ref: KegiatanImage, select: true,
         autopopulate: {maxDepth: 1},
         default: null
     }]

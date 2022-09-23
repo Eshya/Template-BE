@@ -1,8 +1,9 @@
 const { Schema, model, SchemaType } = require("mongoose");
+const Periode = require('../periode/periode.model')
 const scheme = new Schema ({
     periode: {
         type: Schema.Types.ObjectId,
-        ref: 'Periode', select: true,
+        ref: Periode, select: true,
         autopopulate: {maxDepth: 1}
     },
     tanggal: {
