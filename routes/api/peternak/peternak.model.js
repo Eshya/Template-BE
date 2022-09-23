@@ -1,10 +1,10 @@
 const { createConnection, Schema, model } = require('mongoose');
 const Kemitraan = require('../kemitraan/kemitraan.model');
-const host = process.env.DB_HOST || '103.31.39.17'
-const dbPort = process.env.DB_PORT || 27018
+// const host = process.env.DB_HOST || '103.31.39.17'
+// const dbPort = process.env.DB_PORT || 27018
 const dbName = process.env.DB_NAME_AUTH || 'chickin-auth-stagging'
-const user = process.env.DB_USER || 'chickindb'
-const pass = process.env.DB_PASS || 'IniDBch1ck1n'
+// const user = process.env.DB_USER || 'chickindb'
+// const pass = process.env.DB_PASS || 'IniDBch1ck1n'
 const mongoString = process.env.MONGO_CONNECTIONSTRING
 
 const options = {
