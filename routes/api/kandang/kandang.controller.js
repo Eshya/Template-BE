@@ -1991,7 +1991,7 @@ exports.feedIntakeChart = async (req, res, next) => {
     const [standardData, dailyActivities] = await Promise.all([
         DataSTD.find()
             .sort({ day: 1 })
-            .select("day deplesi"),
+            .select("day dailyIntake"),
 
         KegiatanHarian.find({ periode: periode.id })
             .select("-periode")
@@ -2028,7 +2028,7 @@ exports.bobotChart = async (req, res, next) => {
     const [standardData, dailyActivities] = await Promise.all([
         DataSTD.find()
             .sort({ day: 1 })
-            .select("day deplesi"),
+            .select("day bodyWeight"),
 
         KegiatanHarian.find({ periode: periode.id })
             .select("-periode")
