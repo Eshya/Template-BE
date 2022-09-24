@@ -1955,14 +1955,16 @@ exports.deplesiChart = async (req, res, next) => {
       createdAt: 1,
     });
 
-    const standardData = await DataSTD.find()
-      .sort({ day: 1 })
-      .select("day deplesi");
-
     const actual = [];
-    const dailyActivities = await KegiatanHarian.find({
-      periode: periode.id,
-    }).select("-periode").sort({ tanggal: 1 });
+    const [standardData, dailyActivities] = await Promise.all([
+        DataSTD.find()
+            .sort({ day: 1 })
+            .select("day deplesi"),
+
+        KegiatanHarian.find({ periode: periode.id })
+            .select("-periode")
+            .sort({ tanggal: 1 })
+    ]);
 
     for (let i = 0; i < dailyActivities.length; i++) {
       actual.push({
@@ -1985,14 +1987,16 @@ exports.feedIntakeChart = async (req, res, next) => {
       createdAt: 1,
     });
 
-    const standardData = await DataSTD.find()
-      .sort({ day: 1 })
-      .select("day dailyIntake");
-
     const actual = [];
-    const dailyActivities = await KegiatanHarian.find({ periode: periode.id })
-      .select("-periode")
-      .sort({ tanggal: 1 });
+    const [standardData, dailyActivities] = await Promise.all([
+        DataSTD.find()
+            .sort({ day: 1 })
+            .select("day deplesi"),
+
+        KegiatanHarian.find({ periode: periode.id })
+            .select("-periode")
+            .sort({ tanggal: 1 })
+    ]);
 
     for (let i = 0; i < dailyActivities.length; i++) {
       const beratPakan = dailyActivities[i]
@@ -2018,15 +2022,18 @@ exports.bobotChart = async (req, res, next) => {
     const periode = await Periode.findOne({ _id: req.params.id }).sort({
       createdAt: 1,
     });
-    const standardData = await DataSTD.find()
-      .sort({ day: 1 })
-      .select("day bodyWeight");
 
     // actual
     const actual = [];
-    const dailyActivities = await KegiatanHarian.find({ periode: periode.id })
-      .select("-periode")
-      .sort({ tanggal: 1 });
+    const [standardData, dailyActivities] = await Promise.all([
+        DataSTD.find()
+            .sort({ day: 1 })
+            .select("day deplesi"),
+
+        KegiatanHarian.find({ periode: periode.id })
+            .select("-periode")
+            .sort({ tanggal: 1 })
+    ]);
 
     for (let i = 0; i < dailyActivities.length; i++) {
       const totalBerat = [];
