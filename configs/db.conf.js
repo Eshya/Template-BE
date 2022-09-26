@@ -7,43 +7,27 @@ const mongoose = require('mongoose');
  * GUNAKAN ENVIRONMENT!!
  */
 
-const host = process.env.DB_HOST || 'localhost'
-const dbPort = process.env.DB_PORT || 27017
 const dbName = process.env.DB_NAME || 'chickin'
-const user = process.env.DB_USER || 'chickindb'
-const pass = process.env.DB_PASS || 'IniDBch1ck1n'
-const mongoString = process.env.MONGO_CONNECTIONSTRING || `mongodb://${host}:${dbPort}`
+const mongoString = process.env.MONGO_CONNECTIONSTRING
 const db = mongoose.connection
-
-debug(`${host},${dbPort},${dbName},${user},${pass},${mongoString}`)
 
 const mysql = require('mysql2/promise');
 const config = require('./mysql.conf');
 
-async function query(sql, params){
+async function query(sql, params) {
     const connection = await mysql.createConnection(config.db);
     const [result] = await connection.execute(sql, params)
     return result;
 }
 
 const options = {
-    useFindAndModify: false,
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    useCreateIndex: true,
-    dbName,
-    user,
-    pass,
-    auth: {
-        authSource: 'admin'
-        // authdb: 'admin'
-    }
+    dbName
 }
 
 let initialRetry = 0;
 const handleError = (err) => {
     if (err) {
-        const {name, errorLabels} = err;
+        const { name, errorLabels } = err;
         debug(`${name} : ${errorLabels}`);
         debug(err)
         if (initialRetry < 3) {
@@ -52,7 +36,7 @@ const handleError = (err) => {
             setTimeout(() => {
                 mongoose.connect(mongoString, options, handleError);
             }, 3000);
-        } else if(initialRetry === 3) {
+        } else if (initialRetry === 3) {
             debug(chalk.bgCyanBright(`failed to connect db`));
             mongoose.disconnect();
             process.exit(1);
@@ -68,6 +52,7 @@ db.once('open', () => {
 
 exports.connect = () => {
     debug(chalk.gray('init db connect.....'));
+    debug(chalk.gray(`Connecting to ${mongoString} with ${options}`));
     mongoose.connect(mongoString, options, handleError);
 }
 

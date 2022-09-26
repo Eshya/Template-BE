@@ -1,4 +1,5 @@
 const {Schema, model} = require('mongoose');
+const FaqImage = require('../faq-image/faq-image.model')
 const scheme = new Schema({
     pertanyaan: {
         type: String,
@@ -10,7 +11,7 @@ const scheme = new Schema({
     },
     image: {
         type: Schema.Types.ObjectId,
-        ref: 'FaqImage', select: true,
+        ref: FaqImage, select: true,
         autopopulate: {maxDepth: 1},
         default: null
     }

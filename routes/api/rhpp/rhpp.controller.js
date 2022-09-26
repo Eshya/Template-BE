@@ -170,7 +170,7 @@ exports.uploadRHPP =  async (req, res, next) => {
         let rhpp_path = path + "/" + filename
         await Periode.findByIdAndUpdate(idPeriode, {rhpp_path: rhpp_path});
  
-        // const periode = await Periode.findById(idPeriode);
+        const periode = await Periode.findById(idPeriode);
         if (periode.downloadedDate) {
             await Periode.updateOne({ _id: idPeriode }, {$unset: {downloadedDate: "" }});
         }
@@ -179,7 +179,7 @@ exports.uploadRHPP =  async (req, res, next) => {
             return res.status(400).send({ message: "Please upload a file!" });
         }
 
-        const periode = await Periode.findById(idPeriode);
+        // const periode = await Periode.findById(idPeriode);
         // const kandang = periode.kandang;
         // const dataPeriode = [];
 

@@ -1,13 +1,15 @@
 const { Schema, model } = require("mongoose");
+const Periode = require('../periode/periode.model')
+const Produk = require('../produk/produk.model')
 const scheme = new Schema({
     periode: {
         type: Schema.Types.ObjectId,
-        ref: 'Periode',
+        ref: Periode,
         autopopulate: { maxDepth: 1 }
     },
     produk: {
         type: Schema.Types.ObjectId,
-        ref: 'Produk',
+        ref: Produk,
         autopopulate: { maxDepth: 2}
     },
     tanggal: {

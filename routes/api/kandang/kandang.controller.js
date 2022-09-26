@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 const {parseQuery} = require('../../helpers');
 const Model = require('./kandang.model');
-const Role = require('../roles/roles.model')
 // const Flock = require('../flock/flock.model');
 const Periode = require('../periode/periode.model');
 const KegiatanHarian = require('../kegiatan-harian/kegiatan-harian.model')
@@ -10,6 +9,7 @@ const Sapronak = require("../sapronak/sapronak.model");
 const Nekropsi = require("../nekropsi/nekropsi.model");
 const DataSTD = require('../data/data.model');
 const PeternakModel = require('../peternak/peternak.model');
+const Role = require('../roles/roles.model')
 const selectPublic = '-createdAt -updatedAt';
 const fetch = require('node-fetch')
 const Promise = require("bluebird");
@@ -17,6 +17,7 @@ const reducer = (acc, value) => acc + value;
 const ONE_DAY = 24 * 60 * 60 * 1000;
 const moment = require('moment');
 const excelJS = require("exceljs");
+const dayjs = require('dayjs');
 
 var urlIOT = process.env.DB_NAME === "chckin" ? `iot-production:3103` : `iot-staging:3104`
 var urlAuth =`${process.env.AUTH_URL}`
@@ -30,7 +31,13 @@ const handleQuerySort = (query) => {
       return JSON.parse("{}");
     }
 }
-
+let dateDiffInDays = (a, b) => {
+    // Discard the time and time-zone information.
+    const utc1 = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
+    const utc2 = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
+  
+    return Math.floor((utc2 - utc1) / _MS_PER_DAY);
+}
 const _find = async (req, isPublic = false) => {
     const {where, limit, offset, sort} = parseQuery(req.query);
     const count = Model.countDocuments(where);
@@ -490,6 +497,7 @@ exports.findOneDataPool =  async (req, res, next) => {
                 periodeEnd: periode.isEnd,
                 periodeKe: dataPeriode[0],
                 IP: IPResult,
+                IPSTD: STD ? STD.ip: 0 ,
                 totalPenghasilanKandang: pendapatanPeternak,
                 DOC: periode.jenisDOC ? periode.jenisDOC.name : "",
                 populasiAwal: periode.populasi,
@@ -1948,6 +1956,130 @@ exports.detailKandang = async (req,res, next) => {
     }
 }
 
+exports.deplesiChart = async (req, res, next) => {
+  try {
+    const periode = await Periode.findOne({ _id: req.params.id }).sort({
+      createdAt: 1,
+    });
+
+    const actual = [];
+    const [standardData, dailyActivities] = await Promise.all([
+        DataSTD.find()
+            .sort({ day: 1 })
+            .select("day deplesi"),
+
+        KegiatanHarian.find({ periode: periode.id })
+            .select("-periode")
+            .sort({ tanggal: 1 })
+    ]);
+
+    for (let i = 0; i < standardData.length; i++) {
+      actual.push({
+        actual: dailyActivities[i]?.deplesi + dailyActivities[i]?.pemusnahan,
+        standard: standardData[i].deplesi,
+        day: standardData[i].day,
+        label: dailyActivities[i]?.tanggal,
+      });
+    }
+
+    return res.json({ data: actual });
+  } catch (error) {
+    return res.json({ status: 500, message: error.message });
+  }
+};
+
+exports.feedIntakeChart = async (req, res, next) => {
+  try {
+    const periode = await Periode.findOne({ _id: req.params.id }).sort({
+      createdAt: 1,
+    });
+
+    const actual = [];
+    const [standardData, dailyActivities] = await Promise.all([
+        DataSTD.find()
+            .sort({ day: 1 })
+            .select("day dailyIntake"),
+
+        KegiatanHarian.find({ periode: periode.id })
+            .select("-periode")
+            .sort({ tanggal: 1 })
+    ]);
+
+    for (let i = 0; i < standardData.length; i++) {
+      const beratPakan = dailyActivities[i]
+        ? dailyActivities[i]?.pakanPakai.reduce((a, { beratPakan }) => a + beratPakan, 0)
+        : 0;
+
+      actual.push({
+        actual: beratPakan,
+        standard: standardData[i].dailyIntake,
+        day: standardData[i].day,
+        label: dailyActivities[i]?.tanggal,
+      });
+    }
+
+    return res.json({ data: actual });
+  } catch (error) {
+    return res.json({ status: 500, message: error.message });
+  }
+};
+
+exports.bobotChart = async (req, res, next) => {
+  try {
+    const periode = await Periode.findOne({ _id: req.params.id }).sort({
+      createdAt: 1,
+    });
+
+    // actual
+    const actual = [];
+    const [standardData, dailyActivities] = await Promise.all([
+        DataSTD.find()
+            .sort({ day: 1 })
+            .select("day bodyWeight"),
+
+        KegiatanHarian.find({ periode: periode.id })
+            .select("-periode")
+            .sort({ tanggal: 1 })
+    ]);
+
+    for (let i = 0; i < standardData.length; i++) {
+      const totalBerat = [];
+
+      for (let n = 0; n < dailyActivities[i]?.berat?.length; n++) {
+        let populasi = 0;
+        if (dailyActivities[i]?.berat[n]?.populasi === 0) {
+          populasi = 1;
+        } else {
+          populasi = dailyActivities[i]?.berat[n]?.populasi;
+        }
+        totalBerat.push(dailyActivities[i]?.berat[n]?.beratTimbang / populasi);
+      }
+
+      const totalberatSum = totalBerat.reduce(function (acc, val) {
+        return acc + val;
+      }, 0);
+
+      const bobotResult = totalberatSum / dailyActivities[i]?.berat?.length;
+      const bobotFixed = Number.isInteger(bobotResult)
+        ? bobotResult
+        : bobotResult.toFixed(2);
+
+      const totalBobot = (isFinite(bobotFixed) && bobotFixed) || 0;
+
+      actual.push({
+        actual: totalBobot,
+        standard: standardData[i].bodyWeight,
+        day: standardData[i].day,
+        label: dailyActivities[i]?.tanggal,
+      });
+    }
+
+    return res.json({ data: actual });
+  } catch (error) {
+    return res.json({ status: 500, message: error.message });
+  }
+};
+
 const handleChickenSheds = async (
   isKemitraan,
   token,
@@ -2007,7 +2139,8 @@ const handleChickenSheds = async (
       const chickenShedPeriods = await Periode.find(filterPeriod).sort(
         "tanggalMulai"
       );
-
+      const lastKegiatanHarian = await KegiatanHarian.find({periode: periode.id}).sort({'tanggal': -1}).limit(1).select('-periode')
+            
       let dataPeriode = [];
       await Promise.map(chickenShedPeriods, async (chickenShedItem, index) => {
         if (chickenShedItem._id.toString() === periode._id.toString()) {
@@ -2016,6 +2149,19 @@ const handleChickenSheds = async (
       });
 
       data = dataPeriode;
+      // lastupdate formating
+      let lastUpdateStr;
+      if(lastKegiatanHarian[0]?.tanggal){
+        const diffDay = dateDiffInDays(new Date(lastKegiatanHarian[0]?.tanggal),new Date().now())
+        if(diffDay==0)lastUpdateStr="Hari Ini";
+        else if(diffDay==1)lastUpdateStr="Kemarin";
+        else lastUpdateStr=moment(lastKegiatanHarian[0]?.tanggal).add(7,'hours').format("DD-MM-YYYY");
+      }
+      else{
+        lastUpdateStr = "No Updated Data";
+      }
+        
+      
 
       // get usia
       const now = new Date(Date.now());
@@ -2034,6 +2180,7 @@ const handleChickenSheds = async (
         isActive: chickenShed.isActive ? "Aktif" : "Rehat",
         usia: age,
         periodeKe: !dataPeriode.length ? "Belum mulai Periode" : dataPeriode[0],
+        lastUpdate:lastUpdateStr
       };
 
       if (isKemitraan && username) {
