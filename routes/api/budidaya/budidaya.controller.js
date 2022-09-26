@@ -43,6 +43,8 @@ exports.riwayatBudidaya =  async (req, res, next) => {
         
         let periode = await Periode.find({kandang: req.params.id}).sort('tanggalMulai')
         let result = [];
+        
+        
         if(isNaN(limit))limit=5;
         if(isNaN(offset))offset=0;
         if(isNaN(sortcode))sortcode=1;
@@ -182,13 +184,14 @@ exports.riwayatBudidaya =  async (req, res, next) => {
         } else {
             offsetPaging = (offset / 5 + 1)
         }
+
         let resultSort = sortBy(result,parseInt(sortcode))
-        
+        let count = result.length
         result = paginate(resultSort,parseInt(limit),parseInt(offsetPaging)) 
         result = searchByPeriode(result,search)
         // console.log(searchByPeriode(result,search))
         res.json({
-            count: result.length,
+            count: count,
             dataRiwayat: result,
             message: 'Woke'
         })
