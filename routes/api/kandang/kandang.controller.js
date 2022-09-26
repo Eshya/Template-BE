@@ -30,7 +30,13 @@ const handleQuerySort = (query) => {
       return JSON.parse("{}");
     }
 }
-
+let dateDiffInDays = (a, b) => {
+    // Discard the time and time-zone information.
+    const utc1 = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
+    const utc2 = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
+  
+    return Math.floor((utc2 - utc1) / _MS_PER_DAY);
+}
 const _find = async (req, isPublic = false) => {
     const {where, limit, offset, sort} = parseQuery(req.query);
     const count = Model.countDocuments(where);
@@ -2008,7 +2014,8 @@ const handleChickenSheds = async (
       const chickenShedPeriods = await Periode.find(filterPeriod).sort(
         "tanggalMulai"
       );
-
+      const lastKegiatanHarian = await KegiatanHarian.find({periode: periode.id}).sort({'tanggal': -1}).limit(1).select('-periode')
+            
       let dataPeriode = [];
       await Promise.map(chickenShedPeriods, async (chickenShedItem, index) => {
         if (chickenShedItem._id.toString() === periode._id.toString()) {
@@ -2017,6 +2024,19 @@ const handleChickenSheds = async (
       });
 
       data = dataPeriode;
+      // lastupdate formating
+      let lastUpdateStr;
+      if(lastKegiatanHarian[0]?.tanggal){
+        const diffDay = dateDiffInDays(new Date(lastKegiatanHarian[0]?.tanggal),new Date().now())
+        if(diffDay==0)lastUpdateStr="Hari Ini";
+        else if(diffDay==1)lastUpdateStr="Kemarin";
+        else lastUpdateStr=moment(lastKegiatanHarian[0]?.tanggal).add(7,'hours').format("DD-MM-YYYY");
+      }
+      else{
+        lastUpdateStr = "No Updated Data";
+      }
+        
+      
 
       // get usia
       const now = new Date(Date.now());
@@ -2035,6 +2055,7 @@ const handleChickenSheds = async (
         isActive: chickenShed.isActive ? "Aktif" : "Rehat",
         usia: age,
         periodeKe: !dataPeriode.length ? "Belum mulai Periode" : dataPeriode[0],
+        lastUpdate:lastUpdateStr
       };
 
       if (isKemitraan && username) {
