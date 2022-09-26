@@ -592,25 +592,29 @@ exports.autoClosingCultivation = async(req, res, next) => {
         });
 
         if (periode) {
-          const today = dayjs(Date.now());
-          const startDate = dayjs(new Date(periode.tanggalMulai));
-          const chickenShedAge = Math.round(
-            Math.abs(today.diff(startDate, "day"))
-          );
-
-          // Add 10 days from created date periode
-          const periodeActiveDate = dayjs(periode.createdAt).add(10, "day");
-
-          if (
-            chickenShedAge >= 50 &&
-            today.format("YYYY-MM-DD") >= periodeActiveDate.format("YYYY-MM-DD")
-          ) {
-
-            periode.isEnd = true;
-            chickenShed.isActive = false;
-            await periode.save();
-            await chickenShed.save();
-          }
+            if (!periode.isEnd && chickenShed.isActive) {
+              const today = dayjs(Date.now());
+              const startDate = dayjs(new Date(periode.tanggalMulai));
+              const chickenShedAge = Math.round(
+                Math.abs(today.diff(startDate, "day"))
+              );
+    
+              // Add 10 days from created date periode
+              const periodeActiveDate = dayjs(periode.createdAt).add(10, "day");
+    
+              if (
+                chickenShedAge >= 50 &&
+                today.format("YYYY-MM-DD") >= periodeActiveDate.format("YYYY-MM-DD")
+              ) {
+    
+                periode.isEnd = true;
+                periode.isAutoClosing = true;
+                chickenShed.isActive = false;
+                periode.tanggalAkhir = Date.now();
+                await periode.save();
+                await chickenShed.save();
+              }
+            }
         }
       }
 
