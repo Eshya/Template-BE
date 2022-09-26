@@ -1966,7 +1966,7 @@ exports.deplesiChart = async (req, res, next) => {
             .sort({ tanggal: 1 })
     ]);
 
-    for (let i = 0; i < dailyActivities.length; i++) {
+    for (let i = 0; i < standardData.length; i++) {
       actual.push({
         actual: dailyActivities[i]?.deplesi + dailyActivities[i]?.pemusnahan,
         standard: standardData[i].deplesi,
@@ -1998,7 +1998,7 @@ exports.feedIntakeChart = async (req, res, next) => {
             .sort({ tanggal: 1 })
     ]);
 
-    for (let i = 0; i < dailyActivities.length; i++) {
+    for (let i = 0; i < standardData.length; i++) {
       const beratPakan = dailyActivities[i]
         ? dailyActivities[i]?.pakanPakai.reduce((a, { beratPakan }) => a + beratPakan, 0)
         : 0;
@@ -2035,7 +2035,7 @@ exports.bobotChart = async (req, res, next) => {
             .sort({ tanggal: 1 })
     ]);
 
-    for (let i = 0; i < dailyActivities.length; i++) {
+    for (let i = 0; i < standardData.length; i++) {
       const totalBerat = [];
 
       for (let n = 0; n < dailyActivities[i]?.berat?.length; n++) {
