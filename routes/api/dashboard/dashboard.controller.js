@@ -189,7 +189,18 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
         let countUsia = (resultPeriode.reduce((a, {usia}) => a + usia, 0) / resultPeriode.length);
         let countBobot = (resultPeriode.reduce((a, {bobot}) => a + bobot, 0) / resultPeriode.length);
         if (peternak) {
-            resultPeriode = resultPeriode.filter(item => item.namaPemilik.toLowerCase().indexOf(peternak) > -1);
+            resultPeriode = resultPeriode.filter(item => {
+                const owner = item.namaPemilik.toLowerCase().indexOf(peternak.toLowerCase()) > -1;
+                const chickenSheds = item.namaKandang.toLowerCase().indexOf(peternak.toLowerCase()) > -1;
+                if (owner) {
+                    return owner;
+                }
+
+                if (chickenSheds) {
+                    return chickenSheds
+                }
+            });
+
             countPopulasi = resultPeriode.reduce((a, {populasi}) => a + populasi, 0);
             countUsia = (resultPeriode.reduce((a, {usia}) => a + usia, 0) / resultPeriode.length);
             countBobot = (resultPeriode.reduce((a, {bobot}) => a + bobot, 0) / resultPeriode.length);
@@ -255,7 +266,19 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
         let countUsia = (resultPeriode.reduce((a, {usia}) => a + usia, 0) / resultPeriode.length);
         let countBobot = (resultPeriode.reduce((a, {bobot}) => a + bobot, 0) / resultPeriode.length);
         if (peternak) {
-            resultPeriode = resultPeriode.filter(item => item.namaPemilik.toLowerCase().indexOf(peternak) > -1);
+            resultPeriode = resultPeriode.filter(item => {
+                const findPemilik = item.namaPemilik.toLowerCase().indexOf(peternak.toLowerCase()) > -1;
+                const findKandang = item.namaKandang.toLowerCase().indexOf(peternak.toLowerCase()) > -1;
+                if (findPemilik) {
+                    return findPemilik;
+                }
+
+                if (findKandang) {
+                    return findKandang
+                }
+
+            });
+
             countPopulasi = resultPeriode.reduce((a, {populasi}) => a + populasi, 0);
             countUsia = (resultPeriode.reduce((a, {usia}) => a + usia, 0) / resultPeriode.length);
             countBobot = (resultPeriode.reduce((a, {bobot}) => a + bobot, 0) / resultPeriode.length);
