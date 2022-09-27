@@ -760,7 +760,7 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
                 const latestSampling = findBerat[0] ? findBerat[0].berat.reduce((a, {populasi}) => a + populasi, 0) : 0
 
 
-            const avgLatestWeight = latestWeight/latestSampling
+            var avgLatestWeight = latestWeight/latestSampling
             periode.isEnd == true ? avgLatestWeight = await formula.weightClosing(periode._id) : avgLatestWeight
 
             const allDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
