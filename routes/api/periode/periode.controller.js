@@ -11,6 +11,7 @@ const selectPublic = '-createdAt -updatedAt'
 const mongoose = require('mongoose')
 const fetch = require('node-fetch')
 const dayjs = require('dayjs');
+const formula = require('../../helpers/formula')
 
 const ONE_DAY = 24 * 60 * 60 * 1000;
 const reducer = (acc, value) => acc + value
@@ -384,7 +385,8 @@ exports.ringkasan = async (req, res, next) => {
         const latestSampling = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {populasi}) => a + populasi, 0) : 0
         const latestFeed = getKegiatan[0] ? getKegiatan[0].pakanPakai.reduce((a, {beratPakan}) => a + beratPakan, 0) : 0
 
-        const avgLatestWeight = latestWeight/latestSampling
+        var avgLatestWeight = latestWeight/latestSampling
+        getPeriode.isEnd == true ? avgLatestWeight = await formula.weightClosing(id) : avgLatestWeight
 
         const allDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
         const allKematian = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
@@ -397,10 +399,13 @@ exports.ringkasan = async (req, res, next) => {
         const populasiAktual = getPeriode.populasi - (allDeplesi + allKematian + allPenjualan )
         const deplesi = (getPeriode.populasi - (getPeriode.populasi - (allDeplesi + allKematian))) * 100 / getPeriode.populasi
         const presentaseAyamHidup = 100 - deplesi
-        const FCR = allPakan / (populasiAkhir * (avgLatestWeight/1000)) 
+        var FCR = allPakan / (populasiAkhir * (avgLatestWeight/1000))
+        getPeriode.isEnd == true ? FCR = await formula.FCRClosing(id) : FCR
         const atas = presentaseAyamHidup * (avgLatestWeight/1000)
         const bawah = FCR*(dataPakan.length-1)
-        const IP = (atas / bawah) * 100
+        var IP = (atas / bawah) * 100
+        getPeriode.isEnd == true ? IP = await formula.IPClosing(id) : IP
+
         const detailPanen = penjualan.map(data => { return {
             panen: data.terjual,
             tanggal: data.tanggal[0]
