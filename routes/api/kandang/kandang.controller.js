@@ -32,6 +32,7 @@ const handleQuerySort = (query) => {
       return JSON.parse("{}");
     }
 }
+const _MS_PER_DAY = 1000 * 60 * 60 * 24;
 let dateDiffInDays = (a, b) => {
     // Discard the time and time-zone information.
     const utc1 = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
@@ -1804,7 +1805,8 @@ exports.kelolaPeternak = async (req, res, next) => {
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
             }).then(res => res.json()).then(data => data.data)
-            return {...tmp.toObject(), user: findUser, umur: umur, periode: findPeriode[0], suhu: suhu[0] ? suhu[0].actualTemperature : 0}
+            return {...tmp.toObject(), user: findUser, umur: umur, periode: findPeriode[0], suhu: suhu?.flock ? suhu.flock.actualTemperature : 0}
+            
         }))
         res.json({
             data: {
@@ -1824,7 +1826,7 @@ exports.kelolaPPL = async (req, res, next) => {
     const token = req.headers['authorization']
     try {
         const findPeriode = await Periode.find({ppl: user, isActivePPL: true}, {}, {autopopulate: false}).populate({path: 'kandang', options: {withDeleted: true}})
-        console.log(findPeriode)
+        // console.log(findPeriode)
         const map = await Promise.all(findPeriode.map(async(x) => {
             const findKandang = await Model.findOneWithDeleted({_id: x.kandang})
             const findUser = await fetch(`${urlAuth}/api/users/${findKandang.createdBy}`, {
@@ -1899,7 +1901,7 @@ exports.detailKandang = async (req,res, next) => {
     const id = req.params.id
     const token = req.headers['authorization']
     try {
-        console.log(req.user)
+        // console.log(req.user)
         var findKandang, findPeriode
         req.user.isPPLActive === true ? findKandang = await Model.findOneWithDeleted({_id: id}) : findKandang = await Model.findById(id)
         req.user.isPPLActive === true ? findPeriode = await Periode.find({kandang: id, isActivePPL: true}, {}, {autopopulate: false}).populate({path: 'kandang', options: {withDeleted: true}}).sort({createdAt: 1}) : findPeriode = await Periode.find({kandang: id}).sort({ createdAt: 1})
@@ -1934,7 +1936,7 @@ exports.detailKandang = async (req,res, next) => {
                 {$project: {penjualan: {$multiply: ['$qty', '$harga', '$beratBadan']}}},
                 {$group: {_id: '$periode', totalPenjualan: {$sum: '$penjualan'}}}
             ])
-            console.log(akumulasiPenjualan)
+            // console.log(akumulasiPenjualan)
             const penjualan = findPenjualan.length == 0 ? 0 : akumulasiPenjualan[0].totalPenjualan
             const sapronak = pembelianSapronak.length === 0 ? 0 : pembelianSapronak[0].totalSapronak
             const estimasi = penjualan - pembelianDoc - sapronak
@@ -2159,13 +2161,15 @@ const handleChickenSheds = async (
 
       data = dataPeriode;
       // lastupdate formating
+    //   console.log(lastKegiatanHarian)
       let lastUpdateStr;
-      if(lastKegiatanHarian[0]?.tanggal){
-        const diffDay = dateDiffInDays(new Date(lastKegiatanHarian[0]?.tanggal),new Date().now())
+      if(lastKegiatanHarian[0]?.tanggal.length !== 0 && lastKegiatanHarian[0]?.tanggal !== undefined){
+        let now = new Date();
+        const diffDay = dateDiffInDays(new Date(lastKegiatanHarian[0]?.tanggal),now)
         if(diffDay==0)lastUpdateStr="Hari Ini";
         else if(diffDay==1)lastUpdateStr="Kemarin";
         else lastUpdateStr=moment(lastKegiatanHarian[0]?.tanggal).add(7,'hours').format("DD-MM-YYYY");
-      }
+    }
       else{
         lastUpdateStr = "No Updated Data";
       }
