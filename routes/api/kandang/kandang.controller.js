@@ -18,6 +18,7 @@ const ONE_DAY = 24 * 60 * 60 * 1000;
 const moment = require('moment');
 const excelJS = require("exceljs");
 const dayjs = require('dayjs');
+const formula = require('../../helpers/formula')
 
 var urlIOT = process.env.DB_NAME === "chckin" ? `iot-production:3103` : `iot-staging:3104`
 var urlAuth =`${process.env.AUTH_URL}`
@@ -400,6 +401,8 @@ exports.findOneDataPool =  async (req, res, next) => {
             const latestFeed = getKegiatanHarian[0] ? getKegiatanHarian[0].pakanPakai.reduce((a, {beratPakan}) => a + beratPakan, 0) : 0
             // console.log(getKegiatanHarian)
             const avgLatestWeight = latestWeight/latestSampling
+            periode.isEnd == true ? avgLatestWeight = await formula.weightClosing(periode._id) : avgLatestWeight
+
 
             const allDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
             const allKematian = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
@@ -413,10 +416,13 @@ exports.findOneDataPool =  async (req, res, next) => {
             const batasDeplesi = ((2 / 100) * periode.populasi)
             const presentaseAyamHidup = 100 - deplesi
             const populasiAkhir = periode.populasi - (allDeplesi + allKematian)
-            const FCR = allPakan / (populasiAkhir * (avgLatestWeight/1000)) 
+            const FCR = allPakan / (populasiAkhir * (avgLatestWeight/1000))
+            periode.isEnd == true ? FCR = await formula.FCRClosing(periode._id) : FCR
+
             const atas = presentaseAyamHidup * (avgLatestWeight/1000)
             const bawah = FCR*(dataPakan.length-1)
             const IP = (atas / bawah) * 100
+            periode.isEnd == true ? IP = await formula.IPClosing(periode._id) : IP
             const IPFixed = IP.toFixed(2)
             const IPResult = isFinite(IPFixed) && IPFixed || 0
 
@@ -754,6 +760,7 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
 
 
             const avgLatestWeight = latestWeight/latestSampling
+            periode.isEnd == true ? avgLatestWeight = await formula.weightClosing(periode._id) : avgLatestWeight
 
             const allDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
             const allKematian = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
@@ -767,10 +774,12 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
             const batasDeplesi = ((2 / 100) * periode.populasi)
             const presentaseAyamHidup = 100 - deplesi
             const populasiAkhir = periode.populasi - (allDeplesi + allKematian)
-            const FCR = allPakan / (populasiAkhir * (avgLatestWeight/1000)) 
+            var FCR = allPakan / (populasiAkhir * (avgLatestWeight/1000)) 
+            periode.isEnd == true ? FCR = await formula.FCRClosing(periode._id) : FCR
             const atas = presentaseAyamHidup * (avgLatestWeight/1000)
             const bawah = FCR*(dataPakan.length-1)
-            const IP = (atas / bawah) * 100
+            var IP = (atas / bawah) * 100
+            periode.isEnd == true ? IP = await formula.IPClosing(periode._id) : IP
             const IPFixed = IP.toFixed(2)
             const IPResult = isFinite(IPFixed) && IPFixed || 0
 
