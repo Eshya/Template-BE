@@ -165,7 +165,7 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
         let role = req.user.role ? req.user.role.name : '';
         let sort = handleQuerySort(req.query.sort)
         let {limit, offset} = parseQuery(req.query);
-        let { city, populasi, kemitraan, peternak } = req.query;
+        let { city, populasiFrom, populasiTo, kemitraan, peternak } = req.query;
         let usiaFrom = req.query.usiaFrom ? req.query.usiaFrom : '';
         let usiaTo = req.query.usiaTo ? req.query.usiaTo : '';
         let bobotFrom = req.query.bobotFrom ? req.query.bobotFrom : '';
@@ -182,7 +182,7 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
         }
 
         const dataKandang = await Kandang.find(filter).sort(sort).select('_id');
-        const resultPeriods = await handlePeriode(true, token, dataKandang, populasi, kemitraan, req.user, role, usiaFrom, usiaTo, bobotFrom, bobotTo);
+        const resultPeriods = await handlePeriode(true, token, dataKandang, populasiFrom, populasiTo, kemitraan, req.user, role, usiaFrom, usiaTo, bobotFrom, bobotTo);
         resultPeriode.push(...resultPeriods.filter(result => result));
 
         let countPopulasi = resultPeriode.reduce((a, {populasi}) => a + populasi, 0);
@@ -215,7 +215,7 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
             }
         })
     } catch (error) {
-        next(error)
+        return res.json({ status: 500, message: error.message})
     }
 }
 
@@ -229,7 +229,7 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
         let role = req.user.role ? req.user.role.name : '';
         let sort = handleQuerySort(req.query.sort)
         let {limit, offset} = parseQuery(req.query);
-        let { city, populasi, kemitraan, peternak } = req.query;
+        let { city, populasiFrom, populasiTo, kemitraan, peternak } = req.query;
         let usiaFrom = req.query.usiaFrom ? req.query.usiaFrom : '';
         let usiaTo = req.query.usiaTo ? req.query.usiaTo : '';
         let bobotFrom = req.query.bobotFrom ? req.query.bobotFrom : '';
@@ -248,7 +248,7 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
         const dataKandang = await Kandang.find(filter).sort(sort).select('_id');
         const dataKemitraan = await Kemitraan.countDocuments(filter)
 
-        const resultPeriods = await handlePeriode(true, token, dataKandang, populasi, kemitraan, req.user, role, usiaFrom, usiaTo, bobotFrom, bobotTo);
+        const resultPeriods = await handlePeriode(true, token, dataKandang, populasiFrom, populasiTo, kemitraan, req.user, role, usiaFrom, usiaTo, bobotFrom, bobotTo);
         resultPeriode.push(...resultPeriods.filter(result => result))
 
         let countPopulasi = resultPeriode.reduce((a, {populasi}) => a + populasi, 0);
@@ -284,7 +284,7 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
         })
         
     } catch (error) {
-        next(error)
+        return res.json({ status: 500, message: error.message})
     }
 }
 
@@ -333,7 +333,7 @@ const handleResultKandang = async(token, getKandang, kemitraan, filterPPL, role,
     return {kandangActive, peternak}
 }
 
-const handlePeriode = async(isKemitraan, token, dataKandang, populasi, kemitraan, user, role, usiaFrom, usiaTo, bobotFrom, bobotTo) => {
+const handlePeriode = async(isKemitraan, token, dataKandang, populasiFrom, populasiTo, kemitraan, user, role, usiaFrom, usiaTo, bobotFrom, bobotTo) => {
     const users = await fetch(`${urlAuth}/api/users/`, {
         method: 'GET',
         headers: {'Authorization': token,
@@ -342,16 +342,25 @@ const handlePeriode = async(isKemitraan, token, dataKandang, populasi, kemitraan
 
     return Promise.map(dataKandang, async (dataItem, index) => {
         const filterPeriod = {};
+        const query = { $gte: 0 };
         filterPeriod.kandang = dataItem.id;
         filterPeriod.isEnd = false;
+        const checkPopulasiFrom = Number.isInteger(populasiFrom) ? populasiFrom : !parseInt(populasiFrom) ? 0 : parseInt(populasiFrom);
+        const checkPopulasiTo = Number.isInteger(populasiTo) ? populasiTo : !parseInt(populasiTo) ? 0 : parseInt(populasiTo);
 
-        if (populasi === '10000') filterPeriod.populasi = {$gte: 0, $lte: 10000}
-        if (populasi === '20000') filterPeriod.populasi = {$gte: 10001, $lte: 20000}
-        if (populasi === '30000') filterPeriod.populasi = {$gte: 20001, $lte: 30000}
-        if (populasi === '40000') filterPeriod.populasi = {$gte: 30001, $lte: 40000}
-        if (populasi === '50000') filterPeriod.populasi = {$gte: 40001, $lte: 50000}
-        if (populasi === '50001') filterPeriod.populasi = {$gte: 50001}
+        if (checkPopulasiFrom > checkPopulasiTo) {
+            throw new Error('Populasi awal tidak boleh melebihi populasi akhir')
+        }
 
+        if (populasiFrom) {
+            query.$gte = checkPopulasiFrom;
+        }
+
+        if (populasiTo) {
+            query.$lte = checkPopulasiTo;
+        }
+ 
+        filterPeriod.populasi = {...query};
         if (kemitraan) {
             filterPeriod.kemitraan = kemitraan;
         }
