@@ -5,6 +5,7 @@ const KegiatanHarian = require('../kegiatan-harian/kegiatan-harian.model')
 const Kemitraan = require('../kemitraan/kemitraan.model')
 const User = require('../peternak/peternak.model')
 const Promise = require("bluebird");
+const mongoose = require('mongoose');
 const ONE_DAY = 24 * 60 * 60 * 1000;
 const fetch = require('node-fetch')
 // var urlAuth = `https://staging-auth.chickinindonesia.com`
@@ -260,11 +261,15 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
         const dataKemitraan = await Kemitraan.countDocuments(filter)
 
         const resultPeriods = await handlePeriode(true, token, dataKandang, populasiFrom, populasiTo, kemitraan, req.user, role, usiaFrom, usiaTo, bobotFrom, bobotTo);
+        
         resultPeriode.push(...resultPeriods.filter(result => result))
-
+        
         let countPopulasi = resultPeriode.reduce((a, {populasi}) => a + populasi, 0);
         let countUsia = (resultPeriode.reduce((a, {usia}) => a + usia, 0) / resultPeriode.length);
         let countBobot = (resultPeriode.reduce((a, {bobot}) => a + bobot, 0) / resultPeriode.length);
+        let countKemitraan = resultPeriode.filter((value, index, self) =>index === self.findIndex((t) => (t.IdKemitraan === value.IdKemitraan ))) // es6 magic
+        let countKandang = resultPeriode.filter((value, index, self) =>index === self.findIndex((t) => (t.idKandang === value.idKandang ))) // es6 magic
+        
         if (peternak) {
             resultPeriode = resultPeriode.filter(item => {
                 const findPemilik = item.namaPemilik.toLowerCase().indexOf(peternak.toLowerCase()) > -1;
@@ -301,8 +306,8 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
                 totalPopulasi: Math.ceil(countPopulasi),
                 averageUsia: Math.ceil(countUsia),
                 averageBobot: Math.ceil(countBobot),
-                totalKandang: Math.ceil(dataKandang.length),
-                totalKemitraan: Math.ceil(dataKemitraan)
+                totalKandang: countKandang.length ,
+                totalKemitraan: countKemitraan.length 
             }
         })
         

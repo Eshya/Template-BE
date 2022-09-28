@@ -1882,7 +1882,7 @@ exports.kelolaPPL = async (req, res, next) => {
 
             const countPeriode = await Periode.countDocuments({kandang: x.kandang})
 
-            return {...findKandang.toObject(), user: findUser, IP: IP, umur: umur, periode: x, urutanKe: countPeriode,  suhu: suhu ? suhu[0].actualTemperature : 0}
+            return {...findKandang.toObject(), user: findUser, IP: IP, umur: umur, periode: x, urutanKe: countPeriode,  suhu: suhu?.flock ? suhu.flock.actualTemperature : 0}
         }))
         res.json({
             data: {
