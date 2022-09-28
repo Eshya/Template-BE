@@ -2020,9 +2020,7 @@ exports.feedIntakeChart = async (req, res, next) => {
 
     for (let i = 0; i < dailyActivities.length; i++) {
       const pakanPakai = dailyActivities[i] ? dailyActivities[i].pakanPakai.reduce((a, {beratPakan}) => a + beratPakan, 0) : 0;
-      const allDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
-      const allKematian = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
-      const populasiAkhir = periode.populasi - (allDeplesi + allKematian );
+      const populasiAkhir = periode.populasi - (dailyActivities[i].deplesi + dailyActivities[i].pemusnahan);
 
       actual.push({
         actual: pakanPakai * 1000 / populasiAkhir,
