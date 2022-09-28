@@ -2009,32 +2009,25 @@ exports.feedIntakeChart = async (req, res, next) => {
     });
 
     const actual = [];
-    const [standardData, dailyActivities, dataDeplesi] = await Promise.all([
+    const [standardData, dailyActivities] = await Promise.all([
         DataSTD.find()
             .sort({ day: 1 })
             .select("day dailyIntake"),
 
         KegiatanHarian.find({ 
             periode: periode.id,
-            pakanPakai: {$exists: true, $not:{$size: 0}} 
         })
             .select("-periode")
             .sort({ tanggal: 1 }),
 
-        KegiatanHarian.aggregate([
-            {$match: {periode: mongoose.Types.ObjectId(periode.id)}},
-            {$group: {_id: '$_id', totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
-        ])
     ]);
 
     for (let i = 0; i < dailyActivities.length; i++) {
-      const pakanPakai = dailyActivities[i] ? dailyActivities[i].pakanPakai.reduce((a, {beratPakan}) => a + beratPakan, 0) : 0;
-      const allDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
-      const allKematian = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
-      const populasiAkhir = periode.populasi - (allDeplesi + allKematian );
+      const pakanPakai = dailyActivities[i] ? dailyActivities[i]?.pakanPakai.reduce((a, {beratPakan}) => a + beratPakan, 0) : 0;
+      const populasiAkhir = periode.populasi - (dailyActivities[i]?.deplesi + dailyActivities[i]?.pemusnahan);
 
       actual.push({
-        actual: pakanPakai * 1000 / populasiAkhir,
+        actual: (pakanPakai * 1000) / populasiAkhir,
         standard: standardData[i].dailyIntake,
         day: standardData[i].day,
         label: dailyActivities[i]?.tanggal,
