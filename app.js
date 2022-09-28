@@ -4,6 +4,8 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 const fs = require('fs')
+const cron = require('node-cron');
+const fetch = require('node-fetch');
 
 const cors = require('cors');
 const db = require('./configs/db.conf');
@@ -69,6 +71,14 @@ app.use((err, req, res) => {
         res.status(500).send({message: 'Internal Server Error'});
     }
 })
+
+cron.schedule('35 23 * * *', async() => {
+    console.log('running a task');
+    await fetch(`${process.env.BE_URL}/api/periode/autoClosingCultivate/`, {
+        method: 'POST',
+        headers: {'apiKey': '74e48c8e3c0bc19f9e22dd7570037392e5d0bf80cf9dd51', "Content-Type": "application/json"}
+    }).then(res => res.json()).then(data => console.log(data))
+});
 
 // delete image scheduler
 

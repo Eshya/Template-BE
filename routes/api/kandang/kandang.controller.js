@@ -18,6 +18,7 @@ const ONE_DAY = 24 * 60 * 60 * 1000;
 const moment = require('moment');
 const excelJS = require("exceljs");
 const dayjs = require('dayjs');
+const formula = require('../../helpers/formula')
 
 var urlIOT = process.env.DB_NAME === "chckin" ? `iot-production:3103` : `iot-staging:3104`
 var urlAuth =`${process.env.AUTH_URL}`
@@ -400,7 +401,9 @@ exports.findOneDataPool =  async (req, res, next) => {
 
             const latestFeed = getKegiatanHarian[0] ? getKegiatanHarian[0].pakanPakai.reduce((a, {beratPakan}) => a + beratPakan, 0) : 0
             // console.log(getKegiatanHarian)
-            const avgLatestWeight = latestWeight/latestSampling
+            var avgLatestWeight = latestWeight/latestSampling
+            periode.isEnd == true ? avgLatestWeight = await formula.weightClosing(periode._id) : avgLatestWeight
+
 
             const allDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
             const allKematian = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
@@ -414,10 +417,13 @@ exports.findOneDataPool =  async (req, res, next) => {
             const batasDeplesi = ((2 / 100) * periode.populasi)
             const presentaseAyamHidup = 100 - deplesi
             const populasiAkhir = periode.populasi - (allDeplesi + allKematian)
-            const FCR = allPakan / (populasiAkhir * (avgLatestWeight/1000)) 
+            var FCR = allPakan / (populasiAkhir * (avgLatestWeight/1000))
+            periode.isEnd == true ? FCR = await formula.FCRClosing(periode._id) : FCR
+
             const atas = presentaseAyamHidup * (avgLatestWeight/1000)
             const bawah = FCR*(dataPakan.length-1)
-            const IP = (atas / bawah) * 100
+            var IP = (atas / bawah) * 100
+            periode.isEnd == true ? IP = await formula.IPClosing(periode._id) : IP
             const IPFixed = IP.toFixed(2)
             const IPResult = isFinite(IPFixed) && IPFixed || 0
 
@@ -754,7 +760,8 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
                 const latestSampling = findBerat[0] ? findBerat[0].berat.reduce((a, {populasi}) => a + populasi, 0) : 0
 
 
-            const avgLatestWeight = latestWeight/latestSampling
+            var avgLatestWeight = latestWeight/latestSampling
+            periode.isEnd == true ? avgLatestWeight = await formula.weightClosing(periode._id) : avgLatestWeight
 
             const allDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
             const allKematian = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
@@ -768,10 +775,12 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
             const batasDeplesi = ((2 / 100) * periode.populasi)
             const presentaseAyamHidup = 100 - deplesi
             const populasiAkhir = periode.populasi - (allDeplesi + allKematian)
-            const FCR = allPakan / (populasiAkhir * (avgLatestWeight/1000)) 
+            var FCR = allPakan / (populasiAkhir * (avgLatestWeight/1000)) 
+            periode.isEnd == true ? FCR = await formula.FCRClosing(periode._id) : FCR
             const atas = presentaseAyamHidup * (avgLatestWeight/1000)
             const bawah = FCR*(dataPakan.length-1)
-            const IP = (atas / bawah) * 100
+            var IP = (atas / bawah) * 100
+            periode.isEnd == true ? IP = await formula.IPClosing(periode._id) : IP
             const IPFixed = IP.toFixed(2)
             const IPResult = isFinite(IPFixed) && IPFixed || 0
 
@@ -1973,11 +1982,14 @@ exports.deplesiChart = async (req, res, next) => {
         KegiatanHarian.find({ periode: periode.id })
             .select("-periode")
             .sort({ tanggal: 1 })
+
     ]);
 
-    for (let i = 0; i < standardData.length; i++) {
+    for (let i = 0; i < dailyActivities.length; i++) {
+      dailyActivities[i].deplesi = (dailyActivities[i].deplesi + dailyActivities[i].pemusnahan) / periode.populasi
+      const deplesi = (periode.populasi - (periode.populasi - (dailyActivities[i].deplesi + dailyActivities[i].pemusnahan))) * 100 / periode.populasi
       actual.push({
-        actual: dailyActivities[i]?.deplesi + dailyActivities[i]?.pemusnahan,
+        actual: deplesi,
         standard: standardData[i].deplesi,
         day: standardData[i].day,
         label: dailyActivities[i]?.tanggal,
@@ -1997,23 +2009,32 @@ exports.feedIntakeChart = async (req, res, next) => {
     });
 
     const actual = [];
-    const [standardData, dailyActivities] = await Promise.all([
+    const [standardData, dailyActivities, dataDeplesi] = await Promise.all([
         DataSTD.find()
             .sort({ day: 1 })
             .select("day dailyIntake"),
 
-        KegiatanHarian.find({ periode: periode.id })
+        KegiatanHarian.find({ 
+            periode: periode.id,
+            pakanPakai: {$exists: true, $not:{$size: 0}} 
+        })
             .select("-periode")
-            .sort({ tanggal: 1 })
+            .sort({ tanggal: 1 }),
+
+        KegiatanHarian.aggregate([
+            {$match: {periode: mongoose.Types.ObjectId(periode.id)}},
+            {$group: {_id: '$_id', totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
+        ])
     ]);
 
-    for (let i = 0; i < standardData.length; i++) {
-      const beratPakan = dailyActivities[i]
-        ? dailyActivities[i]?.pakanPakai.reduce((a, { beratPakan }) => a + beratPakan, 0)
-        : 0;
+    for (let i = 0; i < dailyActivities.length; i++) {
+      const pakanPakai = dailyActivities[i] ? dailyActivities[i].pakanPakai.reduce((a, {beratPakan}) => a + beratPakan, 0) : 0;
+      const allDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
+      const allKematian = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
+      const populasiAkhir = periode.populasi - (allDeplesi + allKematian );
 
       actual.push({
-        actual: beratPakan,
+        actual: pakanPakai * 1000 / populasiAkhir,
         standard: standardData[i].dailyIntake,
         day: standardData[i].day,
         label: dailyActivities[i]?.tanggal,
@@ -2044,7 +2065,7 @@ exports.bobotChart = async (req, res, next) => {
             .sort({ tanggal: 1 })
     ]);
 
-    for (let i = 0; i < standardData.length; i++) {
+    for (let i = 0; i < dailyActivities.length; i++) {
       const totalBerat = [];
 
       for (let n = 0; n < dailyActivities[i]?.berat?.length; n++) {

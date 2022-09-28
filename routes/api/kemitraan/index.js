@@ -4,7 +4,7 @@ const router = express.Router();
 const c = require('./kemitraan.controller');
 const { schema } = require('./kemitraan.validation');
 
-const all = permition('superadmin', 'ppl', 'peternak', 'adminsales', 'adminkemitraan', 'adminiot')
+const all = permition('superadmin', 'ppl', 'peternak', 'adminsales', 'adminkemitraan', 'adminiot','adminaftersales')
 
 router.get('/', auth, all, permitionPPL, queryCek, c.findAll)
 router.get('/:id', auth, paramCek, c.findById)

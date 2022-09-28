@@ -4,7 +4,7 @@ const c = require('./jenis-DOC.controller');
 const {schema} = require('./jenis-DOC.validation')
 const {auth, queryCek, schemaCek, paramCek, after, permition, permitionPPL} = require('../../helpers')
 
-const all = permition('superadmin', 'ppl', 'peternak', 'adminsales', 'adminkemitraan', 'adminiot')
+const all = permition('superadmin', 'ppl', 'peternak', 'adminsales', 'adminkemitraan', 'adminiot','adminaftersales')
 
 router.get('/', auth, all, permitionPPL, queryCek, c.findAll);
 router.get('/:id', auth, paramCek, c.findById);

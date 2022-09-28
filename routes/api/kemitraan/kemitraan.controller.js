@@ -62,7 +62,6 @@ exports.findAll = async (req, res, next) => {
         await Promise.map(periods, async (itemPeriode) => {
           if (itemPeriode.kandang) {
               // get IP
-              console.log('kandang', itemPeriode.kandang)
             dataKandangPeriode.push({
               idKandang: itemPeriode.kandang._id,
               populasi: itemPeriode.populasi

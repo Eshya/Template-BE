@@ -54,6 +54,10 @@ const scheme = new Schema({
         type: Date,
         default: null
     },
+    isAutoClosing: {
+        type: Boolean,
+        default: false
+    }
 }, {versionKey: false, timestamps: true})
 scheme.plugin(require('mongoose-autopopulate'));
 scheme.plugin(require('mongoose-delete'), {deletedAt: true, overrideMethods: true})
