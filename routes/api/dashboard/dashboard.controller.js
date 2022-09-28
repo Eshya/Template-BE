@@ -306,8 +306,8 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
                 totalPopulasi: Math.ceil(countPopulasi),
                 averageUsia: Math.ceil(countUsia),
                 averageBobot: Math.ceil(countBobot),
-                totalKandang: role === "adminaftersales" ? countKandang.length : Math.ceil(dataKandang.length),
-                totalKemitraan: role === "adminaftersales" ? countKemitraan.length : Math.ceil(dataKemitraan)
+                totalKandang: countKandang.length ,
+                totalKemitraan: countKemitraan.length 
             }
         })
         
