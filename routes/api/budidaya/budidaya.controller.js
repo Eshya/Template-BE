@@ -181,9 +181,9 @@ exports.riwayatBudidaya =  async (req, res, next) => {
             offsetPaging = (offset / 5 + 1)
         }
         let resultSort = sortBy(result,parseInt(sortcode))
+        result = searchByPeriode(resultSort,search)
+        result = paginate(result,parseInt(limit),parseInt(offsetPaging)) 
         
-        result = paginate(resultSort,parseInt(limit),parseInt(offsetPaging)) 
-        result = searchByPeriode(result,search)
         // console.log(searchByPeriode(result,search))
         res.json({
             count: result.length,
