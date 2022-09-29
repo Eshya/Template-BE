@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 const {parseQuery} = require('../../helpers');
 const Model = require('./kandang.model');
-const Role = require('../roles/roles.model')
 // const Flock = require('../flock/flock.model');
 const Periode = require('../periode/periode.model');
 const KegiatanHarian = require('../kegiatan-harian/kegiatan-harian.model')
@@ -10,6 +9,7 @@ const Sapronak = require("../sapronak/sapronak.model");
 const Nekropsi = require("../nekropsi/nekropsi.model");
 const DataSTD = require('../data/data.model');
 const PeternakModel = require('../peternak/peternak.model');
+const Role = require('../roles/roles.model')
 const selectPublic = '-createdAt -updatedAt';
 const fetch = require('node-fetch')
 const Promise = require("bluebird");
@@ -17,6 +17,8 @@ const reducer = (acc, value) => acc + value;
 const ONE_DAY = 24 * 60 * 60 * 1000;
 const moment = require('moment');
 const excelJS = require("exceljs");
+const dayjs = require('dayjs');
+const formula = require('../../helpers/formula')
 
 var urlIOT = process.env.DB_NAME === "chckin" ? `iot-production:3103` : `iot-staging:3104`
 var urlAuth =`${process.env.AUTH_URL}`
@@ -30,7 +32,14 @@ const handleQuerySort = (query) => {
       return JSON.parse("{}");
     }
 }
-
+const _MS_PER_DAY = 1000 * 60 * 60 * 24;
+let dateDiffInDays = (a, b) => {
+    // Discard the time and time-zone information.
+    const utc1 = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
+    const utc2 = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
+  
+    return Math.floor((utc2 - utc1) / _MS_PER_DAY);
+}
 const _find = async (req, isPublic = false) => {
     const {where, limit, offset, sort} = parseQuery(req.query);
     const count = Model.countDocuments(where);
@@ -392,7 +401,9 @@ exports.findOneDataPool =  async (req, res, next) => {
 
             const latestFeed = getKegiatanHarian[0] ? getKegiatanHarian[0].pakanPakai.reduce((a, {beratPakan}) => a + beratPakan, 0) : 0
             // console.log(getKegiatanHarian)
-            const avgLatestWeight = latestWeight/latestSampling
+            var avgLatestWeight = latestWeight/latestSampling
+            periode.isEnd == true ? avgLatestWeight = await formula.weightClosing(periode._id) : avgLatestWeight
+
 
             const allDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
             const allKematian = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
@@ -406,10 +417,13 @@ exports.findOneDataPool =  async (req, res, next) => {
             const batasDeplesi = ((2 / 100) * periode.populasi)
             const presentaseAyamHidup = 100 - deplesi
             const populasiAkhir = periode.populasi - (allDeplesi + allKematian)
-            const FCR = allPakan / (populasiAkhir * (avgLatestWeight/1000)) 
+            var FCR = allPakan / (populasiAkhir * (avgLatestWeight/1000))
+            periode.isEnd == true ? FCR = await formula.FCRClosing(periode._id) : FCR
+
             const atas = presentaseAyamHidup * (avgLatestWeight/1000)
             const bawah = FCR*(dataPakan.length-1)
-            const IP = (atas / bawah) * 100
+            var IP = (atas / bawah) * 100
+            periode.isEnd == true ? IP = await formula.IPClosing(periode._id) : IP
             const IPFixed = IP.toFixed(2)
             const IPResult = isFinite(IPFixed) && IPFixed || 0
 
@@ -746,7 +760,8 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
                 const latestSampling = findBerat[0] ? findBerat[0].berat.reduce((a, {populasi}) => a + populasi, 0) : 0
 
 
-            const avgLatestWeight = latestWeight/latestSampling
+            var avgLatestWeight = latestWeight/latestSampling
+            periode.isEnd == true ? avgLatestWeight = await formula.weightClosing(periode._id) : avgLatestWeight
 
             const allDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
             const allKematian = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
@@ -760,10 +775,12 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
             const batasDeplesi = ((2 / 100) * periode.populasi)
             const presentaseAyamHidup = 100 - deplesi
             const populasiAkhir = periode.populasi - (allDeplesi + allKematian)
-            const FCR = allPakan / (populasiAkhir * (avgLatestWeight/1000)) 
+            var FCR = allPakan / (populasiAkhir * (avgLatestWeight/1000)) 
+            periode.isEnd == true ? FCR = await formula.FCRClosing(periode._id) : FCR
             const atas = presentaseAyamHidup * (avgLatestWeight/1000)
             const bawah = FCR*(dataPakan.length-1)
-            const IP = (atas / bawah) * 100
+            var IP = (atas / bawah) * 100
+            periode.isEnd == true ? IP = await formula.IPClosing(periode._id) : IP
             const IPFixed = IP.toFixed(2)
             const IPResult = isFinite(IPFixed) && IPFixed || 0
 
@@ -1788,7 +1805,8 @@ exports.kelolaPeternak = async (req, res, next) => {
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
             }).then(res => res.json()).then(data => data.data)
-            return {...tmp.toObject(), user: findUser, umur: umur, periode: findPeriode[0], suhu: suhu[0] ? suhu[0].actualTemperature : 0}
+            return {...tmp.toObject(), user: findUser, umur: umur, periode: findPeriode[0], suhu: suhu?.flock ? suhu.flock.actualTemperature : 0}
+            
         }))
         res.json({
             data: {
@@ -1808,7 +1826,7 @@ exports.kelolaPPL = async (req, res, next) => {
     const token = req.headers['authorization']
     try {
         const findPeriode = await Periode.find({ppl: user, isActivePPL: true}, {}, {autopopulate: false}).populate({path: 'kandang', options: {withDeleted: true}})
-        console.log(findPeriode)
+        // console.log(findPeriode)
         const map = await Promise.all(findPeriode.map(async(x) => {
             const findKandang = await Model.findOneWithDeleted({_id: x.kandang})
             const findUser = await fetch(`${urlAuth}/api/users/${findKandang.createdBy}`, {
@@ -1864,7 +1882,7 @@ exports.kelolaPPL = async (req, res, next) => {
 
             const countPeriode = await Periode.countDocuments({kandang: x.kandang})
 
-            return {...findKandang.toObject(), user: findUser, IP: IP, umur: umur, periode: x, urutanKe: countPeriode,  suhu: suhu ? suhu[0].actualTemperature : 0}
+            return {...findKandang.toObject(), user: findUser, IP: IP, umur: umur, periode: x, urutanKe: countPeriode,  suhu: suhu?.flock ? suhu.flock.actualTemperature : 0}
         }))
         res.json({
             data: {
@@ -1883,7 +1901,7 @@ exports.detailKandang = async (req,res, next) => {
     const id = req.params.id
     const token = req.headers['authorization']
     try {
-        console.log(req.user)
+        // console.log(req.user)
         var findKandang, findPeriode
         req.user.isPPLActive === true ? findKandang = await Model.findOneWithDeleted({_id: id}) : findKandang = await Model.findById(id)
         req.user.isPPLActive === true ? findPeriode = await Periode.find({kandang: id, isActivePPL: true}, {}, {autopopulate: false}).populate({path: 'kandang', options: {withDeleted: true}}).sort({createdAt: 1}) : findPeriode = await Periode.find({kandang: id}).sort({ createdAt: 1})
@@ -1918,7 +1936,7 @@ exports.detailKandang = async (req,res, next) => {
                 {$project: {penjualan: {$multiply: ['$qty', '$harga', '$beratBadan']}}},
                 {$group: {_id: '$periode', totalPenjualan: {$sum: '$penjualan'}}}
             ])
-            console.log(akumulasiPenjualan)
+            // console.log(akumulasiPenjualan)
             const penjualan = findPenjualan.length == 0 ? 0 : akumulasiPenjualan[0].totalPenjualan
             const sapronak = pembelianSapronak.length === 0 ? 0 : pembelianSapronak[0].totalSapronak
             const estimasi = penjualan - pembelianDoc - sapronak
@@ -1948,6 +1966,135 @@ exports.detailKandang = async (req,res, next) => {
         next(error)
     }
 }
+
+exports.deplesiChart = async (req, res, next) => {
+  try {
+    const periode = await Periode.findOne({ _id: req.params.id }).sort({
+      createdAt: 1,
+    });
+
+    const actual = [];
+    const [standardData, dailyActivities] = await Promise.all([
+        DataSTD.find()
+            .sort({ day: 1 })
+            .select("day deplesi"),
+
+        KegiatanHarian.find({ periode: periode.id })
+            .select("-periode")
+            .sort({ tanggal: 1 })
+
+    ]);
+
+    for (let i = 0; i < dailyActivities.length; i++) {
+      dailyActivities[i].deplesi = (dailyActivities[i].deplesi + dailyActivities[i].pemusnahan) / periode.populasi
+      const deplesi = (periode.populasi - (periode.populasi - (dailyActivities[i].deplesi + dailyActivities[i].pemusnahan))) * 100 / periode.populasi
+      actual.push({
+        actual: deplesi,
+        standard: standardData[i].deplesi,
+        day: standardData[i].day,
+        label: dailyActivities[i]?.tanggal,
+      });
+    }
+
+    return res.json({ data: actual });
+  } catch (error) {
+    return res.json({ status: 500, message: error.message });
+  }
+};
+
+exports.feedIntakeChart = async (req, res, next) => {
+  try {
+    const periode = await Periode.findOne({ _id: req.params.id }).sort({
+      createdAt: 1,
+    });
+
+    const actual = [];
+    const [standardData, dailyActivities] = await Promise.all([
+        DataSTD.find()
+            .sort({ day: 1 })
+            .select("day dailyIntake"),
+
+        KegiatanHarian.find({ 
+            periode: periode.id,
+        })
+            .select("-periode")
+            .sort({ tanggal: 1 }),
+
+    ]);
+
+    for (let i = 0; i < dailyActivities.length; i++) {
+      const pakanPakai = dailyActivities[i] ? dailyActivities[i]?.pakanPakai.reduce((a, {beratPakan}) => a + beratPakan, 0) : 0;
+      const populasiAkhir = periode.populasi - (dailyActivities[i]?.deplesi + dailyActivities[i]?.pemusnahan);
+
+      actual.push({
+        actual: (pakanPakai * 1000) / populasiAkhir,
+        standard: standardData[i].dailyIntake,
+        day: standardData[i].day,
+        label: dailyActivities[i]?.tanggal,
+      });
+    }
+
+    return res.json({ data: actual });
+  } catch (error) {
+    return res.json({ status: 500, message: error.message });
+  }
+};
+
+exports.bobotChart = async (req, res, next) => {
+  try {
+    const periode = await Periode.findOne({ _id: req.params.id }).sort({
+      createdAt: 1,
+    });
+
+    // actual
+    const actual = [];
+    const [standardData, dailyActivities] = await Promise.all([
+        DataSTD.find()
+            .sort({ day: 1 })
+            .select("day bodyWeight"),
+
+        KegiatanHarian.find({ periode: periode.id })
+            .select("-periode")
+            .sort({ tanggal: 1 })
+    ]);
+
+    for (let i = 0; i < dailyActivities.length; i++) {
+      const totalBerat = [];
+
+      for (let n = 0; n < dailyActivities[i]?.berat?.length; n++) {
+        let populasi = 0;
+        if (dailyActivities[i]?.berat[n]?.populasi === 0) {
+          populasi = 1;
+        } else {
+          populasi = dailyActivities[i]?.berat[n]?.populasi;
+        }
+        totalBerat.push(dailyActivities[i]?.berat[n]?.beratTimbang / populasi);
+      }
+
+      const totalberatSum = totalBerat.reduce(function (acc, val) {
+        return acc + val;
+      }, 0);
+
+      const bobotResult = totalberatSum / dailyActivities[i]?.berat?.length;
+      const bobotFixed = Number.isInteger(bobotResult)
+        ? bobotResult
+        : bobotResult.toFixed(2);
+
+      const totalBobot = (isFinite(bobotFixed) && bobotFixed) || 0;
+
+      actual.push({
+        actual: totalBobot,
+        standard: standardData[i].bodyWeight,
+        day: standardData[i].day,
+        label: dailyActivities[i]?.tanggal,
+      });
+    }
+
+    return res.json({ data: actual });
+  } catch (error) {
+    return res.json({ status: 500, message: error.message });
+  }
+};
 
 const handleChickenSheds = async (
   isKemitraan,
@@ -2008,7 +2155,8 @@ const handleChickenSheds = async (
       const chickenShedPeriods = await Periode.find(filterPeriod).sort(
         "tanggalMulai"
       );
-
+      const lastKegiatanHarian = await KegiatanHarian.find({periode: periode.id}).sort({'tanggal': -1}).limit(1).select('-periode')
+            
       let dataPeriode = [];
       await Promise.map(chickenShedPeriods, async (chickenShedItem, index) => {
         if (chickenShedItem._id.toString() === periode._id.toString()) {
@@ -2017,6 +2165,21 @@ const handleChickenSheds = async (
       });
 
       data = dataPeriode;
+      // lastupdate formating
+    //   console.log(lastKegiatanHarian)
+      let lastUpdateStr;
+      if(lastKegiatanHarian[0]?.tanggal.length !== 0 && lastKegiatanHarian[0]?.tanggal !== undefined){
+        let now = new Date();
+        const diffDay = dateDiffInDays(new Date(lastKegiatanHarian[0]?.tanggal),now)
+        if(diffDay==0)lastUpdateStr="Hari Ini";
+        else if(diffDay==1)lastUpdateStr="Kemarin";
+        else lastUpdateStr=moment(lastKegiatanHarian[0]?.tanggal).add(7,'hours').format("DD-MM-YYYY");
+    }
+      else{
+        lastUpdateStr = "No Updated Data";
+      }
+        
+      
 
       // get usia
       const now = new Date(Date.now());
@@ -2035,6 +2198,7 @@ const handleChickenSheds = async (
         isActive: chickenShed.isActive ? "Aktif" : "Rehat",
         usia: age,
         periodeKe: !dataPeriode.length ? "Belum mulai Periode" : dataPeriode[0],
+        lastUpdate:lastUpdateStr
       };
 
       if (isKemitraan && username) {

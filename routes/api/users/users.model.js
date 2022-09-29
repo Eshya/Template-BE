@@ -1,4 +1,7 @@
 const {Schema, model} = require('mongoose');
+const Roles = require('../roles/roles.model')
+const UserImage = require('../user-image/user-image.model')
+const Periode = require('../periode/periode.model')
 
 const scheme = new Schema({
     fullname: {
@@ -29,12 +32,12 @@ const scheme = new Schema({
     },
     role: {
         type: Schema.Types.ObjectId,
-        ref: 'Roles', select: true,
+        ref: Roles, select: true,
         autopopulate: true
     },
     image: {
         type: Schema.Types.ObjectId,
-        ref: 'UserImage', select: true,
+        ref: UserImage, select: true,
         autopopulate: {maxDepth: 1},
         default: null
     },
@@ -57,7 +60,7 @@ const scheme = new Schema({
     kelola: [
         {
             type: Schema.Types.ObjectId,
-            ref: 'Periode',
+            ref: Periode,
             default: null,
             autopopulate: {maxDepth: 1}
         }

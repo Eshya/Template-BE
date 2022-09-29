@@ -13,6 +13,7 @@ services:
       DB_NAME: chckin
       DB_NAME_AUTH: chickin-auth
       AUTH_URL: https://auth.chickinindonesia.com
+      BE_URL: https://smartfarm.chickinindonesia.com
     volumes:
       - /sites/apps/smartfarm/uploads:/app/uploads
     networks:

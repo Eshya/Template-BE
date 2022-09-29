@@ -1,13 +1,16 @@
 const { Schema, model } = require("mongoose");
+const Kandang = require('../kandang/kandang.model')
+const JenisDOC = require('../jenis-DOC/jenis-DOC.model')
+const Kemitraan = require('../kemitraan/kemitraan.model')
 const scheme = new Schema({
     kandang: {
         type: Schema.Types.ObjectId,
-        ref: 'Kandang', select: false,
+        ref: Kandang, select: false,
         autopopulate: {maxdepth: 1}
     },
     jenisDOC: {
         type: Schema.Types.ObjectId,
-        ref: 'JenisDOC', select: true,
+        ref: JenisDOC, select: true,
         autopopulate: true
     },
     populasi: {
@@ -32,7 +35,7 @@ const scheme = new Schema({
     },
     kemitraan: {
         type: Schema.Types.ObjectId,
-        ref: 'Kemitraan', 
+        ref: Kemitraan, 
         require: false,
         autopopulate: {maxdepth: 1}
     },
@@ -51,6 +54,10 @@ const scheme = new Schema({
         type: Date,
         default: null
     },
+    isAutoClosing: {
+        type: Boolean,
+        default: false
+    }
 }, {versionKey: false, timestamps: true})
 scheme.plugin(require('mongoose-autopopulate'));
 scheme.plugin(require('mongoose-delete'), {deletedAt: true, overrideMethods: true})
