@@ -27,6 +27,15 @@ const getSortedDailyActivities = async(idPeriode) => {
     return await KegiatanHarian.find({periode: idPeriode}).sort({ tanggal: 1 });
 }
 
+const getDataDeplesi = async(idPeriode) => {
+    const dataDeplesi = await KegiatanHarian.aggregate([
+        {$match: {periode: mongoose.Types.ObjectId(idPeriode)}},
+        {$group: {_id: '$_id', totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
+    ])
+
+    return dataDeplesi;
+}
+
 const AvgDailyWeight = async(idPeriode, day) => {
     const periode = await Periode.findById(idPeriode);
     const dailyActivities = await getSortedDailyActivities(idPeriode);
@@ -52,6 +61,32 @@ const RGR = async(idPeriode) => {
     const RGR = ((avgLastDay-avgFirstDay)/avgFirstDay)*100;
 
     return RGR
+}
+
+/**
+ * FCRHarian = akumulasiPakanPakaiHarian/((BWHarian/1000*sisaAktualAyam)+akumulasiTonasePanen)
+ */
+
+const dailyFCR = async(idPeriode) => {
+    const dailyActivities = await getSortedDailyActivities(idPeriode)
+    const sortedDailyActivities = dailyActivities.sort((a,b) => b.tanggal - a.tanggal)
+
+    const dataDeplesi = await getDataDeplesi(idPeriode);
+    const allDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
+    const allDeath = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
+
+    const getSales  = await getPenjualan(idPeriode)
+    const accumulateTotalTonase = getSales.reduce((a, {totalTonase}) => a + totalTonase, 0)
+    
+    const periode = await Periode.findById(idPeriode);
+    const actualRemainingChicken = periode.populasi - (allDeplesi + allDeath)
+
+    const dailyFeedIntake = await getKegiatanHarian(idPeriode);
+    const accumulateFeedIntake = dailyFeedIntake.reduce((a, {totalPakan}) => a + totalPakan, 0)
+
+    const avgLatestWeight = await AvgDailyWeight(idPeriode, sortedDailyActivities.length - 1)
+    const FCR = accumulateFeedIntake/((avgLatestWeight/1000*actualRemainingChicken)+accumulateTotalTonase);
+    return FCR
 }
 
 const getWeightClosing = async (idPeriode) => {
@@ -110,3 +145,4 @@ exports.persentaseAyamHidupClosing = getpersentaseAyamHidupClosing
 exports.weightClosing = getWeightClosing
 exports.avgAge = getAvgAge
 exports.RGR = RGR
+exports.FCR = dailyFCR

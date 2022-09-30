@@ -417,7 +417,7 @@ exports.findOneDataPool =  async (req, res, next) => {
             const batasDeplesi = ((2 / 100) * periode.populasi)
             const presentaseAyamHidup = 100 - deplesi
             const populasiAkhir = periode.populasi - (allDeplesi + allKematian)
-            var FCR = allPakan / (populasiAkhir * (avgLatestWeight/1000))
+            var FCR = await formula.FCR(periode._id);
             periode.isEnd == true ? FCR = await formula.FCRClosing(periode._id) : FCR
 
             const atas = presentaseAyamHidup * (avgLatestWeight/1000)
@@ -775,7 +775,7 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
             const batasDeplesi = ((2 / 100) * periode.populasi)
             const presentaseAyamHidup = 100 - deplesi
             const populasiAkhir = periode.populasi - (allDeplesi + allKematian)
-            var FCR = allPakan / (populasiAkhir * (avgLatestWeight/1000)) 
+            var FCR = await formula.FCR(periode._id);
             periode.isEnd == true ? FCR = await formula.FCRClosing(periode._id) : FCR
             const atas = presentaseAyamHidup * (avgLatestWeight/1000)
             const bawah = FCR*(dataPakan.length-1)
@@ -1596,7 +1596,7 @@ exports.getKelola = async (req, res, next) => {
                 const populasiAkhir = periode[i].populasi - (allDeplesi + allKematian)
                 const deplesi = (periode[i].populasi - (periode[i].populasi - (allDeplesi + allKematian))) * 100 / periode[i].populasi
                 const presentaseAyamHidup = 100 - deplesi
-                const FCR = allPakan / (populasiAkhir * (avgLatestWeight/1000)) 
+                const FCR = await formula.FCR(periode[i].id)
                 const atas = presentaseAyamHidup * (avgLatestWeight/1000)
                 const bawah = FCR*(dataPakan.length-1)
                 const IP = (atas / bawah) * 100
@@ -1868,7 +1868,7 @@ exports.kelolaPPL = async (req, res, next) => {
             
             const deplesi = (x.populasi - (x.populasi - (cumDeplesi + cumKematian))) * 100 / x.populasi
             const presentaseAyamHidup = 100 - deplesi
-            const FCR = cumPakan / (populasiAkhir * (avgLatestWeight/1000))
+            const FCR = await formula.FCR(x._id)
 
             const atas = presentaseAyamHidup * (avgLatestWeight/1000)
             const bawah = FCR * (dataPakan.length-1)
