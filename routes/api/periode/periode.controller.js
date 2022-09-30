@@ -418,7 +418,7 @@ exports.ringkasan = async (req, res, next) => {
         const avgBW7 = await rataBW(req.params.id, 7)
         const std = await Data.findOne({day: umur.umur})
         const stdRGR = await Data.findOne({day: 7}).select('rgr')
-        const rgr = umur.umur >= 7 ? (avgBW7.avgBW - avgBW0.avgBW) / avgBW0.avgBW * 100 : 0
+        const rgr = await formula.RGR(id);
         res.json({
             totalMortality: allDeplesi,
             totalCulling: allKematian,

@@ -2,6 +2,7 @@ const Periode = require('../api/periode/periode.model')
 const Penjualan = require('../api/penjualan/penjualan.model')
 const KegiatanHarian = require('../api/kegiatan-harian/kegiatan-harian.model')
 const ONE_DAY = 24 * 60 * 60 * 1000;
+const dayjs = require('dayjs');
 const mongoose = require('mongoose')
 
 const getPenjualan = async (idPeriode) => {
@@ -20,6 +21,37 @@ const getKegiatanHarian = async (idPeriode) => {
         {$group: {_id: '$_id', totalPakan: {$sum: '$pakanPakai.beratPakan'}}}
     ])
     return dataPakan
+}
+
+const getSortedDailyActivities = async(idPeriode) => {
+    return await KegiatanHarian.find({periode: idPeriode}).sort({ tanggal: 1 });
+}
+
+const AvgDailyWeight = async(idPeriode, day) => {
+    const periode = await Periode.findById(idPeriode);
+    const dailyActivities = await getSortedDailyActivities(idPeriode);
+
+    if (periode && dailyActivities.length) {
+        const startDate = dayjs(new Date(periode.tanggalMulai));
+        const dailyActivity = dailyActivities.find(activity => {
+            const date = dayjs(new Date(activity.tanggal))
+            const age = Math.round(Math.abs(date.diff(startDate, 'day')))
+            if (age === day) return activity
+        });
+
+        const dailyWeight = !dailyActivity ? 0 : dailyActivity.berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0);
+        const dailyWeightSample = !dailyActivity ? 0 : dailyActivity.berat.reduce((a, {populasi}) => a + populasi, 0);
+        const avgDailyWeight = dailyWeight/dailyWeightSample
+        return avgDailyWeight
+    }
+}
+
+const RGR = async(idPeriode) => {
+    const avgFirstDay = await AvgDailyWeight(idPeriode, 0);
+    const avgLastDay = await AvgDailyWeight(idPeriode, 7);
+    const RGR = ((avgLastDay-avgFirstDay)/avgFirstDay)*100;
+
+    return RGR
 }
 
 const getWeightClosing = async (idPeriode) => {
@@ -77,3 +109,4 @@ exports.FCRClosing = getFCRClosing
 exports.persentaseAyamHidupClosing = getpersentaseAyamHidupClosing
 exports.weightClosing = getWeightClosing
 exports.avgAge = getAvgAge
+exports.RGR = RGR
