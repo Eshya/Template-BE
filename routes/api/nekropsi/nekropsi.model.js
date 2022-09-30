@@ -1,4 +1,6 @@
 const { Schema, model } = require("mongoose");
+const NekropsiImage = require('../nekropsi-image/nekropsi-image.model')
+const Periode = require('../periode/periode.model')
 
 const kepalaSchema = new Schema({
     bengkakDibawahMata: {default: null, type: Boolean},
@@ -182,13 +184,13 @@ const scheme = new Schema({
     },
     images: [{
         type: Schema.Types.ObjectId,
-        ref: 'NekropsiImage',
+        ref: NekropsiImage,
         select: true,
         autopopulate: {maxDepth: 1}
     }],
     periode: {
         type: Schema.Types.ObjectId,
-        ref: 'Periode', autopopulate: {maxDepth: 1}
+        ref: Periode, autopopulate: {maxDepth: 1}
     },
     catatan: {
         type: String,

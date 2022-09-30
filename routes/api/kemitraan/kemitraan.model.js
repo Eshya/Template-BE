@@ -1,4 +1,7 @@
 const { createConnection, Schema, model} = require('mongoose');
+const Provinces = require('../province/province.model')
+const Regencies = require('../regency/regency.model')
+const Districts = require('../districts/districts.model')
 // const host = process.env.DB_HOST || '103.31.39.17'
 // const dbPort = process.env.DB_PORT || 27018
 // const dbName = process.env.DB_NAME_AUTH || 'chickin-auth-stagging'
@@ -60,19 +63,19 @@ const scheme = new Schema({
     },
     province: {
         type: Schema.Types.ObjectId,
-        ref: 'Provinces',
+        ref: Provinces,
         select: true,
         autopopulate: true
     },
     regency: {
         type: Schema.Types.ObjectId,
-        ref: 'Regencies',
+        ref: Regencies,
         select: true,
         autopopulate: true
     },
     districts: {
         type: Schema.Types.ObjectId,
-        ref: 'Districts',
+        ref: Districts,
         select: true,
         autopopulate: true
     },

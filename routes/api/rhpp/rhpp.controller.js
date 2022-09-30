@@ -169,6 +169,11 @@ exports.uploadRHPP =  async (req, res, next) => {
         // update RHPP periode
         let rhpp_path = path + "/" + filename
         await Periode.findByIdAndUpdate(idPeriode, {rhpp_path: rhpp_path});
+ 
+        const periode = await Periode.findById(idPeriode);
+        if (periode.downloadedDate) {
+            await Periode.updateOne({ _id: idPeriode }, {$unset: {downloadedDate: "" }});
+        }
 
         if (req.file == undefined) {
             return res.status(400).send({ message: "Please upload a file!" });
@@ -232,7 +237,10 @@ exports.downloadRHPP =  async (req, res, next) => {
 
         let path = periode.rhpp_path;
         let filename = "[RHPP]_[" + dataPeriode[0].namaKandang + "]_[Periode_" + dataPeriode[0].periodeKe + "]_" + dateNow + ".pdf"
-        res.download(path, filename, (err) => {
+        res.download(path, filename, async(err) => {
+            periode.downloadedDate = new Date();
+            await periode.save();
+
             if (err) {
                 return res.status(400).send({message: "Could not download the file. " + err});
             }
@@ -247,15 +255,66 @@ exports.deleteRHPP =  async (req, res, next) => {
         let periode = await Periode.findOne({_id: req.params.id}).sort({ createdAt: -1 })
         await Periode.findByIdAndUpdate(periode.id, {rhpp_path: ""});
 
-        fs.unlink(periode.rhpp_path, function (err) {
+        fs.unlink(periode.rhpp_path, async(err) => {
             if (err) {
                 return res.status(400).send({message: "Delete RHPP error. " + err});
             }
+
+            if (periode.downloadedDate) {
+                await Periode.updateOne({ _id: periode.id }, {$unset: {downloadedDate: "" }});
+            }
+
             res.status(200).send({
                 message: "RHPP successfully deleted.",
             });
         });
     } catch (error) {
         next(error);
+    }
+}
+
+exports.downloadedRHPP = async(req, res, next) => {
+    const query = req.query;
+    const periodsData = [];
+    if (query.periode) {
+        findQuery = { _id : query.periode }
+        try {
+            const periods = await Periode.find(findQuery);
+            for (const periode of periods) {
+                if (periode.downloadedDate ) {
+                    periodsData.push({
+                        user_id: periode.kandang.createdBy,
+                         periode: periode._id,
+                        downloaded_date: periode.downloadedDate
+                    })
+                }
+            }
+            
+            return res.json({ status: 200, message: 'OK', data: periodsData })
+        } catch(err) {
+            return res.json({ status: 500, message: err });
+        }
+    }
+
+    if (!query.periode) {
+        try {
+            const chickenSheds = await Kandang.find({ createdBy: req.user._id });
+            for (const chickenShed of chickenSheds) {
+                const periods = await Periode.find({kandang: chickenShed._id});
+                for (const periode of periods) {
+                    if (periode.downloadedDate ) {
+                        periodsData.push({
+                            user_id: periode.kandang.createdBy,
+                            periode: periode._id,
+                            downloaded_date: periode.downloadedDate
+                        })
+                    }
+                }
+            }
+
+            return res.json({ status: 200, message: 'OK', data: periodsData })
+        } catch (err) {
+            return res.json({ status: 500, message: err });
+        }
     }
 }

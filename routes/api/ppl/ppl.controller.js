@@ -3,6 +3,14 @@ const { parseQuery } = require('../../helpers');
 const Model = require('../peternak/peternak.model')
 const kandang = require('../kandang/kandang.model');
 const Periode = require('../periode/periode.model');
+const KegiatanHarian = require('../kegiatan-harian/kegiatan-harian.model')
+const Penjualan = require("../penjualan/penjualan.model");
+const Sapronak = require("../sapronak/sapronak.model");
+const PeternakModel = require('../peternak/peternak.model');
+const fetch = require('node-fetch')
+const Promise = require("bluebird");
+const reducer = (acc, value) => acc + value;
+var urlIOT = process.env.DB_NAME === "chckin" ? `iot-production:3103` : `iot-staging:3104`
 const handleQuerySort = (query) => {
     try{
       const toJSONString = ("{" + query + "}").replace(/(\w+:)|(\w+ :)/g, (matched => {
@@ -60,37 +68,121 @@ exports.findAll =  async (req, res, next) => {
         next(error)
     }
 }
-const _findPPL = async (req, isActive) => {
-    const findPeriode = await Periode.aggregate([
-        {$match: {ppl: mongoose.Types.ObjectId(req.params.id), isActivePPL: isActive}},
-        {$sort: {'tanggalAkhir': -1}},
-        {$group: {_id: '$_id', id: {$first: '$kandang'}}},
-        {$group: {_id: '$id', periode: {$push: '$_id'},}}
-    ])
 
-    const map = await Promise.all(findPeriode.map(async(x)=>{
-        const findPeriode = await Periode.findById(x.periode[0])
-        const findKandang = await kandang.findOneWithDeleted({_id: x._id})
-        const countPeriode = await Periode.countDocuments({kandang: x._id})
-        return {...findKandang.toObject(),periode: findPeriode, urutanKe: countPeriode}
-    }))
-
-    return map;
-
-}
 exports.findById = async (req, res, next) => {
     try {
+        const token = req.headers['authorization']
         const ppl = await Model.findById(req.params.id).select('avatar image noKTP address fullname username email phoneNumber asalKemitraan kemitraanUser isPPLActive')
-        
-        const findActive = await _findPPL(req, true)
-        const findUnactive = await _findPPL(req, false)
+        const findPeriode = await Periode.aggregate([
+            {$match: {ppl: mongoose.Types.ObjectId(req.params.id)}},
+            {$sort: {'tanggalAkhir': -1}},
+            {$group: {_id: '$_id', id: {$first: '$kandang'}}},
+            {$group: {_id: '$id', periode: {$push: '$_id'},}}
+        ])
+        let dataKandangPeriode = [];
+        await Promise.map(findPeriode, async(itemPeriode)=>{
+            // const findPeriode = await Periode.findById(x.periode[0])
+            const findKandang = await kandang.findOneWithDeleted({_id: itemPeriode._id})
+            const countPeriode = await Periode.countDocuments({kandang: itemPeriode._id})
+            
+            
+            if (itemPeriode.periode) {
+                // get IP
+                const penjualan = await Penjualan.aggregate([
+                    {$match: {periode: mongoose.Types.ObjectId(itemPeriode.periode[0])}},
+                    {$group: {_id: '$_id', terjual: {$sum: '$qty'}}}
+                ])
+    
+                const dataPakan = await KegiatanHarian.aggregate([
+                    {$match: {periode: mongoose.Types.ObjectId(itemPeriode.periode[0])}},
+                    {$unwind: {'path': '$pakanPakai', "preserveNullAndEmptyArrays": true}},
+                    {$group: {_id: '$_id', totalPakan: {$sum: '$pakanPakai.beratPakan'}}}
+                ])
+    
+                const dataDeplesi = await KegiatanHarian.aggregate([
+                    {$match: {periode: mongoose.Types.ObjectId(itemPeriode.periode[0])}},
+                    {$group: {_id: '$_id', totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
+                ])
+    
+                const getKegiatan = await KegiatanHarian.find({periode: itemPeriode.periode[0]}).sort({'tanggal': -1}).limit(1).select('-periode')
+                const latestWeight =  getKegiatan[0] ? await getKegiatan[0].berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0) : 0
+                
+    
+                const allDeplesi = await dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
+                const allKematian = await dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
+                
+                //const allPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
+                const allPakan = await dataPakan.reduce((a, {totalPakan})=>a + totalPakan, 0);
+                const deplesi = (findKandang.populasi - (findKandang.populasi - (allDeplesi + allKematian))) * 100 / findKandang.populasi
+                const presentaseAyamHidup = 100 - deplesi
+                const populasiAkhir = findKandang.populasi - (allDeplesi + allKematian )
+                const FCR = allPakan / (populasiAkhir * (latestWeight/1000)) 
+                const atas = presentaseAyamHidup * (latestWeight/1000)
+                const bawah = FCR*(dataPakan.length-1)
+                const IP = (atas / bawah) * 100
+               
+                // console.log(IP)
+                // get total penjualan
+                let harian = []
+                let flock = []
+                let pembelianPakan = 0
+                let pembelianOVK = 0
+                const getSapronak = await Sapronak.find({periode: itemPeriode.periode[0]});
+                for (let i = 0; i < getSapronak.length; i++) {
+                    if (getSapronak[i].produk && (getSapronak[i].produk.jenis === 'PAKAN')) {
+                        const compliment = getSapronak[i].kuantitas * getSapronak[i].hargaSatuan
+                        pembelianPakan += compliment
+                    } else {
+                        const compliment = getSapronak[i].kuantitas * getSapronak[i].hargaSatuan
+                        pembelianOVK += compliment
+                    }
+                }
+                const pembelianDoc = findKandang.populasi * getSapronak[0]?.hargaSatuan
+                const getPenjualan = await Penjualan.find({periode: itemPeriode.periode[0]})
+                getPenjualan.forEach(x => {
+                    harian.push(x.beratBadan * x.harga * x.qty)
+                })
+                const penjualanAyamBesar = await harian.reduce(reducer, 0);
+                const pendapatanPeternak = penjualanAyamBesar - pembelianDoc - pembelianOVK - pembelianPakan
+                // console.log(pendapatanPeternak)
+                const peternak = await PeternakModel.findById(findKandang.createdBy._id).select('fullname')
+                // fund flock iot
+                flock = await fetch(`http://${urlIOT}/api/flock/datapool/kandang/` + findKandang._id, {
+                    method: 'get',
+                    headers: {
+                        'Authorization': token,
+                        "Content-Type": "application/json" }
+                }).then(result => {
+                    if (result.ok) {
+                        return result.json();
+                    }
+                });
+                dataKandangPeriode.push({
+                    idPemilik: findKandang.createdBy ? findKandang.createdBy._id : null,
+                    namaPemilik: findKandang.createdBy ? (peternak?.fullname ? peternak.fullname : "Not Registered") : null,
+                    idKandang: findKandang._id,
+                    namaKandang: findKandang.kode,
+                    isIoTInstalled:flock?.data?.flock.length!=0 ? true : false,
+                    alamat: findKandang.alamat,
+                    kota: findKandang.kota,
+                    isActive: findKandang.isActive,
+                    jenisKandang: findKandang.tipe ? findKandang.tipe.tipe : null,
+                    populasi: findKandang.populasi,
+                    periodeEnd: itemPeriode.isEnd,
+                    IP: IP,
+                    idPeriode: itemPeriode._id,
+                    periodeKe: countPeriode,
+                    totalPenghasilanKandang: pendapatanPeternak
+                });
+                
+            }
+    
+            
+        })
         res.json({
             detailPPL: ppl,
-            totalKandang: findActive.length + findUnactive.length,
-            detailKandang: {
-                kelolaAktif:findActive,
-                kelolaRehat:findUnactive
-            },
+            totalKandang: dataKandangPeriode.length,
+            detailKandang:dataKandangPeriode,
             message: 'Ok'
         })
     } catch (error) {

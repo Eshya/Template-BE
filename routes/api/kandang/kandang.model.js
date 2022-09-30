@@ -1,4 +1,5 @@
 const { createConnection, Schema, model} = require('mongoose');
+const TipeKandang = require('../tipe-kandang/tipe-kandang.model')
 // const host = process.env.DB_HOST || '103.31.39.17'
 // const dbPort = process.env.DB_PORT || 27018
 // const dbName = process.env.DB_NAME_AUTH || 'chickin-auth-stagging'
@@ -114,7 +115,7 @@ const scheme = new Schema({
     },
     tipe: {
         type: Schema.Types.ObjectId,
-        ref: 'TipeKandang', select: true,
+        ref: TipeKandang, select: true,
         autopopulate: {maxDepth: 1}
     },
     isActive: {
@@ -133,5 +134,5 @@ const scheme = new Schema({
     }
 }, {versionKey: false, timestamps: true})
 scheme.plugin(require('mongoose-autopopulate'));
-scheme.plugin(require('mongoose-delete'), {deleteAt: true, overrideMethods: true})
+scheme.plugin(require('mongoose-delete'), {deletedAt: true, overrideMethods: true})
 module.exports = model('Kandang', scheme, 'kandang');

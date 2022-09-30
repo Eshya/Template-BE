@@ -1,4 +1,4 @@
-version: '3.7'
+version: "3.7"
 services:
   smartfarm-stg:
     image: ${APP_IMAGE_STG}:${APP_IMAGE_STG_TAG}
@@ -6,12 +6,11 @@ services:
     environment:
       SERVER_PORT: 3102
       NODE_ENV: staging
-      DB_HOST: $DB_HOST
-      DB_PORT: 27017
-      DB_USER: $DB_USER
-      DB_PASS: $DB_PASS
+      MONGO_CONNECTIONSTRING: $MONGO_CONNECTIONSTRING_STG
       DB_NAME: chckin-stagging
       DB_NAME_AUTH: chickin-auth-stagging
+      AUTH_URL: https://staging-auth.chickinindonesia.com
+      BE_URL: https://staging-smartfarm.chickinindonesia.com
     volumes:
       - /sites/apps/smartfarm/uploads:/app/uploads
     networks:
@@ -22,3 +21,6 @@ services:
 networks:
   chickinnetwork:
     external: true
+
+
+

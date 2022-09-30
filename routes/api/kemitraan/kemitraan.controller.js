@@ -21,41 +21,69 @@ const handleQuerySort = (query) => {
     }
 }
 
-exports.findAll =  async (req, res, next) => {
+exports.findAll = async (req, res, next) => {
     try {
-        const {limit, offset} = parseQuery(req.query);
-        const { name, alamat, email, phoneNumber } = req.query;
-        let sort = handleQuerySort(req.query.sort)
-        const filter = {}
-        if (name) {
-            filter.name = new RegExp(name, 'i') 
-        }
-        if (alamat) {
-            filter.alamat = new RegExp(alamat, 'i') 
-        }
-        if (email) {
-            filter.email = new RegExp(email, 'i') 
-        }
-        if (phoneNumber) {
-            filter.phoneNumber = phoneNumber
-        }
-        filter.deleted = false;
-
-        if (!req.query.sort) {
-            sort = { name: 1 }
-        }
-
-        const count = await Model.countDocuments(filter)
-        const data = await Model.find(filter).limit(limit).skip(offset).sort(sort)
-        res.json({
-            message: 'Ok',
-            length: count,
-            data: data
-        })
+      const { limit, offset } = parseQuery(req.query);
+      const { name, alamat, email, phoneNumber } = req.query;
+      let sort = handleQuerySort(req.query.sort);
+      const filter = {};
+      if (name) {
+        filter.name = new RegExp(name, "i");
+      }
+      if (alamat) {
+        filter.alamat = new RegExp(alamat, "i");
+      }
+      if (email) {
+        filter.email = new RegExp(email, "i");
+      }
+      if (phoneNumber) {
+        filter.phoneNumber = phoneNumber;
+      }
+      filter.deleted = false;
+  
+      if (!req.query.sort) {
+        sort = { name: 1 };
+      }
+  
+      const partnershipsObject = [];
+      const count = await Model.countDocuments(filter);
+      const partnerships = await Model.find(filter)
+        .limit(limit)
+        .skip(offset)
+        .sort(sort);
+  
+      for (const partnership of partnerships) {
+        const periods = await Periode.find({
+          kemitraan: partnership._id,
+          kandang: { $ne: null },
+        });
+  
+        const dataKandangPeriode = []
+        await Promise.map(periods, async (itemPeriode) => {
+          if (itemPeriode.kandang) {
+              // get IP
+            dataKandangPeriode.push({
+              idKandang: itemPeriode.kandang._id,
+              populasi: itemPeriode.populasi
+            });
+          }
+        });
+  
+        const partnershipData = JSON.parse(JSON.stringify(partnership));
+        partnershipData.totalPopulasi = dataKandangPeriode.reduce((a, {populasi}) => a + populasi, 0);
+        partnershipData.totalKandang = dataKandangPeriode.length
+        partnershipsObject.push(partnershipData)
+      }
+  
+      res.json({
+        message: "Ok",
+        length: count,
+        data: partnershipsObject,
+      });
     } catch (error) {
-        next(error)
+      next(error);
     }
-}
+  };
 
 exports.findById = async (req, res, next) => {
     try {
@@ -178,6 +206,9 @@ exports.insert = async (req, res, next) => {
             fs.writeFileSync(path, base64Data,  {encoding: 'base64'});
             data.image = path;
         }
+
+        const findNumber = await Model.findOne({phoneNumber: data.phoneNumber})
+        if(findNumber) throw res.json({error: 400, message: 'phone number already registered'})
         const result = await Model.create(data)
         res.json({
             data: result,
@@ -201,6 +232,7 @@ exports.updateById = async (req, res, next) => {
             fs.writeFileSync(path, base64Data,  {encoding: 'base64'});
             data.image = path;
         }
+
         const result = await Model.findByIdAndUpdate(id, data, {new: true}).exec()
         res.json({
             data: result,
@@ -238,3 +270,4 @@ exports.removeKemitraanById = async (req, res, next) => {
         next(err)
     }
 }
+
