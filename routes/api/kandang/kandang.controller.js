@@ -553,9 +553,11 @@ exports.findOneDataPool =  async (req, res, next) => {
                 let sisaPopulasi = await KegiatanHarian.find({periode: periode.id, tanggal: {$lte: kegiatanHarian.tanggal}}).select('-periode')
                 let totalCulling = sisaPopulasi.reduce((a, {pemusnahan}) => a + pemusnahan, 0);
                 let totalMortalitas = sisaPopulasi.reduce((a, {deplesi}) => a + deplesi, 0);
-                let ayamHidup = periode.populasi - (totalCulling + totalMortalitas);
-                let ayamHidupPercentage = ayamHidup / periode.populasi * 100;
+                // let ayamHidup = periode.populasi - (totalCulling + totalMortalitas);
+                // let ayamHidupPercentage = ayamHidup / periode.populasi * 100;
 
+                let ayamHidup = await formula.actualRemainingChicken(periode.id);
+                let ayamHidupPercentage = await formula.liveChickenPrecentage(periode.id);
                 dataHarian.push({
                     usiaAyam: usiaAyam,
                     tanggal: kegiatanHarian.tanggal,

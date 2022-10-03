@@ -53,6 +53,13 @@ const actualRemainingChicken = async(idPeriode) => {
     return remainingChicken;
 }
 
+const liveChickenPrecentage = async(idPeriode) => {
+    const remainingChicken = await actualRemainingChicken(idPeriode);
+    const periode = await Periode.findById(idPeriode);
+    const livePrecentage = (remainingChicken/periode.populasi)*100;
+    return livePrecentage;
+}
+
 const AvgDailyWeight = async(idPeriode, day) => {
     const periode = await Periode.findById(idPeriode);
     const dailyActivities = await getSortedDailyActivities(idPeriode);
@@ -158,3 +165,5 @@ exports.weightClosing = getWeightClosing
 exports.avgAge = getAvgAge
 exports.RGR = RGR
 exports.FCR = dailyFCR
+exports.liveChickenPrecentage = liveChickenPrecentage
+exports.actualRemainingChicken = actualRemainingChicken
