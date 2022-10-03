@@ -36,12 +36,19 @@ const getDataDeplesi = async(idPeriode) => {
     return dataDeplesi;
 }
 
+const accumulateDeplesi = async(idPeriode) => {
+    const dataDeplesi = await getDataDeplesi(idPeriode);
+    const totalDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
+    const totalMortality = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
+    const deplesiAccumulation = totalDeplesi + totalMortality
+    return deplesiAccumulation
+}
+
 const actualRemainingChicken = async(idPeriode) => {
     const getSales = await getPenjualan(idPeriode);
     const accumulateTotalHarvest = getSales.reduce((a, {totalEkor}) => a + totalEkor, 0)
     const periode = await Periode.findById(idPeriode);
-    const dataDeplesi = await getDataDeplesi(idPeriode);
-    const totalDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
+    const totalDeplesi = await accumulateDeplesi(idPeriode);
     const remainingChicken = periode.populasi - totalDeplesi - accumulateTotalHarvest;
     return remainingChicken;
 }
