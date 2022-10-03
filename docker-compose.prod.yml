@@ -1,12 +1,12 @@
 version: "3.9"
 services:
   smartfarm-prod:
-    build: .
-    # image: ${APP_IMAGE_PROD}:${APP_IMAGE_PROD_TAG}
+    image: ${APP_IMAGE_PROD}:${APP_IMAGE_PROD_TAG}
     container_name: smartfarm-production
     environment:
       SERVER_PORT: 3101
-      MONGO_CONNECTIONSTRING: mongodb+srv://chickinProdDBUser:M4ziLdjSHLTuaqLq@chickinprodcluster.mgumb9a.mongodb.net/?retryWrites=true&w=majority
+      NODE_ENV: production
+      MONGO_CONNECTIONSTRING: $PROD_MONGO_CONNECTIONSTRING
       DB_NAME: chckin
       DB_NAME_AUTH: chickin-auth
       AUTH_URL: https://auth.chickinindonesia.com
