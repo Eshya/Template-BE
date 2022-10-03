@@ -399,7 +399,7 @@ exports.ringkasan = async (req, res, next) => {
         const populasiAktual = getPeriode.populasi - (allDeplesi + allKematian + allPenjualan )
         const deplesi = (getPeriode.populasi - (getPeriode.populasi - (allDeplesi + allKematian))) * 100 / getPeriode.populasi
         const presentaseAyamHidup = 100 - deplesi
-        const FCR = await formula.FCR(id)
+        var FCR = await formula.FCR(id)
         !getPeriode?.isEnd ? FCR = await formula.FCRClosing(id) : FCR
         const atas = presentaseAyamHidup * (avgLatestWeight/1000)
         const bawah = FCR*(dataPakan.length-1)
