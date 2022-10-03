@@ -400,7 +400,7 @@ exports.ringkasan = async (req, res, next) => {
         const deplesi = (getPeriode.populasi - (getPeriode.populasi - (allDeplesi + allKematian))) * 100 / getPeriode.populasi
         const presentaseAyamHidup = 100 - deplesi
         const FCR = await formula.FCR(id)
-        getPeriode.isEnd == true ? FCR = await formula.FCRClosing(id) : FCR
+        !getPeriode?.isEnd ? FCR = await formula.FCRClosing(id) : FCR
         const atas = presentaseAyamHidup * (avgLatestWeight/1000)
         const bawah = FCR*(dataPakan.length-1)
         var IP = (atas / bawah) * 100
@@ -435,8 +435,8 @@ exports.ringkasan = async (req, res, next) => {
             beratAktual: avgLatestWeight,
             feedIntake: latestFeed * 1000 / populasiAkhir,
             ADG: 0,
-            fcrAktual: FCR,
-            diffFcr: FCR - std.fcr,
+            fcrAktual: FCR.toFixed(2),
+            diffFcr: (FCR - std.fcr).toFixed(2),
             RGR: rgr,
             diffRgr: rgr - stdRGR.rgr,
             pakanMasuk: pakanMasuk,

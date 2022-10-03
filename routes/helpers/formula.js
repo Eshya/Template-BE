@@ -36,6 +36,16 @@ const getDataDeplesi = async(idPeriode) => {
     return dataDeplesi;
 }
 
+const actualRemainingChicken = async(idPeriode) => {
+    const getSales = await getPenjualan(idPeriode);
+    const accumulateTotalHarvest = getSales.reduce((a, {totalEkor}) => a + totalEkor, 0)
+    const periode = await Periode.findById(idPeriode);
+    const dataDeplesi = await getDataDeplesi(idPeriode);
+    const totalDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
+    const remainingChicken = periode.populasi - totalDeplesi - accumulateTotalHarvest;
+    return remainingChicken;
+}
+
 const AvgDailyWeight = async(idPeriode, day) => {
     const periode = await Periode.findById(idPeriode);
     const dailyActivities = await getSortedDailyActivities(idPeriode);
@@ -71,21 +81,16 @@ const dailyFCR = async(idPeriode) => {
     const dailyActivities = await getSortedDailyActivities(idPeriode)
     const sortedDailyActivities = dailyActivities.sort((a,b) => b.tanggal - a.tanggal)
 
-    const dataDeplesi = await getDataDeplesi(idPeriode);
-    const allDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
-    const allDeath = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
-
     const getSales  = await getPenjualan(idPeriode)
     const accumulateTotalTonase = getSales.reduce((a, {totalTonase}) => a + totalTonase, 0)
     
-    const periode = await Periode.findById(idPeriode);
-    const actualRemainingChicken = periode.populasi - (allDeplesi + allDeath)
+    const remainingChicken = await actualRemainingChicken(idPeriode);
 
     const dailyFeedIntake = await getKegiatanHarian(idPeriode);
     const accumulateFeedIntake = dailyFeedIntake.reduce((a, {totalPakan}) => a + totalPakan, 0)
 
     const avgLatestWeight = await AvgDailyWeight(idPeriode, sortedDailyActivities.length - 1)
-    const FCR = accumulateFeedIntake/((avgLatestWeight/1000*actualRemainingChicken)+accumulateTotalTonase);
+    const FCR = accumulateFeedIntake/((avgLatestWeight/1000*remainingChicken)+accumulateTotalTonase);
     return FCR
 }
 
