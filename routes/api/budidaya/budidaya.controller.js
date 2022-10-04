@@ -106,7 +106,8 @@ exports.riwayatBudidaya =  async (req, res, next) => {
                 const deplesi = (periodeChild.populasi - (periodeChild.populasi - (allDeplesi + allKematian))) * 100 / periodeChild.populasi
                 const totalDeplesi = (allDeplesi + allKematian)
                 const batasDeplesi = ((2 / 100) * periodeChild.populasi)
-                const presentaseAyamHidup = 100 - deplesi
+                // const presentaseAyamHidup = 100 - deplesi
+                const presentaseAyamHidup = await formula.liveChickenPrecentage(periodeChild._id)
                 const populasiAkhir = periodeChild.populasi - (allDeplesi + allKematian)
                 const FCR = await formula.FCR(periodeChild._id);
                 const atas = presentaseAyamHidup * (avgLatestWeight/1000)

@@ -115,7 +115,8 @@ exports.findById = async (req, res, next) => {
                 //const allPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
                 const allPakan = await dataPakan.reduce((a, {totalPakan})=>a + totalPakan, 0);
                 const deplesi = (findKandang.populasi - (findKandang.populasi - (allDeplesi + allKematian))) * 100 / findKandang.populasi
-                const presentaseAyamHidup = 100 - deplesi
+                // const presentaseAyamHidup = 100 - deplesi
+                const presentaseAyamHidup = await formula.liveChickenPrecentage(itemPeriode._id);
                 const populasiAkhir = findKandang.populasi - (allDeplesi + allKematian )
                 const FCR = await formula.FCR(itemPeriode._id);
                 const atas = presentaseAyamHidup * (latestWeight/1000)

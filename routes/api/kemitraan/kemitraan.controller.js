@@ -130,7 +130,8 @@ exports.getKandangPeriode = async (req, res, next) => {
                 //const allPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
                 const allPakan = dataPakan.reduce((a, {totalPakan})=>a + totalPakan, 0);
                 const deplesi = (itemPeriode.populasi - (itemPeriode.populasi - (allDeplesi + allKematian))) * 100 / itemPeriode.populasi
-                const presentaseAyamHidup = 100 - deplesi
+                // const presentaseAyamHidup = 100 - deplesi
+                const presentaseAyamHidup = await formula.liveChickenPrecentage(itemPeriode._id);
                 const populasiAkhir = itemPeriode.populasi - (allDeplesi + allKematian )
                 const FCR = await formula.FCR(itemPeriode._id) 
                 const atas = presentaseAyamHidup * (latestWeight/1000)
