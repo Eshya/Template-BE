@@ -12,7 +12,7 @@ const scheme = new Schema({
         autopopulate: {maxDepth: 1},
         default: null
     },
-    lokasiKandang: {
+    lokasiPPL: {
         type: String,
         required: true
     },
