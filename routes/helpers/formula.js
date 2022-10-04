@@ -49,7 +49,7 @@ const actualRemainingChicken = async(idPeriode) => {
     const accumulateTotalHarvest = getSales.reduce((a, {totalEkor}) => a + totalEkor, 0)
     const periode = await Periode.findById(idPeriode);
     const totalDeplesi = await accumulateDeplesi(idPeriode);
-    const remainingChicken = periode.populasi - totalDeplesi - accumulateTotalHarvest;
+    const remainingChicken = periode.populasi - (totalDeplesi - accumulateTotalHarvest);
     return remainingChicken;
 }
 
@@ -97,7 +97,7 @@ const dailyFCR = async(idPeriode) => {
     const accumulateFeedIntake = dailyFeedIntake.reduce((a, {totalPakan}) => a + totalPakan, 0)
 
     const avgLatestWeight = await AvgDailyWeight(idPeriode, sortedDailyActivities.length - 1)
-    const FCR = accumulateFeedIntake/((avgLatestWeight/1000*remainingChicken)+accumulateTotalTonase);
+    const FCR = accumulateFeedIntake/(((avgLatestWeight/1000)*remainingChicken)+accumulateTotalTonase);
     return FCR
 }
 
