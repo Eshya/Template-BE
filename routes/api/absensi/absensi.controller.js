@@ -12,6 +12,7 @@ let dateDiffInDays = (a, b) => {
 }
 function delCreator(obj){
     obj.createdBy = undefined
+    obj.idKandang = undefined
     return obj
 }
 exports.findAll = async (req, res, next) => {
@@ -36,7 +37,7 @@ exports.findById = async (req, res, next) => {
         const createdBy = req.user._id
         const results = await Model.find({createdBy}).sort({ tanggal: -1 });
         res.json({
-            data: results,
+            data: delCreator(results),
             message: 'Woke'
         })
     } catch (error) {

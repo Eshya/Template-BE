@@ -1,9 +1,16 @@
 const { Schema, model } = require("mongoose");
 const AbsensiImage = require('../absensi-image/absensi-image.model')
+const Kandang = require('../kandang/kandang.model')
 const scheme = new Schema({
     namaKandang: {
         type: String,
         required: true
+    },
+    idKandang: {
+        type: Schema.Types.ObjectId,
+        ref: Kandang, select: true,
+        autopopulate: {maxDepth: 1},
+        default: null
     },
     lokasiKandang: {
         type: String,
