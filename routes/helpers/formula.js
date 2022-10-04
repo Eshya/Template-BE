@@ -23,6 +23,14 @@ const getKegiatanHarian = async (idPeriode) => {
     return dataPakan
 }
 
+const dailyChickenAge = async(idPeriode) => {
+    const periode = await Periode.findById(idPeriode);
+    const startDate = dayjs(new Date(periode.tanggalMulai));
+    const today = dayjs(new Date());
+    const age = Math.round(Math.abs(today.diff(startDate, 'day')));
+    return age;
+}
+
 const getSortedDailyActivities = async(idPeriode) => {
     return await KegiatanHarian.find({periode: idPeriode}).sort({ tanggal: 1 });
 }
@@ -110,3 +118,4 @@ exports.persentaseAyamHidupClosing = getpersentaseAyamHidupClosing
 exports.weightClosing = getWeightClosing
 exports.avgAge = getAvgAge
 exports.RGR = RGR
+exports.dailyChickenAge = dailyChickenAge

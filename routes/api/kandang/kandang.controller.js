@@ -1379,10 +1379,11 @@ exports.findPeriode = async (req, res, next) => {
         const results = await Periode.find({kandang: id}).sort('updatedAt')
         const kandang = await Model.findById(id)
         if (results.length > 0){
-            const oneDay = 24 * 60 * 60 * 1000;
-            const now = new Date(Date.now());
-            const start = new Date(results[results.length - 1].tanggalMulai);
-            const umurAyam = Math.round(Math.abs((now - start) / oneDay))
+            // const oneDay = 24 * 60 * 60 * 1000;
+            // const now = new Date(Date.now());
+            // const start = new Date(results[results.length - 1].tanggalMulai);
+            // const umurAyam = Math.round(Math.abs((now - start) / oneDay))
+            const umurAyam = await formula.dailyChickenAge(tmp._id)
             const tmp = results[results.length - 1]
             const findUser = await fetch(`${urlAuth}/api/users/${tmp.ppl}`, {
                 method: 'GET',
@@ -2186,7 +2187,7 @@ const handleChickenSheds = async (
       const start = new Date(periode.tanggalMulai);
       age = periode.isEnd
         ? Math.round(Math.abs((periode.tanggalAkhir - start) / ONE_DAY))
-        : Math.round(Math.abs((now - start) / ONE_DAY));
+        : await formula.dailyChickenAge(periode._id);
 
       resultObject = {
         idPemilik: chickenShed.createdBy ? chickenShed.createdBy._id : null,
