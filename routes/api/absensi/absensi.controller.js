@@ -15,6 +15,13 @@ function delCreator(obj){
     obj.idKandang = undefined
     return obj
 }
+function delCreatorArray(array){
+    array.forEach(element => {
+        element.createdBy = undefined
+        element.idKandang = undefined
+    });
+    return array
+}
 exports.findAll = async (req, res, next) => {
     const {where, limit, offset, sort} = parseQuery(req.query);
     try {
@@ -37,7 +44,7 @@ exports.findById = async (req, res, next) => {
         const createdBy = req.user._id
         const results = await Model.find({createdBy}).sort({ tanggal: -1 });
         res.json({
-            data: delCreator(results),
+            data: delCreatorArray(results),
             message: 'Woke'
         })
     } catch (error) {
