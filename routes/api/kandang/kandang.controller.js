@@ -1583,7 +1583,8 @@ exports.getKelola = async (req, res, next) => {
                 const now = new Date(Date.now());
                 const start = new Date(periode[i].tanggalMulai);
                 const oneDay = 24 * 60 * 60 * 1000;
-                const umur = Math.round(Math.abs((now - start) / oneDay))
+                // const umur = Math.round(Math.abs((now - start) / oneDay))
+                const umur = await formula.dailyChickenAge(periode[i].id);
 
                 const latestWeight = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0) : 0
                 const latestSampling = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {populasi}) => a + populasi, 0) : 0
@@ -1799,7 +1800,8 @@ exports.kelolaPeternak = async (req, res, next) => {
             ])
             const now = new Date(Date.now())
             const start = new Date(findPeriode[0]?.tanggalMulai)
-            const umur = Math.round(Math.abs((now - start) / ONE_DAY))
+            // const umur = Math.round(Math.abs((now - start) / ONE_DAY))
+            const umur = await formula.dailyChickenAge(findPeriode[0].id);
 
             const suhu = await fetch(`http://${urlIOT}/api/flock/kandang/${x._id}`,{
                 method: 'GET',
@@ -1837,7 +1839,8 @@ exports.kelolaPPL = async (req, res, next) => {
             }).then(res => res.json()).then(data => data.data)
             const now = new Date(Date.now())
             const start = new Date(x.tanggalMulai)
-            const umur = Math.round(Math.abs((now - start) / ONE_DAY))
+            // const umur = Math.round(Math.abs((now - start) / ONE_DAY))
+            const umur = await formula.dailyChickenAge(x._id)
             const getKegiatan = await KegiatanHarian.findOne({periode: x._id}).sort({'tanggal': -1})
             
             const dataDeplesi = await KegiatanHarian.aggregate([
@@ -1923,7 +1926,8 @@ exports.detailKandang = async (req,res, next) => {
             const tanggalAkhir = new Date(x.tanggalAkhir)
             const finish = x.isEnd === true ? new Date(x.tanggalAkhir) : new Date(Date.now())
             const start = new Date(x.tanggalMulai)
-            const umur = Math.round(Math.abs((finish - start) / ONE_DAY))
+            // const umur = Math.round(Math.abs((finish - start) / ONE_DAY))
+            const umur = await formula.dailyChickenAge(x._id);
             const pembelianSapronak = await Sapronak.aggregate([
                 {$match: {periode: x._id}},
                 {$unwind: '$produk'},
