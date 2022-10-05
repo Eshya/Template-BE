@@ -23,7 +23,7 @@ exports.findPosts = async (req, res, next) => {
                 title: x.title.rendered,
                 content: x.content.rendered,
                 embed: {
-                    size: {
+                    sizes: {
                         medium: {
                             source_url: embeded_image
                         }
@@ -56,7 +56,7 @@ exports.postBycategories = async (req, res, next) => {
                 title: x.title.rendered,
                 content: x.content.rendered,
                 embed: {
-                    sourceUrl: embeded_image
+                    source_url: embeded_image
                 }
             }
             return obj
