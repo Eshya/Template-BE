@@ -612,6 +612,10 @@ exports.autoClosingCultivation = async(req, res, next) => {
                 today.format("YYYY-MM-DD") >= periodeActiveDate.format("YYYY-MM-DD")
               ) {
     
+                if (periode.ppl) {
+                    periode.isActivePPL = false
+                }
+
                 periode.isEnd = true;
                 periode.isAutoClosing = true;
                 chickenShed.isActive = false;

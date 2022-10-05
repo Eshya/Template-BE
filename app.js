@@ -78,6 +78,8 @@ cron.schedule('35 23 * * *', async() => {
         method: 'POST',
         headers: {'apiKey': '74e48c8e3c0bc19f9e22dd7570037392e5d0bf80cf9dd51', "Content-Type": "application/json"}
     }).then(res => res.json()).then(data => console.log(data))
+}, {
+    timezone: "Asia/Jakarta" 
 });
 
 // delete image scheduler
