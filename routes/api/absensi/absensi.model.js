@@ -29,13 +29,13 @@ const scheme = new Schema({
     },
     fotoKandang: [{
         type: Schema.Types.ObjectId,
-        ref: AbsensiImage, select: true,
+        ref: AbsensiImage, 
         autopopulate: {maxDepth: 1},
         default: null
     }],
     fotoRecording: [{
         type: Schema.Types.ObjectId,
-        ref: AbsensiImage, select: true,
+        ref: AbsensiImage, 
         autopopulate: {maxDepth: 1},
         default: null
     }],
@@ -44,4 +44,5 @@ const scheme = new Schema({
         default: null
     }
 }, {versionKey: false, timestamps: true})
+scheme.plugin(require('mongoose-autopopulate'));
 module.exports = model('Absensi', scheme, 'absensi');
