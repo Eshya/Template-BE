@@ -1387,8 +1387,8 @@ exports.findPeriode = async (req, res, next) => {
             // const now = new Date(Date.now());
             // const start = new Date(results[results.length - 1].tanggalMulai);
             // const umurAyam = Math.round(Math.abs((now - start) / oneDay))
-            const umurAyam = await formula.dailyChickenAge(tmp._id)
             const tmp = results[results.length - 1]
+            const umurAyam = await formula.dailyChickenAge(tmp._id)
             const findUser = await fetch(`${urlAuth}/api/users/${tmp.ppl}`, {
                 method: 'GET',
                 headers: {'Authorization': token,
