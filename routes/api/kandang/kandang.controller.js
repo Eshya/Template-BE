@@ -415,7 +415,8 @@ exports.findOneDataPool =  async (req, res, next) => {
             const deplesi = (periode.populasi - (periode.populasi - (allDeplesi + allKematian))) * 100 / periode.populasi
             const totalDeplesi = (allDeplesi + allKematian)
             const batasDeplesi = ((2 / 100) * periode.populasi)
-            const presentaseAyamHidup = 100 - deplesi
+            // const presentaseAyamHidup = 100 - deplesi
+            const presentaseAyamHidup = await formula.liveChickenPrecentage(periode._id);
             const populasiAkhir = periode.populasi - (allDeplesi + allKematian)
             var FCR = await formula.FCR(periode._id);
             periode.isEnd == true ? FCR = await formula.FCRClosing(periode._id) : FCR
@@ -553,9 +554,11 @@ exports.findOneDataPool =  async (req, res, next) => {
                 let sisaPopulasi = await KegiatanHarian.find({periode: periode.id, tanggal: {$lte: kegiatanHarian.tanggal}}).select('-periode')
                 let totalCulling = sisaPopulasi.reduce((a, {pemusnahan}) => a + pemusnahan, 0);
                 let totalMortalitas = sisaPopulasi.reduce((a, {deplesi}) => a + deplesi, 0);
-                let ayamHidup = periode.populasi - (totalCulling + totalMortalitas);
-                let ayamHidupPercentage = ayamHidup / periode.populasi * 100;
+                // let ayamHidup = periode.populasi - (totalCulling + totalMortalitas);
+                // let ayamHidupPercentage = ayamHidup / periode.populasi * 100;
 
+                let ayamHidup = await formula.actualRemainingChicken(periode.id);
+                let ayamHidupPercentage = await formula.liveChickenPrecentage(periode.id);
                 dataHarian.push({
                     usiaAyam: usiaAyam,
                     tanggal: kegiatanHarian.tanggal,
@@ -773,7 +776,8 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
             const deplesi = (periode.populasi - (periode.populasi - (allDeplesi + allKematian))) * 100 / periode.populasi
             const totalDeplesi = (allDeplesi + allKematian)
             const batasDeplesi = ((2 / 100) * periode.populasi)
-            const presentaseAyamHidup = 100 - deplesi
+            // const presentaseAyamHidup = 100 - deplesi
+            const presentaseAyamHidup = await formula.liveChickenPrecentage(periode._id);
             const populasiAkhir = periode.populasi - (allDeplesi + allKematian)
             var FCR = await formula.FCR(periode._id);
             periode.isEnd == true ? FCR = await formula.FCRClosing(periode._id) : FCR
@@ -1595,7 +1599,8 @@ exports.getKelola = async (req, res, next) => {
 
                 const populasiAkhir = periode[i].populasi - (allDeplesi + allKematian)
                 const deplesi = (periode[i].populasi - (periode[i].populasi - (allDeplesi + allKematian))) * 100 / periode[i].populasi
-                const presentaseAyamHidup = 100 - deplesi
+                // const presentaseAyamHidup = 100 - deplesi
+                const presentaseAyamHidup = await formula.liveChickenPrecentage(periode[i].id)
                 const FCR = await formula.FCR(periode[i].id)
                 const atas = presentaseAyamHidup * (avgLatestWeight/1000)
                 const bawah = FCR*(dataPakan.length-1)
@@ -1867,7 +1872,8 @@ exports.kelolaPPL = async (req, res, next) => {
             const populasiAkhir = x.populasi - (cumDeplesi + cumKematian + cumPenjualan)
             
             const deplesi = (x.populasi - (x.populasi - (cumDeplesi + cumKematian))) * 100 / x.populasi
-            const presentaseAyamHidup = 100 - deplesi
+            // const presentaseAyamHidup = 100 - deplesi
+            const presentaseAyamHidup = await formula.liveChickenPrecentage(x._id);
             const FCR = await formula.FCR(x._id)
 
             const atas = presentaseAyamHidup * (avgLatestWeight/1000)
