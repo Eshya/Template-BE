@@ -622,8 +622,8 @@ exports.autoClosingCultivation = async(req, res, next) => {
                 periode.tanggalAkhir = Date.now();
 
                 await Promise.all([
-                    await periode.save(),
-                    await chickenShed.save()
+                    periode.save(),
+                    chickenShed.save()
                 ]);
               }
             }
