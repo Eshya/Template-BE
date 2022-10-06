@@ -1801,7 +1801,7 @@ exports.kelolaPeternak = async (req, res, next) => {
             const now = new Date(Date.now())
             const start = new Date(findPeriode[0]?.tanggalMulai)
             // const umur = Math.round(Math.abs((now - start) / ONE_DAY))
-            const umur = await formula.dailyChickenAge(findPeriode[0].id);
+            const umur = await formula.dailyChickenAge(findPeriode[0]._id);
 
             const suhu = await fetch(`http://${urlIOT}/api/flock/kandang/${x._id}`,{
                 method: 'GET',

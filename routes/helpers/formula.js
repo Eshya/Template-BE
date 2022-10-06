@@ -25,7 +25,8 @@ const getKegiatanHarian = async (idPeriode) => {
 
 const dailyChickenAge = async(idPeriode) => {
     const periode = await Periode.findById(idPeriode);
-    const startDate = dayjs(new Date(periode.tanggalMulai));
+    console.log(periode)
+    const startDate = dayjs(new Date(periode?.tanggalMulai));
     const today = dayjs(new Date());
     const age = Math.round(Math.abs(today.diff(startDate, 'day')));
     return age;
