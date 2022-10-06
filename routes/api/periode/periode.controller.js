@@ -398,8 +398,9 @@ exports.ringkasan = async (req, res, next) => {
         const populasiAkhir = getPeriode.populasi - (allDeplesi + allKematian )
         const populasiAktual = getPeriode.populasi - (allDeplesi + allKematian + allPenjualan )
         const deplesi = (getPeriode.populasi - (getPeriode.populasi - (allDeplesi + allKematian))) * 100 / getPeriode.populasi
-        const presentaseAyamHidup = 100 - deplesi
-        var FCR = allPakan / (populasiAkhir * (avgLatestWeight/1000))
+        // const presentaseAyamHidup = 100 - deplesi
+        const presentaseAyamHidup = await formula.liveChickenPrecentage(id);
+        var FCR = await formula.FCR(id)
         getPeriode.isEnd == true ? FCR = await formula.FCRClosing(id) : FCR
         const atas = presentaseAyamHidup * (avgLatestWeight/1000)
         const bawah = FCR*(dataPakan.length-1)

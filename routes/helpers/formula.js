@@ -14,6 +14,12 @@ const getPenjualan = async (idPeriode) => {
     return penjualan
 }
 
+const totalTonase = async(idPeriode) => {
+    const getSales  = await getPenjualan(idPeriode)
+    const accumulateTotalTonase = getSales.reduce((a, {totalTonase}) => a + totalTonase, 0)
+    return accumulateTotalTonase;
+}
+
 const getKegiatanHarian = async (idPeriode) => {
     const dataPakan = await KegiatanHarian.aggregate([
         {$match: {periode: mongoose.Types.ObjectId(idPeriode)}},
@@ -25,6 +31,39 @@ const getKegiatanHarian = async (idPeriode) => {
 
 const getSortedDailyActivities = async(idPeriode) => {
     return await KegiatanHarian.find({periode: idPeriode}).sort({ tanggal: 1 });
+}
+
+const getDataDeplesi = async(idPeriode) => {
+    const dataDeplesi = await KegiatanHarian.aggregate([
+        {$match: {periode: mongoose.Types.ObjectId(idPeriode)}},
+        {$group: {_id: '$_id', totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
+    ])
+
+    return dataDeplesi;
+}
+
+const accumulateDeplesi = async(idPeriode) => {
+    const dataDeplesi = await getDataDeplesi(idPeriode);
+    const totalDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
+    const totalMortality = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
+    const deplesiAccumulation = totalDeplesi + totalMortality
+    return deplesiAccumulation
+}
+
+const actualRemainingChicken = async(idPeriode) => {
+    const getSales = await getPenjualan(idPeriode);
+    const accumulateTotalHarvest = getSales.reduce((a, {totalEkor}) => a + totalEkor, 0)
+    const periode = await Periode.findById(idPeriode);
+    const totalDeplesi = await accumulateDeplesi(idPeriode);
+    const remainingChicken = periode.populasi - (totalDeplesi - accumulateTotalHarvest);
+    return remainingChicken;
+}
+
+const liveChickenPrecentage = async(idPeriode) => {
+    const remainingChicken = await actualRemainingChicken(idPeriode);
+    const periode = await Periode.findById(idPeriode);
+    const livePrecentage = (remainingChicken/periode.populasi)*100;
+    return livePrecentage;
 }
 
 const AvgDailyWeight = async(idPeriode, day) => {
@@ -54,10 +93,31 @@ const RGR = async(idPeriode) => {
     return RGR
 }
 
+/**
+ * FCRHarian = akumulasiPakanPakaiHarian/((BWHarian/1000*sisaAktualAyam)+akumulasiTonasePanen)
+ */
+
+const dailyFCR = async(idPeriode) => {
+    const dailyActivities = await getSortedDailyActivities(idPeriode)
+    const sortedDailyActivities = dailyActivities.sort((a,b) => b.tanggal - a.tanggal)
+
+    const getSales  = await getPenjualan(idPeriode)
+    const accumulateTotalTonase = await totalTonase(idPeriode)
+    
+    const remainingChicken = await actualRemainingChicken(idPeriode);
+
+    const dailyFeedIntake = await getKegiatanHarian(idPeriode);
+    const accumulateFeedIntake = dailyFeedIntake.reduce((a, {totalPakan}) => a + totalPakan, 0)
+
+    const avgLatestWeight = await AvgDailyWeight(idPeriode, sortedDailyActivities.length - 1)
+    const FCR = accumulateFeedIntake/(((avgLatestWeight/1000)*remainingChicken)+accumulateTotalTonase);
+    return FCR
+}
+
 const getWeightClosing = async (idPeriode) => {
     const getSales = await getPenjualan(idPeriode)
     const accumulateTotalHarvest = getSales.reduce((a, {totalEkor}) => a + totalEkor, 0)
-    const accumulateTotalTonase = getSales.reduce((a, {totalTonase}) => a + totalTonase, 0)
+    const accumulateTotalTonase = await totalTonase(idPeriode);
     const avgWeightClosing = accumulateTotalTonase/accumulateTotalHarvest
     return avgWeightClosing
 }
@@ -87,10 +147,9 @@ const getAvgAge = async (idPeriode) => {
 }
 
 const getFCRClosing = async (idPeriode) => {
-    const getSales  = await getPenjualan(idPeriode)
     const getDaily = await getKegiatanHarian(idPeriode)
     const accumulateFeedIntake = getDaily.reduce((a, {totalPakan}) => a + totalPakan, 0)
-    const accumulateTotalTonase = getSales.reduce((a, {totalTonase}) => a + totalTonase, 0)
+    const accumulateTotalTonase = await totalTonase(idPeriode);
     const FCR = accumulateFeedIntake / accumulateTotalTonase
     return FCR
 }
@@ -110,3 +169,6 @@ exports.persentaseAyamHidupClosing = getpersentaseAyamHidupClosing
 exports.weightClosing = getWeightClosing
 exports.avgAge = getAvgAge
 exports.RGR = RGR
+exports.FCR = dailyFCR
+exports.liveChickenPrecentage = liveChickenPrecentage
+exports.actualRemainingChicken = actualRemainingChicken
