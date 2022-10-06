@@ -14,6 +14,12 @@ const getPenjualan = async (idPeriode) => {
     return penjualan
 }
 
+const totalTonase = async(idPeriode) => {
+    const getSales  = await getPenjualan(idPeriode)
+    const accumulateTotalTonase = getSales.reduce((a, {totalTonase}) => a + totalTonase, 0)
+    return accumulateTotalTonase;
+}
+
 const getKegiatanHarian = async (idPeriode) => {
     const dataPakan = await KegiatanHarian.aggregate([
         {$match: {periode: mongoose.Types.ObjectId(idPeriode)}},
@@ -96,7 +102,7 @@ const dailyFCR = async(idPeriode) => {
     const sortedDailyActivities = dailyActivities.sort((a,b) => b.tanggal - a.tanggal)
 
     const getSales  = await getPenjualan(idPeriode)
-    const accumulateTotalTonase = getSales.reduce((a, {totalTonase}) => a + totalTonase, 0)
+    const accumulateTotalTonase = await totalTonase(idPeriode)
     
     const remainingChicken = await actualRemainingChicken(idPeriode);
 
@@ -111,7 +117,7 @@ const dailyFCR = async(idPeriode) => {
 const getWeightClosing = async (idPeriode) => {
     const getSales = await getPenjualan(idPeriode)
     const accumulateTotalHarvest = getSales.reduce((a, {totalEkor}) => a + totalEkor, 0)
-    const accumulateTotalTonase = getSales.reduce((a, {totalTonase}) => a + totalTonase, 0)
+    const accumulateTotalTonase = await totalTonase(idPeriode);
     const avgWeightClosing = accumulateTotalTonase/accumulateTotalHarvest
     return avgWeightClosing
 }
@@ -141,10 +147,9 @@ const getAvgAge = async (idPeriode) => {
 }
 
 const getFCRClosing = async (idPeriode) => {
-    const getSales  = await getPenjualan(idPeriode)
     const getDaily = await getKegiatanHarian(idPeriode)
     const accumulateFeedIntake = getDaily.reduce((a, {totalPakan}) => a + totalPakan, 0)
-    const accumulateTotalTonase = getSales.reduce((a, {totalTonase}) => a + totalTonase, 0)
+    const accumulateTotalTonase = await totalTonase(idPeriode);
     const FCR = accumulateFeedIntake / accumulateTotalTonase
     return FCR
 }
