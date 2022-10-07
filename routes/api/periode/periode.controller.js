@@ -100,7 +100,8 @@ exports.findKegiatan = async (req, res, next) => {
             var tmp = x
             //findUmur
             const tanggal = new Date(x.tanggal)
-            var umur = Math.round(Math.abs((tanggal - start) / ONE_DAY))
+            // var umur = Math.round(Math.abs((tanggal - start) / ONE_DAY))
+            var umur = await formula.dailyChickenAge(periode._id)
             //findDeplesi
             if (umur >= 50){ umur = 50 }
             const deplesiEkor = x.deplesi
@@ -398,8 +399,9 @@ exports.ringkasan = async (req, res, next) => {
         const populasiAkhir = getPeriode.populasi - (allDeplesi + allKematian )
         const populasiAktual = getPeriode.populasi - (allDeplesi + allKematian + allPenjualan )
         const deplesi = (getPeriode.populasi - (getPeriode.populasi - (allDeplesi + allKematian))) * 100 / getPeriode.populasi
-        const presentaseAyamHidup = 100 - deplesi
-        var FCR = allPakan / (populasiAkhir * (avgLatestWeight/1000))
+        // const presentaseAyamHidup = 100 - deplesi
+        const presentaseAyamHidup = await formula.liveChickenPrecentage(id);
+        var FCR = await formula.FCR(id)
         getPeriode.isEnd == true ? FCR = await formula.FCRClosing(id) : FCR
         const atas = presentaseAyamHidup * (avgLatestWeight/1000)
         const bawah = FCR*(dataPakan.length-1)
@@ -418,7 +420,7 @@ exports.ringkasan = async (req, res, next) => {
         const avgBW7 = await rataBW(req.params.id, 7)
         const std = await Data.findOne({day: umur.umur})
         const stdRGR = await Data.findOne({day: 7}).select('rgr')
-        const rgr = umur.umur >= 7 ? (avgBW7.avgBW - avgBW0.avgBW) / avgBW0.avgBW * 100 : 0
+        const rgr = await formula.RGR(id);
         res.json({
             totalMortality: allDeplesi,
             totalCulling: allKematian,
