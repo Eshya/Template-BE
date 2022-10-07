@@ -10,7 +10,7 @@ const maxSize = 5 * 1024 * 1024;
 const fetch = require('node-fetch')
 const axios = require('axios');
 const qs = require('qs');
-var urlAuth = process.env.AUTH_URL || `staging-auth.chickinindonesia.com`
+var urlAuth = process.env.AUTH_URL || `https://staging-auth.chickinindonesia.com`
 
 const handleQuerySort = (query) => {
     try{
@@ -76,7 +76,7 @@ exports.findAll =  async (req, res, next) => {
                 });
 
                 //find detail peternak
-                const findUser = await fetch(`https://${urlAuth}/api/users/${data[i].createdBy}`, {
+                const findUser = await fetch(`${urlAuth}/api/users/${data[i].createdBy}`, {
                     method: 'GET',
                     headers: {'Authorization': token,
                     "Content-Type": "application/json"}
