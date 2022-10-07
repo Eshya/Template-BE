@@ -10,7 +10,7 @@ const maxSize = 5 * 1024 * 1024;
 const fetch = require('node-fetch')
 const axios = require('axios');
 const qs = require('qs');
-var urlAuth = process.env.DB_NAME === "chckin" ? `auth.chickinindonesia.com` : `staging-auth.chickinindonesia.com`
+var urlAuth = process.env.AUTH_URL || `staging-auth.chickinindonesia.com`
 
 const handleQuerySort = (query) => {
     try{
