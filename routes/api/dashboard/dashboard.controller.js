@@ -8,6 +8,7 @@ const Promise = require("bluebird");
 const mongoose = require('mongoose');
 const ONE_DAY = 24 * 60 * 60 * 1000;
 const fetch = require('node-fetch')
+const {clearKey} = require("../../../configs/redis.conf")
 // var urlAuth = `https://staging-auth.chickinindonesia.com`
 var urlAuth = `${process.env.AUTH_URL}`;
 var urlIOT = process.env.DB_NAME === "chckin" ? `iot-production:3103` : `iot-staging:3104`
@@ -399,7 +400,7 @@ const handlePeriode = async(isKemitraan, token, dataKandang, populasiFrom, popul
         }
         
 
-        const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 });
+        const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 }).cache();
         if (periode?.kandang && periode?.kemitraan && periode?.kandang?.createdBy) {
             // get usia
             const now = new Date(Date.now());

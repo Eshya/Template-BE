@@ -7,10 +7,11 @@ const client = redis.createClient({
     port: process.env.REDIS_PORT,
     password: process.env.REDIS_PASSWORD
 })
-client.hget = util.promisify(client.hget);
+
+client.hGet = util.promisify(client.hGet);
 const exec = mongoose.Query.prototype.exec;
 
-mongoose.Query.prototype.cache = function(options = { time: 60 }) {
+mongoose.Query.prototype.cache = function(options = { time: 300 }) {
     this.useCache = true;
     this.time = options.time;
     this.hashKey = JSON.stringify(options.key || this.mongooseCollection.name);
@@ -19,6 +20,7 @@ mongoose.Query.prototype.cache = function(options = { time: 60 }) {
 };
 
 mongoose.Query.prototype.exec = async function() {
+    await client.connect()
     if (!this.useCache) {
     return await exec.apply(this, arguments);
     }
@@ -27,7 +29,7 @@ mongoose.Query.prototype.exec = async function() {
     ...this.getQuery()
     });
 
-    const cacheValue = await client.hget(this.hashKey, key);
+    const cacheValue = await client.hGet(this.hashKey, key);
 
     if (cacheValue) {
     const doc = JSON.parse(cacheValue);
@@ -40,7 +42,7 @@ mongoose.Query.prototype.exec = async function() {
 
     const result = await exec.apply(this, arguments);
     console.log(this.time);
-    client.hset(this.hashKey, key, JSON.stringify(result));
+    client.hSet(this.hashKey, key, JSON.stringify(result));
     client.expire(this.hashKey, this.time);
 
     console.log("Response from MongoDB");
