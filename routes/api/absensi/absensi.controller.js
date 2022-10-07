@@ -1,7 +1,8 @@
 const {parseQuery, createError} = require('../../helpers');
 const Model = require('./absensi.model');
 const mongoose = require('mongoose');
-
+const Periode = require('../periode/periode.model')
+const Kandang = require('../kandang/kandang.model')
 const _MS_PER_DAY = 1000 * 60 * 60 * 24;
 let dateDiffInDays = (a, b) => {
     // Discard the time and time-zone information.
@@ -95,5 +96,39 @@ exports.removeById = async (req, res, next) => {
     } catch (error) {
         res.send(createError(501, error.message));
         next(error);
+    }
+}
+const _findPPL = async (req, isActive) => {
+    const user = req.user._id
+    const createdBy = req.user._id 
+    const token = req.headers['authorization']
+    isActive ? isEnd = false : isEnd = true
+    const findPeriode = await Periode.aggregate([
+        {$match: {ppl: mongoose.Types.ObjectId(user), isActivePPL: isActive}},
+        {$sort: {'tanggalAkhir': -1}},
+        {$group: {_id: '$_id', id: {$first: '$kandang'}}},
+        {$group: {_id: '$id', periode: {$push: '$_id'},}}
+    ])
+    const map = await Promise.all(findPeriode.map(async (x) => {
+        const findKandang = await Kandang.findOneWithDeleted({_id: x._id})
+        const findIsVisited = await Model.findOne({createdBy}).sort({ tanggal: -1 });
+        let now = new Date();
+        const diffDay = dateDiffInDays(new Date(findIsVisited?.tanggal),now)
+        return {_id :findKandang._id,kode : findKandang.kode, pplVisitedAlready : diffDay === 0 ? true : false }
+    }))
+    // const filter = map.filter(x => x.isDeleted === "false")
+    return map
+}
+exports.findKandang = async (req, res, next) => {
+    try {
+        
+        const findActive = await _findPPL(req, true)
+        res.json({
+            data: findActive,
+            message: 'Woke'
+        })
+    } catch (error) {
+        res.send(createError(501, error.message));
+        next(error)
     }
 }
