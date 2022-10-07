@@ -258,7 +258,8 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
             sort = { createdAt: -1 }
         }
 
-        const dataKandang = await Kandang.find(filter).sort(sort).select('_id');
+        const dataKandang = await Kandang.find(filter).sort(sort).select('_id')
+        console.log(dataKandang)
         const dataKemitraan = await Kemitraan.countDocuments(filter)
 
         const resultPeriods = await handlePeriode(true, token, dataKandang, populasiFrom, populasiTo, kemitraan, req.user, role, usiaFrom, usiaTo, bobotFrom, bobotTo);
@@ -400,7 +401,7 @@ const handlePeriode = async(isKemitraan, token, dataKandang, populasiFrom, popul
         }
         
 
-        const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 })
+        const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 }).cache()
         if (periode?.kandang && periode?.kemitraan && periode?.kandang?.createdBy) {
             // get usia
             const now = new Date(Date.now());

@@ -11,10 +11,10 @@ const client = redis.createClient({
     retry_strategy: () => 1000
     
 })
-client.on("connect", () => {
-    console.log("Connected to our redis instance!");
-    client.on('error', (err) => console.log('Redis Client Error', err));
-});
+// client.on("connect", () => {
+//     console.log("Connected to our redis instance!");
+//     client.on('error', (err) => console.log('Redis Client Error', err));
+// });
 // client.on('connect', () => {
 //     console.log('Redis Connected!');
 // });
@@ -23,7 +23,11 @@ client.on("connect", () => {
 // client.on("error", (err) => {
 //     console.log(`Redis Error:${err}`);
 // });
-client.hget = util.promisify(client.get);
+const getAsync = util.promisify(client.hget).bind(client);
+
+client.on("error", function(error) {
+    console.error(error);
+  });
 const exec = mongoose.Query.prototype.exec;
 
 mongoose.Query.prototype.cache = function(options = { time: 300 }) {
@@ -43,25 +47,26 @@ mongoose.Query.prototype.exec = async function() {
     const key = JSON.stringify({
     ...this.getQuery()
     });
+    // console.log(key)
     
+    // const cacheValue = await client.HGETALL(this.hashKey, key);
+    const cacheValue = await getAsync(this.hashKey,key)
     
-    const cacheValue = await client.get(this.hashKey, key);
-    
-    if (cacheValue) {
-    const doc = JSON.parse(cacheValue);
-
-    console.log("Response from Redis");
-    return Array.isArray(doc)
-        ? doc.map(d => new this.model(d))
-        : new this.model(doc);
+    if (cacheValue !== null) {
+        const doc = JSON.parse(cacheValue);
+        console.log("Response From Redis")
+        return doc.map(d => d._id = mongoose.Types.ObjectId(d._id));
+        // console.log(doc.length())
+        
+        
     }
 
     const result = await exec.apply(this, arguments);
-    
-    client.set(this.hashKey, key, JSON.stringify(result));
+    // console.log(result)
+    client.hset(this.hashKey,key, JSON.stringify(result));
     client.expire(this.hashKey, this.time);
 
-    console.log("Response from MongoDB");
+    // console.log("Response from MongoDB");
     
     return result;
 };
