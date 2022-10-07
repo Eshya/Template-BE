@@ -1,7 +1,8 @@
 const mongoose = require("mongoose");
+const Promise = require("bluebird");
 const redis = require("redis");
 const util = require("util");
-
+const Kandang = require('../routes/api/kandang/kandang.model')
 const client = redis.createClient({
     
     host: process.env.REDIS_HOST,
@@ -11,18 +12,7 @@ const client = redis.createClient({
     retry_strategy: () => 1000
     
 })
-// client.on("connect", () => {
-//     console.log("Connected to our redis instance!");
-//     client.on('error', (err) => console.log('Redis Client Error', err));
-// });
-// client.on('connect', () => {
-//     console.log('Redis Connected!');
-// });
 
-// // Log any error that may occur to the console
-// client.on("error", (err) => {
-//     console.log(`Redis Error:${err}`);
-// });
 const getAsync = util.promisify(client.hget).bind(client);
 
 client.on("error", function(error) {
@@ -54,11 +44,11 @@ mongoose.Query.prototype.exec = async function() {
     
     if (cacheValue !== null) {
         const doc = JSON.parse(cacheValue);
-        console.log("Response From Redis")
-        return doc.map(d => d._id = mongoose.Types.ObjectId(d._id));
+        
+        return Array.isArray(doc)
+        ? await Promise.map(doc, async (d) => {new this.model(d)})
+        : new this.model(doc);
         // console.log(doc.length())
-        
-        
     }
 
     const result = await exec.apply(this, arguments);
