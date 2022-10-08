@@ -1,7 +1,7 @@
 const debug = require('debug')(`${process.env.npm_package_name}:mongoose`);
 const chalk = require('chalk');
 const mongoose = require('mongoose');
-const cache = require('./redis.conf')
+
 /**
  * Tolong jangan di ganti2 
  * GUNAKAN ENVIRONMENT!!
@@ -54,7 +54,6 @@ exports.connect = () => {
     debug(chalk.gray('init db connect.....'));
     debug(chalk.gray(`Connecting to ${mongoString} with ${options}`));
     mongoose.connect(mongoString, options, handleError);
-    
 }
 
 exports.connection = db;

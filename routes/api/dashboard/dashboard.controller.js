@@ -401,8 +401,7 @@ const handlePeriode = async(isKemitraan, token, dataKandang, populasiFrom, popul
         }
         
 
-        const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 }).cache()
-        console.log(periode);
+        const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 }).cache();
         if (periode?.kandang && periode?.kemitraan && periode?.kandang?.createdBy) {
             // get usia
             const now = new Date(Date.now());
