@@ -8,7 +8,7 @@ const Promise = require("bluebird");
 const mongoose = require('mongoose');
 const ONE_DAY = 24 * 60 * 60 * 1000;
 const fetch = require('node-fetch')
-const {clearKey} = require("../../../configs/redis.conf")
+const {clearKey} = require('../../../configs/redis.conf')
 // var urlAuth = `https://staging-auth.chickinindonesia.com`
 var urlAuth = `${process.env.AUTH_URL}`;
 var urlIOT = process.env.DB_NAME === "chckin" ? `iot-production:3103` : `iot-staging:3104`
@@ -258,7 +258,7 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
             sort = { createdAt: -1 }
         }
 
-        const dataKandang = await Kandang.find(filter).sort(sort).select('_id')
+        const dataKandang = await Kandang.find(filter).sort(sort).select('_id').cache()
         // console.log(dataKandang)
         const dataKemitraan = await Kemitraan.countDocuments(filter)
 
@@ -369,15 +369,15 @@ const handlePeriode = async(isKemitraan, token, dataKandang, populasiFrom, popul
         headers: {'Authorization': token,
         "Content-Type": "application/json"}
     }).then(res => res.json()).then(data => data.data)
-
+    
     return Promise.map(dataKandang, async (dataItem, index) => {
         const filterPeriod = {};
         const query = { $gte: 0 };
-        filterPeriod.kandang = dataItem.id;
+        filterPeriod.kandang = dataItem._id;
         filterPeriod.isEnd = false;
         const checkPopulasiFrom = Number.isInteger(populasiFrom) ? populasiFrom : !parseInt(populasiFrom) ? 0 : parseInt(populasiFrom);
         const checkPopulasiTo = Number.isInteger(populasiTo) ? populasiTo : !parseInt(populasiTo) ? 0 : parseInt(populasiTo);
-
+        
         if (checkPopulasiFrom > checkPopulasiTo) {
             throw new Error('Populasi awal tidak boleh melebihi populasi akhir')
         }
@@ -402,19 +402,20 @@ const handlePeriode = async(isKemitraan, token, dataKandang, populasiFrom, popul
         
 
         const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 }).cache();
+        
         if (periode?.kandang && periode?.kemitraan && periode?.kandang?.createdBy) {
             // get usia
             const now = new Date(Date.now());
             const start = new Date(periode.tanggalMulai);
             const age = Math.round(Math.abs((now - start) / ONE_DAY));
 
-            const query = {periode: periode.id}
+            const query = {periode: periode._id}
             if (isKemitraan) {
                 query.berat = { $exists: true, $ne: [] }
             }
 
             // get weight actual
-            const getKegiatan = await KegiatanHarian.findOne(query).sort({'tanggal': -1}).select('-periode')
+            const getKegiatan = await KegiatanHarian.findOne(query).sort({'tanggal': -1}).select('-periode').cache()
             /**
              * Sanja Remark
              * Old logic to calculate avg latest weight
