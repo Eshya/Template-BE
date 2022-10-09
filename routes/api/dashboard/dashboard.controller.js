@@ -183,7 +183,7 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
             sort = { createdAt: -1 }
         }
 
-        const dataKandang = await Kandang.find(filter).sort(sort).select('_id');
+        const dataKandang = await Kandang.find(filter).sort(sort).select('_id').cache();
         const resultPeriods = await handlePeriode(true, token, dataKandang, populasiFrom, populasiTo, kemitraan, req.user, role, usiaFrom, usiaTo, bobotFrom, bobotTo);
         resultPeriode.push(...resultPeriods.filter(result => result));
 
@@ -491,7 +491,7 @@ const handlePeriode = async(isKemitraan, token, dataKandang, populasiFrom, popul
                 pushData = true;
             }
             let flock = [];
-            flock = await fetch(`http://${urlIOT}/api/flock/datapool/kandang/` + periode.kandang.id, {
+            flock = await fetch(`http://${urlIOT}/api/flock/datapool/kandang/` + periode.kandang._id, {
                 method: 'get',
                 headers: {
                     'Authorization': token,

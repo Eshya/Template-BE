@@ -25,7 +25,7 @@ const getAsync = util.promisify(client.hget).bind(client);
 //   });
 const exec = mongoose.Query.prototype.exec;
 
-mongoose.Query.prototype.cache = function(options = { time: 3000 }) {
+mongoose.Query.prototype.cache = function(options = { time: process.env.REDIS_TIME }) {
     this.useCache = true;
     this.time = options.time;
     this.hashKey = JSON.stringify(options.key || this.mongooseCollection.name);

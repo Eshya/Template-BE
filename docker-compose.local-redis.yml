@@ -25,12 +25,10 @@ services:
       REDIS_HOST: cache
       REDIS_PORT: 6379
       REDIS_PASSWORD: eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
+      REDIS_TIME: 3000
     volumes:
       - ./uploads:/app/uploads
-    depends_on:
-      - cache
-    links:
-      - cache
+      - cache:/data
     networks:
       - chickinnetwork
     ports:
@@ -41,7 +39,8 @@ networks:
     external: true
 volumes:
   cache:
-    driver: local
+    name: chickin-be_cache
+    external: true
 
 
 
