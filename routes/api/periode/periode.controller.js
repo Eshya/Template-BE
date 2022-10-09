@@ -640,7 +640,7 @@ exports.reActivateChickenSheds = async (req, res, next) => {
       const chickenShedIds = periods.map(({ kandang }) => kandang._id);
 
       await Promise.all([
-        await Model.bulkWrite([
+        Model.bulkWrite([
             {
                 "updateMany": {
                     "filter": { "isEnd": true, "tanggalAkhir": null },
@@ -655,7 +655,7 @@ exports.reActivateChickenSheds = async (req, res, next) => {
             }
         ]),
 
-        await Kandang.updateMany({ _id: { $in: chickenShedIds }}, {$set: { isActive: true }})
+        Kandang.updateMany({ _id: { $in: chickenShedIds }}, {$set: { isActive: true }})
       ]);
 
       return res.json({
