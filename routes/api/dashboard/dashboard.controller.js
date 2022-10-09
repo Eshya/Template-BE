@@ -520,9 +520,9 @@ const handlePeriode = async(isKemitraan, token, dataKandang, populasiFrom, popul
                 if (!namaPemilik) {
                     return
                 }
-
+                
                 return({
-                    idKandang: periode.kandang.id,
+                    idKandang: periode.kandang._id,
                     namaKandang: periode.kandang.kode,
                     isIoTInstalled:flock?.data?.flock.length!=0 ? true : false,
                     kota: periode.kandang.kota,
@@ -530,7 +530,7 @@ const handlePeriode = async(isKemitraan, token, dataKandang, populasiFrom, popul
                     bobot: avgLatestWeight,
                     usia: age,
                     populasi: periode.populasi,
-                    IdKemitraan: periode.kemitraan ? periode.kemitraan.id : null,
+                    IdKemitraan: periode.kemitraan ? periode.kemitraan._id : null,
                     namaKemitraan: periode.kemitraan ? periode.kemitraan.name : "",
                     idPemilik: periode.kandang.createdBy ? periode.kandang.createdBy._id : null,
                     namaPemilik: namaPemilikSTR,

@@ -3,6 +3,13 @@ const Promise = require("bluebird");
 const redis = require("redis");
 const util = require("util");
 const Kandang = require('../routes/api/kandang/kandang.model')
+const Periode = require('../routes/api/periode/periode.model')
+const KegiatanHarian = require('../routes/api/kegiatan-harian/kegiatan-harian.model')
+const fs = require('fs');
+const files = fs.readdirSync(`${__dirname}/../routes/api`);
+let listNotIcludedModel = ['jenisDOC','tipe','berat','ovkPakai','jenisOVK','image','pakanPakai','jenisPakan']
+listNotIcludedModel.forEach(model =>{files.push(model)})
+console.log(files)
 const client = redis.createClient({
     host: process.env.REDIS_HOST,
     port: process.env.REDIS_PORT,
@@ -42,10 +49,11 @@ mongoose.Query.prototype.exec = async function() {
     
     if (cacheValue !== null) {
         const doc = JSON.parse(cacheValue);
-        
+        let cacheParse = keyExists(doc,this.hashKey)
+        // console.log(cacheParse)
         return Array.isArray(doc)
         ? arrayJson(doc)
-        : keyExists(doc);
+        : cacheParse;
         // console.log(doc.length())
     }
 
@@ -59,7 +67,9 @@ mongoose.Query.prototype.exec = async function() {
     
     return result;
 };
-const keyExists = (obj) => {
+
+const keyExists = (obj,hashKey) => {
+    
     if (!obj || (typeof obj !== "object" && !Array.isArray(obj))) {
       return obj; // quit revursive
     }
@@ -70,11 +80,16 @@ const keyExists = (obj) => {
     if (obj.hasOwnProperty('createdBy')) {
         obj['createdBy'] = mongoose.Types.ObjectId(obj['createdBy'])
     }
+
+
     if (obj.hasOwnProperty('createdAt')) {
         obj['createdAt']= obj['createdAt'] !== null ? new Date(obj['createdAt']) : null
     }
     if (obj.hasOwnProperty('updatedAt')) {
         obj['updatedAt']= obj['updatedAt'] !== null ? new Date(obj['updatedAt']) : null
+    }
+    if (obj.hasOwnProperty('tanggal')) {
+        obj['tanggal']= obj['tanggal'] !== null ? new Date(obj['tanggal']) : null
     }
     if (obj.hasOwnProperty('tanggalMulai')) {
         obj['tanggalMulai']= obj['tanggalMulai'] !== null ? new Date(obj['tanggalMulai']) : null
@@ -84,25 +99,59 @@ const keyExists = (obj) => {
     }
     
     /// recursive nested data 
-    if (obj.hasOwnProperty('kandang')){
-      obj['kandang']=keyExists(obj['kandang'])
-    //   console.log(obj['kandang'])
-    }
-    if (obj.hasOwnProperty('jenisDOC')){
-        obj['jenisDOC']=keyExists(obj['jenisDOC'])
-    }
-    if (obj.hasOwnProperty('kemitraan')){
-        obj['kemitraan']=keyExists(obj['kemitraan'])
-    }
-    if (obj.hasOwnProperty('tipe')){
-        obj['tipe']=keyExists(obj['tipe'])
-    }
-    if (obj.hasOwnProperty('province')){
-        obj['province']=keyExists(obj['province'])
-    }
-    if (obj.hasOwnProperty('regency')){
-        obj['regency']=keyExists(obj['regency'])
-    }
+    files.forEach((endpoint)=> {
+        if (endpoint!='index.js') {
+            
+            if (obj.hasOwnProperty(endpoint)){
+                if (Array.isArray(obj[endpoint])){
+                    obj[endpoint]=arrayJson(keyExists(obj[endpoint]))
+                    
+                }
+                else if(mongoose.Types.ObjectId.isValid(obj[endpoint])){
+                    obj[endpoint]=mongoose.Types.ObjectId(obj[endpoint])
+                }
+                else{
+                    obj[endpoint]=keyExists(obj[endpoint])
+                }
+                
+            }
+        }
+    });
+    // if (obj.hasOwnProperty('kandang')){
+    //   obj['kandang']=keyExists(obj['kandang'])
+    // }
+    // if (obj.hasOwnProperty('periode')){
+    //     obj['periode']= keyExists(obj['kandang'])
+    // }
+    // if (obj.hasOwnProperty('produk')){
+    //     obj['produk']=keyExists(obj['produk'])
+    // }
+    // if (obj.hasOwnProperty('jenisDOC')){
+    //     obj['jenisDOC']=keyExists(obj['jenisDOC'])
+    // }
+    // if (obj.hasOwnProperty('kemitraan')){
+    //     obj['kemitraan']=keyExists(obj['kemitraan'])
+    // }
+    // if (obj.hasOwnProperty('tipe')){
+    //     obj['tipe']=keyExists(obj['tipe'])
+    // }
+    // if (obj.hasOwnProperty('berat')){
+    //     obj['tipe']=keyExists(obj['tipe'])
+    // }
+    // if (obj.hasOwnProperty('province')){
+    //     obj['province']=keyExists(obj['province'])
+    // }
+    // if (obj.hasOwnProperty('regency')){
+    //     obj['regency']=keyExists(obj['regency'])
+    // }
+    // if (obj.hasOwnProperty('ovkPakai')){
+    //     obj['ovkPakai']=arrayJson(keyExists(obj['ovkPakai']))
+    // }
+    // if (obj.hasOwnProperty('jenisOVK')){
+    //     obj['jenisOVK']=keyExists(obj['jenisOVK'])
+        
+    // }
+    // console.log(obj)
     return obj;
   };
 
