@@ -1,15 +1,5 @@
 version: "3.7"
 services:
-  cache:
-    image: redis:6.2-alpine
-    restart: always
-    ports:
-      - '6379:6379'
-    command: redis-server --save 20 1 --loglevel warning --requirepass eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
-    networks:
-      - chickinnetwork
-    volumes: 
-      - cache:/data
   smartfarm-stg:
     image: ${APP_IMAGE_STG}:${APP_IMAGE_STG_TAG}
     container_name: smartfarm-staging
@@ -29,6 +19,7 @@ services:
       - /sites/apps/smartfarm/uploads:/app/uploads
     networks:
       - chickinnetwork
+      - cache:/data
     ports:
       - "3102:3102"
     restart: always
@@ -37,7 +28,7 @@ networks:
     external: true
 volumes:
   cache:
-    name: chickin-be_cache
+    name: cache-compose_cache
     external: true
 
 
