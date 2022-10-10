@@ -9,6 +9,7 @@ const Sapronak = require("../sapronak/sapronak.model");
 const PeternakModel = require('../peternak/peternak.model');
 const fetch = require('node-fetch')
 const Promise = require("bluebird");
+const formula = require('../../helpers/formula');
 const reducer = (acc, value) => acc + value;
 var urlIOT = process.env.DB_NAME === "chckin" ? `iot-production:3103` : `iot-staging:3104`
 const handleQuerySort = (query) => {
@@ -114,9 +115,10 @@ exports.findById = async (req, res, next) => {
                 //const allPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
                 const allPakan = await dataPakan.reduce((a, {totalPakan})=>a + totalPakan, 0);
                 const deplesi = (findKandang.populasi - (findKandang.populasi - (allDeplesi + allKematian))) * 100 / findKandang.populasi
-                const presentaseAyamHidup = 100 - deplesi
+                // const presentaseAyamHidup = 100 - deplesi
+                const presentaseAyamHidup = await formula.liveChickenPrecentage(itemPeriode._id);
                 const populasiAkhir = findKandang.populasi - (allDeplesi + allKematian )
-                const FCR = allPakan / (populasiAkhir * (latestWeight/1000)) 
+                const FCR = await formula.FCR(itemPeriode._id);
                 const atas = presentaseAyamHidup * (latestWeight/1000)
                 const bawah = FCR*(dataPakan.length-1)
                 const IP = (atas / bawah) * 100
