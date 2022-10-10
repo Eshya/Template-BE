@@ -404,7 +404,8 @@ exports.ringkasan = async (req, res, next) => {
         getPeriode.isEnd == true ? FCR = await formula.FCRClosing(id) : FCR
         const atas = presentaseAyamHidup * (avgLatestWeight/1000)
         const bawah = FCR*(dataPakan.length-1)
-        var IP = (atas / bawah) * 100
+        // var IP = (atas / bawah) * 100
+        var IP = await formula.dailyIP(id)
         getPeriode.isEnd == true ? IP = await formula.IPClosing(id) : IP
 
         const detailPanen = penjualan.map(data => { return {
@@ -514,11 +515,13 @@ exports.performa = async (req, res, next) => {
             const kematian = allDeplesi + allKematian
             const atas = (100 - (((findPopulasi[0] - kematian) / findPopulasi[0]) * 100)) * avg
             const bawah = (allPakan/allTonase) * findUmur 
+            var IP = await formula.dailyIP(id)
             // console.log(avg);
             res.json({                
                 FCR: allPakan/allTonase,
                 Deplesi: ((findPopulasi[0] - kematian) / findPopulasi[0]) * 100,
-                IP : (atas / bawah) * 100
+                IP : IP
+                
             })
         }
         // console.log(tonase);
