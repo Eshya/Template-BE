@@ -11,8 +11,13 @@ services:
       DB_NAME_AUTH: chickin-auth-stagging
       AUTH_URL: https://staging-auth.chickinindonesia.com
       BE_URL: https://staging-smartfarm.chickinindonesia.com
+      REDIS_HOST: cache
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
+      REDIS_TIME: 300
     volumes:
       - /sites/apps/smartfarm/uploads:/app/uploads
+      - cache:/data
     networks:
       - chickinnetwork
     ports:
@@ -20,6 +25,10 @@ services:
     restart: always
 networks:
   chickinnetwork:
+    external: true
+volumes:
+  cache:
+    name: cache-compose_cache
     external: true
 
 
