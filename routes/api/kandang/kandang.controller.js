@@ -423,7 +423,7 @@ exports.findOneDataPool =  async (req, res, next) => {
 
             const atas = presentaseAyamHidup * (avgLatestWeight/1000)
             const bawah = FCR*(dataPakan.length-1)
-            var IP = await formula.dailyIP(id)
+            var IP = await formula.dailyIP(periode._id)
 
             // var IP = (atas / bawah) * 100
             periode.isEnd == true ? IP = await formula.IPClosing(periode._id) : IP
@@ -786,7 +786,7 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
             const atas = presentaseAyamHidup * (avgLatestWeight/1000)
             const bawah = FCR*(dataPakan.length-1)
             // var IP = (atas / bawah) * 100
-            var IP = await formula.dailyIP(id)
+            var IP = await formula.dailyIP(periode._id)
 
             periode.isEnd == true ? IP = await formula.IPClosing(periode._id) : IP
             const IPFixed = IP.toFixed(2)
@@ -1610,7 +1610,7 @@ exports.getKelola = async (req, res, next) => {
                 const FCR = await formula.FCR(periode[i].id)
                 const atas = presentaseAyamHidup * (avgLatestWeight/1000)
                 const bawah = FCR*(dataPakan.length-1)
-                var IP = await formula.dailyIP(id)
+                var IP = await formula.dailyIP(periode[1].id)
 
                 // const IP = (atas / bawah) * 100
 
@@ -1889,7 +1889,7 @@ exports.kelolaPPL = async (req, res, next) => {
             const atas = presentaseAyamHidup * (avgLatestWeight/1000)
             const bawah = FCR * (dataPakan.length-1)
             // const IP = (atas/bawah) * 100
-            var IP = await formula.dailyIP(id)
+            var IP = await formula.dailyIP(x._id)
 
 
             const suhu = await fetch(`http://${urlIOT}/api/flock/kandang/${x.kandang}`,{
