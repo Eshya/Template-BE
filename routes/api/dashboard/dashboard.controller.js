@@ -403,10 +403,9 @@ const handlePeriode = async(isKemitraan, token, dataKandang, populasiFrom, popul
         const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 });
         if (periode?.kandang && periode?.kemitraan && periode?.kandang?.createdBy) {
             // get usia
-            // const now = new Date(Date.now());
-            // const start = new Date(periode.tanggalMulai);
-            // const age = Math.round(Math.abs((now - start) / ONE_DAY));
-            const age = await formula.dailyChickenAge(periode._id);
+            const now = new Date(Date.now());
+            const start = new Date(periode.tanggalMulai);
+            const age = Math.round(Math.abs((now - start) / ONE_DAY));
 
             const query = {periode: periode.id}
             if (isKemitraan) {

@@ -1383,10 +1383,10 @@ exports.findPeriode = async (req, res, next) => {
         const results = await Periode.find({kandang: id}).sort('updatedAt')
         const kandang = await Model.findById(id)
         if (results.length > 0){
-            // const oneDay = 24 * 60 * 60 * 1000;
-            // const now = new Date(Date.now());
-            // const start = new Date(results[results.length - 1].tanggalMulai);
-            // const umurAyam = Math.round(Math.abs((now - start) / oneDay))
+            const oneDay = 24 * 60 * 60 * 1000;
+            const now = new Date(Date.now());
+            const start = new Date(results[results.length - 1].tanggalMulai);
+            const umurAyam = Math.round(Math.abs((now - start) / oneDay))
             const tmp = results[results.length - 1]
             const umurAyam = await formula.dailyChickenAge(tmp._id)
             const findUser = await fetch(`${urlAuth}/api/users/${tmp.ppl}`, {
@@ -1587,8 +1587,8 @@ exports.getKelola = async (req, res, next) => {
                 const now = new Date(Date.now());
                 const start = new Date(periode[i].tanggalMulai);
                 const oneDay = 24 * 60 * 60 * 1000;
-                // const umur = Math.round(Math.abs((now - start) / oneDay))
-                const umur = await formula.dailyChickenAge(periode[i].id);
+                const umur = Math.round(Math.abs((now - start) / oneDay))
+                // const umur = await formula.dailyChickenAge(periode[i].id);
 
                 const latestWeight = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0) : 0
                 const latestSampling = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {populasi}) => a + populasi, 0) : 0
@@ -1805,8 +1805,8 @@ exports.kelolaPeternak = async (req, res, next) => {
             ])
             const now = new Date(Date.now())
             const start = new Date(findPeriode[0]?.tanggalMulai)
-            // const umur = Math.round(Math.abs((now - start) / ONE_DAY))
-            const umur = await formula.dailyChickenAge(findPeriode[0]._id);
+            const umur = Math.round(Math.abs((now - start) / ONE_DAY))
+            // const umur = await formula.dailyChickenAge(findPeriode[0]._id);
 
             const suhu = await fetch(`http://${urlIOT}/api/flock/kandang/${x._id}`,{
                 method: 'GET',
@@ -1844,8 +1844,8 @@ exports.kelolaPPL = async (req, res, next) => {
             }).then(res => res.json()).then(data => data.data)
             const now = new Date(Date.now())
             const start = new Date(x.tanggalMulai)
-            // const umur = Math.round(Math.abs((now - start) / ONE_DAY))
-            const umur = await formula.dailyChickenAge(x._id)
+            const umur = Math.round(Math.abs((now - start) / ONE_DAY))
+            // const umur = await formula.dailyChickenAge(x._id)
             const getKegiatan = await KegiatanHarian.findOne({periode: x._id}).sort({'tanggal': -1})
             
             const dataDeplesi = await KegiatanHarian.aggregate([
@@ -1932,8 +1932,8 @@ exports.detailKandang = async (req,res, next) => {
             const tanggalAkhir = new Date(x.tanggalAkhir)
             const finish = x.isEnd === true ? new Date(x.tanggalAkhir) : new Date(Date.now())
             const start = new Date(x.tanggalMulai)
-            // const umur = Math.round(Math.abs((finish - start) / ONE_DAY))
-            const umur = await formula.dailyChickenAge(x._id);
+            const umur = Math.round(Math.abs((finish - start) / ONE_DAY))
+            // const umur = await formula.dailyChickenAge(x._id);
             const pembelianSapronak = await Sapronak.aggregate([
                 {$match: {periode: x._id}},
                 {$unwind: '$produk'},
@@ -2197,7 +2197,7 @@ const handleChickenSheds = async (
       const start = new Date(periode.tanggalMulai);
       age = periode.isEnd
         ? Math.round(Math.abs((periode.tanggalAkhir - start) / ONE_DAY))
-        : await formula.dailyChickenAge(periode._id);
+        : Math.round(Math.abs((now - start) / ONE_DAY));
 
       resultObject = {
         idPemilik: chickenShed.createdBy ? chickenShed.createdBy._id : null,
