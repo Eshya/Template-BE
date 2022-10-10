@@ -7,6 +7,8 @@ router.get('/', auth, queryCek, c.findAll);
 // router.get('/count', queryCek, c.count);
 // router.get('/sisaAyam/:id', auth, permition('superadmin', 'peternak', 'ppl'), permitionPPL, paramCek, c.findSisaAyam);
 router.get('/ppl/history', auth, queryCek,permitionPPL, c.findById);
+router.get('/ppl/history-today', auth, queryCek,permitionPPL, c.findToday);
+router.get('/ppl/kandang', auth, queryCek,permitionPPL, c.findKandang);
 router.get('/ppl', auth, paramCek,permitionPPL, c.findIsAbsent);
 router.post('/ppl', auth, permition('superadmin', 'peternak', 'ppl'), permitionPPL, after, c.insert);
 // router.put('/ppl', auth, c.updateWhere);
