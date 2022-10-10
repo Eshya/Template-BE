@@ -78,12 +78,12 @@ exports.dashboardKemitraan =  async (req, res, next) => {
         const totalPeternak = removeDuplicatesData(resultPeternak)
 
         // get total PPL
-        const totalKemitraan = await User.countDocuments(filterPPL);
+        const totalKemitraan = await User.countDocuments(filterPPL).cache();
 
         filterPPL.role = '61d5608d4a7ba5b05c9c7ae3';
         filterPPL.deleted = false;
 
-        const totalPPl = await User.countDocuments(filterPPL);
+        const totalPPl = await User.countDocuments(filterPPL).cache();
         return res.json({
             totalKandangActive: resultKandangActive.length,
             totalPPL: totalPPl,
@@ -261,7 +261,7 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
 
         const dataKandang = await Kandang.find(filter).sort(sort).select('_id').cache()
         // console.log(dataKandang)
-        const dataKemitraan = await Kemitraan.countDocuments(filter)
+        const dataKemitraan = await Kemitraan.countDocuments(filter).cache()
 
         const resultPeriods = await handlePeriode(true, token, dataKandang, populasiFrom, populasiTo, kemitraan, req.user, role, usiaFrom, usiaTo, bobotFrom, bobotTo);
         
