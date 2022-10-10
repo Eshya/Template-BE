@@ -1,5 +1,15 @@
 version: "3.7"
 services:
+  cache:
+    image: redis:6.2-alpine
+    restart: always
+    ports:
+      - '6379:6379'
+    command: redis-server --save 20 1 --loglevel warning --requirepass eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
+    networks:
+      - chickinnetwork
+    volumes: 
+      - cache:/data
   smartfarm-stg:
     image: ${APP_IMAGE_STG}:${APP_IMAGE_STG_TAG}
     container_name: smartfarm-staging
@@ -11,6 +21,10 @@ services:
       DB_NAME_AUTH: chickin-auth-stagging
       AUTH_URL: https://staging-auth.chickinindonesia.com
       BE_URL: https://staging-smartfarm.chickinindonesia.com
+      REDIS_HOST: cache
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
+      REDIS_TIME: 300
     volumes:
       - /sites/apps/smartfarm/uploads:/app/uploads
     networks:
@@ -21,6 +35,9 @@ services:
 networks:
   chickinnetwork:
     external: true
+volumes:
+  cache:
+    driver: local
 
 
 
