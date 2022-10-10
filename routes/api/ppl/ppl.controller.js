@@ -11,7 +11,7 @@ const fetch = require('node-fetch')
 const Promise = require("bluebird");
 const formula = require('../../helpers/formula');
 const reducer = (acc, value) => acc + value;
-var urlIOT = process.env.DB_NAME === "chckin" ? `iot-production:3103` : `localhost:3104`
+var urlIOT = process.env.DB_NAME === "chckin" ? `iot-production:3103` : `iot-staging:3104`
 const handleQuerySort = (query) => {
     try{
       const toJSONString = ("{" + query + "}").replace(/(\w+:)|(\w+ :)/g, (matched => {
