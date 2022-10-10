@@ -13,6 +13,7 @@ services:
       DB_NAME_AUTH: chickin-auth
       AUTH_URL: https://auth.chickinindonesia.com
       BE_URL: https://smartfarm.chickinindonesia.com
+      BE_API_KEY: 74e48c8e3c0bc19f9e22dd7570037392e5d0bf80cf9dd51
     volumes:
       - /home/chickin/projects/smartfarm/upload-prod:/app/uploads
     networks:

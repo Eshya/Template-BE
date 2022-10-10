@@ -587,47 +587,54 @@ exports.validateTambah = async (req,res, next) => {
     }
 }
 
-exports.autoClosingCultivation = async(req, res, next) => {
-    const chickenSheds = await Kandang.find({});
-    try {
-      for (const chickenShed of chickenSheds) {
-        // Continue to next periode when periode is undefined or empty
-        const periode = await Model.findOne({ kandang: chickenShed._id }).sort({
-          updatedAt: -1,
-        });
+exports.autoClosingCultivation = async (req, res, next) => {
+  const chickenSheds = await Kandang.find({});
+  const chickenShedIds = chickenSheds.map((chickenShed) => chickenShed._id);
+  const periods = await Model.find({ kandang: { $in: chickenShedIds } });
 
-        if (periode) {
-            if (!periode.isEnd && chickenShed.isActive) {
-              const today = dayjs(Date.now());
-              const startDate = dayjs(new Date(periode.tanggalMulai));
-              const chickenShedAge = Math.round(
-                Math.abs(today.diff(startDate, "day"))
-              );
-    
-              // Add 10 days from created date periode
-              const periodeActiveDate = dayjs(periode.createdAt).add(10, "day");
-    
-              if (
-                chickenShedAge >= 50 &&
-                today.format("YYYY-MM-DD") >= periodeActiveDate.format("YYYY-MM-DD")
-              ) {
-    
-                periode.isEnd = true;
-                periode.isAutoClosing = true;
-                chickenShed.isActive = false;
-                periode.tanggalAkhir = Date.now();
-                await periode.save();
-                await chickenShed.save();
-              }
+  try {
+    await Promise.all(
+      chickenSheds.map(async (chickenShed) => {
+        const periodData = periods.filter(
+          (period) =>
+            period.kandang._id.toString() === chickenShed._id.toString()
+        );
+
+        const periode = periodData.sort((a, b) => b.updatedAt - a.updatedAt);
+        if (periode[0] && !periode[0].isEnd && chickenShed.isActive) {
+          const today = dayjs(Date.now());
+          const startDate = dayjs(new Date(periode[0].tanggalMulai));
+          const chickenShedAge = Math.round(
+            Math.abs(today.diff(startDate, "day"))
+          );
+
+          // Add 10 days from created date periode
+          const periodeActiveDate = dayjs(periode[0].createdAt).add(10, "day");
+
+          if (
+            chickenShedAge >= 50 &&
+            today.format("YYYY-MM-DD") >= periodeActiveDate.format("YYYY-MM-DD")
+          ) {
+            if (periode[0].ppl) {
+              periode[0].isActivePPL = false;
             }
-        }
-      }
 
-      return res.json({ status: 200, message: "Successfully Auto Closing" });
-    } catch (error) {
-      return res.json({ status: 500, message: error.message });
-    }
-}
+            periode[0].isEnd = true;
+            periode[0].isAutoClosing = true;
+            chickenShed.isActive = false;
+            periode[0].tanggalAkhir = Date.now();
+
+            await Promise.all([periode[0].save(), chickenShed.save()]);
+          }
+        }
+      })
+    );
+
+    return res.json({ status: 200, message: "Successfully Auto Closing" });
+  } catch (error) {
+    return res.json({ status: 500, message: error.message });
+  }
+};
 
 exports.reActivateChickenSheds = async (req, res, next) => {
     try {
