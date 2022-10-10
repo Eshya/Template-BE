@@ -11,7 +11,7 @@ const fetch = require('node-fetch')
 const Promise = require("bluebird");
 const formula = require('../../helpers/formula');
 const reducer = (acc, value) => acc + value;
-var urlIOT = process.env.DB_NAME === "chckin" ? `iot-production:3103` : `iot-staging:3104`
+var urlIOT = process.env.DB_NAME === "chckin" ? `iot-production:3103` : `localhost:3104`
 const handleQuerySort = (query) => {
     try{
       const toJSONString = ("{" + query + "}").replace(/(\w+:)|(\w+ :)/g, (matched => {
@@ -112,13 +112,12 @@ exports.findById = async (req, res, next) => {
                 const allDeplesi = await dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
                 const allKematian = await dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
                 
-                //const allPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
+                const allPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
                 const allPakan = await dataPakan.reduce((a, {totalPakan})=>a + totalPakan, 0);
                 const deplesi = (findKandang.populasi - (findKandang.populasi - (allDeplesi + allKematian))) * 100 / findKandang.populasi
-                // const presentaseAyamHidup = 100 - deplesi
-                const presentaseAyamHidup = await formula.liveChickenPrecentage(itemPeriode._id);
+                const presentaseAyamHidup = 100 - deplesi
                 const populasiAkhir = findKandang.populasi - (allDeplesi + allKematian )
-                const FCR = await formula.FCR(itemPeriode._id);
+                const FCR = allPakan / (populasiAkhir * (latestWeight/1000)) 
                 const atas = presentaseAyamHidup * (latestWeight/1000)
                 const bawah = FCR*(dataPakan.length-1)
                 const IP = (atas / bawah) * 100
