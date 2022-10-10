@@ -1610,7 +1610,7 @@ exports.getKelola = async (req, res, next) => {
 
                 dataPeriode.push({
                     idPeriode: periode[i]._id,
-                    umurAyam: umur,
+                    umurAyam: umur - 1,
                     tanggalMulai: periode[i].tanggalMulai,
                     tanggalAkhir: periode[i].tanggalAkhir,
                     isEnd: periode[i].isEnd,
@@ -2207,7 +2207,7 @@ const handleChickenSheds = async (
         isIoTInstalled: flock.data?.flock.length != 0 ? true : false,
         kota: chickenShed.kota,
         isActive: chickenShed.isActive ? "Aktif" : "Rehat",
-        usia: age,
+        usia: age - 1,
         periodeKe: !dataPeriode.length ? "Belum mulai Periode" : dataPeriode[0],
         lastUpdate:lastUpdateStr
       };
