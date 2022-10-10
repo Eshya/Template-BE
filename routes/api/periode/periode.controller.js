@@ -100,8 +100,7 @@ exports.findKegiatan = async (req, res, next) => {
             var tmp = x
             //findUmur
             const tanggal = new Date(x.tanggal)
-            // var umur = Math.round(Math.abs((tanggal - start) / ONE_DAY))
-            var umur = await formula.dailyChickenAge(periode._id)
+            var umur = Math.round(Math.abs((tanggal - start) / ONE_DAY))
             //findDeplesi
             if (umur >= 50){ umur = 50 }
             const deplesiEkor = x.deplesi
@@ -558,9 +557,10 @@ exports.hapusPPL = async (req, res, next) => {
 exports.validateTambah = async (req,res, next) => {
     const data = req.body
     const token = req.headers['authorization']
-    var url
+    let url = process.env.AUTH_URL || `https://staging-auth.chickinindonesia.com`
+    url = `${url}/api/users/`
     try {
-        process.env.DB_NAME === "chckin" ? url = `https://auth.chickinindonesia.com/api/users/` : url = `https://staging-auth.chickinindonesia.com/api/users/`
+        // process.env.DB_NAME === "chckin" ? url = `https://auth.chickinindonesia.com/api/users/` : url = `https://staging-auth.chickinindonesia.com/api/users/`
         if(!mongoose.Types.ObjectId.isValid(data.periode)) return res.json({data: null, error: 1016, message: "kandang tidak ditemukan!"})
         const results = await Model.findById(data.periode)
         const tmp = results
