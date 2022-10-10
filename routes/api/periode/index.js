@@ -26,5 +26,6 @@ router.put('/:id', auth, paramCek, c.updateById);
 router.put('/', auth, c.updateWhere);
 router.delete('/', auth, c.remove);
 router.delete('/:id', auth, paramCek, c.removeById);
+router.post('/script/reActivateChickenSheds', c.reActivateChickenSheds);
 module.exports = router;
 
