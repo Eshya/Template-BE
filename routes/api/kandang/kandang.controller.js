@@ -1819,7 +1819,7 @@ exports.kelolaPeternak = async (req, res, next) => {
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
             }).then(res => res.json()).then(data => data.data)
-            return {...tmp.toObject(), user: findUser, umur: umur, periode: findPeriode[0], suhu: suhu?.flock ? suhu.flock.actualTemperature : 0}
+            return {...tmp.toObject(), user: findUser, umur: umur - 1, periode: findPeriode[0], suhu: suhu?.flock ? suhu.flock.actualTemperature : 0}
             
         }))
         res.json({
@@ -1900,7 +1900,7 @@ exports.kelolaPPL = async (req, res, next) => {
 
             const countPeriode = await Periode.countDocuments({kandang: x.kandang})
 
-            return {...findKandang.toObject(), user: findUser, IP: IP, umur: umur, periode: x, urutanKe: countPeriode,  suhu: suhu?.flock ? suhu.flock.actualTemperature : 0}
+            return {...findKandang.toObject(), user: findUser, IP: IP, umur: umur - 1, periode: x, urutanKe: countPeriode,  suhu: suhu?.flock ? suhu.flock.actualTemperature : 0}
         }))
         res.json({
             data: {
