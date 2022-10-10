@@ -166,7 +166,7 @@ exports.findById = async (req, res, next) => {
                 const atas = presentaseAyamHidup * (latestWeight/1000)
                 const bawah = FCR*(dataPakan.length-1)
                 // IP = (atas / bawah) * 100
-                IP = await formula.dailyIP(id)
+                IP = await formula.dailyIP(periode._id)
 
 
                 // get total penjualan
