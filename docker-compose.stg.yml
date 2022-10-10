@@ -17,9 +17,9 @@ services:
       REDIS_TIME: 300
     volumes:
       - /sites/apps/smartfarm/uploads:/app/uploads
+      - cache:/data
     networks:
       - chickinnetwork
-      - cache:/data
     ports:
       - "3102:3102"
     restart: always
