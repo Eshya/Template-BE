@@ -1388,7 +1388,6 @@ exports.findPeriode = async (req, res, next) => {
             const start = new Date(results[results.length - 1].tanggalMulai);
             const umurAyam = Math.round(Math.abs((now - start) / oneDay))
             const tmp = results[results.length - 1]
-            const umurAyam = await formula.dailyChickenAge(tmp._id)
             const findUser = await fetch(`${urlAuth}/api/users/${tmp.ppl}`, {
                 method: 'GET',
                 headers: {'Authorization': token,
@@ -1610,7 +1609,7 @@ exports.getKelola = async (req, res, next) => {
 
                 dataPeriode.push({
                     idPeriode: periode[i]._id,
-                    umurAyam: umur,
+                    umurAyam: umur - 1,
                     tanggalMulai: periode[i].tanggalMulai,
                     tanggalAkhir: periode[i].tanggalAkhir,
                     isEnd: periode[i].isEnd,
@@ -2147,20 +2146,20 @@ const handleChickenSheds = async (
     let age = 0;
 
     let flock = [];
-    flock = await fetch(
-      `http://${urlIOT}/api/flock/datapool/kandang/` + chickenShed._id,
-      {
-        method: "get",
-        headers: {
-          Authorization: token,
-          "Content-Type": "application/json",
-        },
-      }
-    ).then((result) => {
-      if (result.ok) {
-        return result.json();
-      }
-    });
+    // flock = await fetch(
+    //   `http://${urlIOT}/api/flock/datapool/kandang/` + chickenShed._id,
+    //   {
+    //     method: "get",
+    //     headers: {
+    //       Authorization: token,
+    //       "Content-Type": "application/json",
+    //     },
+    //   }
+    // ).then((result) => {
+    //   if (result.ok) {
+    //     return result.json();
+    //   }
+    // });
 
     if (periode && periode?.kandang) {
       const chickenShedPeriods = await Periode.find(filterPeriod).sort(
@@ -2207,7 +2206,7 @@ const handleChickenSheds = async (
         isIoTInstalled: flock.data?.flock.length != 0 ? true : false,
         kota: chickenShed.kota,
         isActive: chickenShed.isActive ? "Aktif" : "Rehat",
-        usia: age,
+        usia: age - 1,
         periodeKe: !dataPeriode.length ? "Belum mulai Periode" : dataPeriode[0],
         lastUpdate:lastUpdateStr
       };
