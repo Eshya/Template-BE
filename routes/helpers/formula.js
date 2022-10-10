@@ -63,7 +63,7 @@ const actualRemainingChicken = async(idPeriode) => {
     const accumulateTotalHarvest = getSales.reduce((a, {totalEkor}) => a + totalEkor, 0)
     const periode = await Periode.findById(idPeriode);
     const totalDeplesi = await accumulateDeplesi(idPeriode);
-    const remainingChicken = periode.populasi - (totalDeplesi - accumulateTotalHarvest);
+    const remainingChicken = periode.populasi - totalDeplesi - accumulateTotalHarvest;
     return remainingChicken;
 }
 
