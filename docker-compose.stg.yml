@@ -15,6 +15,7 @@ services:
       REDIS_PORT: 6379
       REDIS_PASSWORD: eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
       REDIS_TIME: 300
+      BE_API_KEY: 74e48c8e3c0bc19f9e22dd7570037392e5d0bf80cf9dd51
     volumes:
       - /sites/apps/smartfarm/uploads:/app/uploads
       - cache:/data
