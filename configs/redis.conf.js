@@ -49,11 +49,13 @@ mongoose.Query.prototype.exec = async function() {
     
     if (cacheValue !== null) {
         const doc = JSON.parse(cacheValue);
-        let cacheParse = keyExists(doc,this.hashKey)
+        // const cacheParse = keyExists(obj)
+        
         // console.log(cacheParse)
+
         return Array.isArray(doc)
         ? arrayJson(doc)
-        : cacheParse;
+        : keyExists(doc);
         // console.log(doc.length())
     }
 
@@ -68,7 +70,7 @@ mongoose.Query.prototype.exec = async function() {
     return result;
 };
 
-const keyExists = (obj,hashKey) => {
+const keyExists = (obj) => {
     
     if (!obj || (typeof obj !== "object" && !Array.isArray(obj))) {
       return obj; // quit revursive
