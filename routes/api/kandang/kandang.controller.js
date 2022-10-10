@@ -423,7 +423,9 @@ exports.findOneDataPool =  async (req, res, next) => {
 
             const atas = presentaseAyamHidup * (avgLatestWeight/1000)
             const bawah = FCR*(dataPakan.length-1)
-            var IP = (atas / bawah) * 100
+            var IP = await formula.dailyIP(id)
+
+            // var IP = (atas / bawah) * 100
             periode.isEnd == true ? IP = await formula.IPClosing(periode._id) : IP
             const IPFixed = IP.toFixed(2)
             const IPResult = isFinite(IPFixed) && IPFixed || 0
@@ -783,7 +785,9 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
             periode.isEnd == true ? FCR = await formula.FCRClosing(periode._id) : FCR
             const atas = presentaseAyamHidup * (avgLatestWeight/1000)
             const bawah = FCR*(dataPakan.length-1)
-            var IP = (atas / bawah) * 100
+            // var IP = (atas / bawah) * 100
+            var IP = await formula.dailyIP(id)
+
             periode.isEnd == true ? IP = await formula.IPClosing(periode._id) : IP
             const IPFixed = IP.toFixed(2)
             const IPResult = isFinite(IPFixed) && IPFixed || 0
@@ -1606,7 +1610,9 @@ exports.getKelola = async (req, res, next) => {
                 const FCR = await formula.FCR(periode[i].id)
                 const atas = presentaseAyamHidup * (avgLatestWeight/1000)
                 const bawah = FCR*(dataPakan.length-1)
-                const IP = (atas / bawah) * 100
+                var IP = await formula.dailyIP(id)
+
+                // const IP = (atas / bawah) * 100
 
                 dataPeriode.push({
                     idPeriode: periode[i]._id,
@@ -1882,7 +1888,9 @@ exports.kelolaPPL = async (req, res, next) => {
 
             const atas = presentaseAyamHidup * (avgLatestWeight/1000)
             const bawah = FCR * (dataPakan.length-1)
-            const IP = (atas/bawah) * 100
+            // const IP = (atas/bawah) * 100
+            var IP = await formula.dailyIP(id)
+
 
             const suhu = await fetch(`http://${urlIOT}/api/flock/kandang/${x.kandang}`,{
                 method: 'GET',

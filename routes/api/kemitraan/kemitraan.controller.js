@@ -136,7 +136,9 @@ exports.getKandangPeriode = async (req, res, next) => {
                 const FCR = await formula.FCR(itemPeriode._id) 
                 const atas = presentaseAyamHidup * (latestWeight/1000)
                 const bawah = FCR*(dataPakan.length-1)
-                const IP = (atas / bawah) * 100
+                // const IP = (atas / bawah) * 100
+                var IP = await formula.dailyIP(id)
+
 
                 // get total penjualan
                 let harian = []
