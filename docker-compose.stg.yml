@@ -37,7 +37,8 @@ networks:
     external: true
 volumes:
   cache:
-    driver: local
+    name: chickin-be_cache
+    external: true
 
 
 
