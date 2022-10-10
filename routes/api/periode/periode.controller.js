@@ -628,3 +628,42 @@ exports.autoClosingCultivation = async(req, res, next) => {
       return res.json({ status: 500, message: error.message });
     }
 }
+
+exports.reActivateChickenSheds = async (req, res, next) => {
+    try {
+      const periods = await Model.find({ isEnd: true, tanggalAkhir: null });
+
+      if (!periods.length) {
+        return res.json({ status: 500, message: err.message });
+      }
+
+      const chickenShedIds = periods.map(({ kandang }) => kandang._id);
+
+      await Promise.all([
+        Model.bulkWrite([
+            {
+                "updateMany": {
+                    "filter": { "isEnd": true, "tanggalAkhir": null },
+                    "update": { "$set": { "isEnd": false, "isAutoClosing": false }}
+                }
+            },
+            {
+             "updateMany": {
+                "filter": { "ppl": { "$ne": null }},
+                "update": { "$set": { "isActivePPL": true }},
+                },
+            }
+        ]),
+
+        Kandang.updateMany({ _id: { $in: chickenShedIds }}, {$set: { isActive: true }})
+      ]);
+
+      return res.json({
+        status: 200,
+        message: "Successfully Reactivate Chicken Sheds",
+      });
+
+    } catch (error) {
+      return res.json({ status: 500, message: error.message });
+    }
+  };
