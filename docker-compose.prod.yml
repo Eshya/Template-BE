@@ -4,6 +4,7 @@ services:
     image: ${APP_IMAGE_PROD}:${APP_IMAGE_PROD_TAG}
     container_name: smartfarm-production
     environment:
+      NODE_ENV: production
       SERVER_PORT: 3101
       DB_HOST: mongodb
       DB_PORT: 27017
