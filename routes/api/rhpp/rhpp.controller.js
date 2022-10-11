@@ -143,6 +143,7 @@ exports.findAll =  async (req, res, next) => {
 
 exports.uploadRHPP =  async (req, res, next) => {
     const { NOTIFICATION_BASE_URL } = process.env;
+    const token = req.headers['authorization'];
     const notificationUrl = !NOTIFICATION_BASE_URL ? 'https://staging-notification.chickinindonesia.com' : NOTIFICATION_BASE_URL
 
     try {
@@ -182,8 +183,13 @@ exports.uploadRHPP =  async (req, res, next) => {
         // const periode = await Periode.findById(idPeriode);
         const kandang = periode.kandang;
         const dataPeriode = [];
+        const user = await fetch(`${urlAuth}/api/users/${req.user._id}`, {
+            method: 'GET',
+            headers: {'Authorization': token,
+            "Content-Type": "application/json"}
+        }).then(res => res.json()).then(data => data.data)
 
-        if (kandang && req.user.tokenFcm){
+        if (kandang && user.tokenFcm){
             const cages = await Periode.find({kandang: periode.kandang._id}).sort('tanggalMulai')
             await Promise.map(cages, async (itemKandang, index) => {
                 if (itemKandang._id.toString() === periode._id.toString()) {
@@ -195,7 +201,7 @@ exports.uploadRHPP =  async (req, res, next) => {
               id_user: req.user._id,
               id_periode: idPeriode,
               id_kandang: kandang._id,
-              tokenFcm: req.user.tokenFcm,
+              tokenFcm: user.tokenFcm,
               urutan_periode: periode ? dataPeriode[0] : 0,
               nama_kandang: kandang.kode,
             };
