@@ -29,9 +29,13 @@ const getKegiatanHarian = async (idPeriode) => {
     return dataPakan
 }
 
+const ageByDaily = async (idPeriode) => {
+    const findDaily = await getKegiatanHarian(idPeriode)
+    return findDaily.length - 1
+}
 const dailyChickenAge = async(idPeriode) => {
-    const dailyActivities = await KegiatanHarian.find({ periode: idPeriode }).sort({tanggal: -1});
-    const startDate = dayjs(new Date(dailyActivities[0]?.tanggal));
+    const dailyActivities = await KegiatanHarian.findOne({ periode: idPeriode }).sort({tanggal: -1});
+    const startDate = dayjs(new Date(dailyActivities?.tanggal));
     const today = dayjs(new Date());
     const age = Math.round(Math.abs(today.diff(startDate, 'day')));
     return age;
@@ -166,7 +170,7 @@ exports.dailyIP = async (idPeriode) => {
     const getLiveChickenPrecentage = await liveChickenPrecentage(idPeriode)
     const getLatestWeight = await AvgDailyWeight(idPeriode, getDailyActivities.length - 1)
     const getDailyFCR = await dailyFCR(idPeriode)
-    const getAge = await dailyChickenAge(idPeriode)
+    const getAge = await ageByDaily(idPeriode)
     const IP = ((getLiveChickenPrecentage * (getLatestWeight/1000)) / (getDailyFCR*getAge)) * 100
     return IP
 }
