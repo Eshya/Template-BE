@@ -182,7 +182,7 @@ exports.uploadRHPP =  async (req, res, next) => {
 
         const kandang = periode.kandang;
         const dataPeriode = [];
-        const user = await fetch(`${urlAuth}/api/users/${req.user._id}`, {
+        const user = await fetch(`${urlAuth}/api/users/${kandang.createdBy}`, {
             method: 'GET',
             headers: {'Authorization': token,
             "Content-Type": "application/json"}
@@ -197,7 +197,7 @@ exports.uploadRHPP =  async (req, res, next) => {
             });
 
             const objectEntry = {
-              id_user: req.user._id,
+              id_user: kandang.createdBy.toString(),
               id_periode: idPeriode,
               id_kandang: kandang._id,
               tokenFcm: user.tokenFcm,
