@@ -112,16 +112,17 @@ exports.findById = async (req, res, next) => {
                 const allDeplesi = await dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
                 const allKematian = await dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
                 
-                //const allPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
+                const allPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
                 const allPakan = await dataPakan.reduce((a, {totalPakan})=>a + totalPakan, 0);
                 const deplesi = (findKandang.populasi - (findKandang.populasi - (allDeplesi + allKematian))) * 100 / findKandang.populasi
-                // const presentaseAyamHidup = 100 - deplesi
-                const presentaseAyamHidup = await formula.liveChickenPrecentage(itemPeriode._id);
+                const presentaseAyamHidup = 100 - deplesi
                 const populasiAkhir = findKandang.populasi - (allDeplesi + allKematian )
-                const FCR = await formula.FCR(itemPeriode._id);
+                const FCR = allPakan / (populasiAkhir * (latestWeight/1000)) 
                 const atas = presentaseAyamHidup * (latestWeight/1000)
                 const bawah = FCR*(dataPakan.length-1)
-                const IP = (atas / bawah) * 100
+                // const IP = (atas / bawah) * 100
+                var IP = await formula.dailyIP(itemPeriode.periode[0])
+
                
                 // console.log(IP)
                 // get total penjualan

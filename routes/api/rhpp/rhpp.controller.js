@@ -10,7 +10,7 @@ const maxSize = 5 * 1024 * 1024;
 const fetch = require('node-fetch')
 const axios = require('axios');
 const qs = require('qs');
-var urlAuth = process.env.DB_NAME === "chckin" ? `auth.chickinindonesia.com` : `staging-auth.chickinindonesia.com`
+var urlAuth = process.env.AUTH_URL || `https://staging-auth.chickinindonesia.com`
 
 const handleQuerySort = (query) => {
     try{
@@ -76,7 +76,7 @@ exports.findAll =  async (req, res, next) => {
                 });
 
                 //find detail peternak
-                const findUser = await fetch(`https://${urlAuth}/api/users/${data[i].createdBy}`, {
+                const findUser = await fetch(`${urlAuth}/api/users/${data[i].createdBy}`, {
                     method: 'GET',
                     headers: {'Authorization': token,
                     "Content-Type": "application/json"}
@@ -180,33 +180,33 @@ exports.uploadRHPP =  async (req, res, next) => {
         }
 
         // const periode = await Periode.findById(idPeriode);
-        // const kandang = periode.kandang;
-        // const dataPeriode = [];
+        const kandang = periode.kandang;
+        const dataPeriode = [];
 
-        // if (kandang && req.user.tokenFcm){
-        //     const cages = await Periode.find({kandang: periode.kandang._id}).sort('tanggalMulai')
-        //     await Promise.map(cages, async (itemKandang, index) => {
-        //         if (itemKandang._id.toString() === periode._id.toString()) {
-        //             dataPeriode.push(index + 1);
-        //         }
-        //     });
+        if (kandang && req.user.tokenFcm){
+            const cages = await Periode.find({kandang: periode.kandang._id}).sort('tanggalMulai')
+            await Promise.map(cages, async (itemKandang, index) => {
+                if (itemKandang._id.toString() === periode._id.toString()) {
+                    dataPeriode.push(index + 1);
+                }
+            });
 
-        //     const objectEntry = {
-        //       id_user: req.user._id,
-        //       id_periode: idPeriode,
-        //       id_kandang: kandang._id,
-        //       tokenFcm: req.user.tokenFcm,
-        //       urutan_periode: periode ? dataPeriode[0] : 0,
-        //       nama_kandang: kandang.kode,
-        //     };
+            const objectEntry = {
+              id_user: req.user._id,
+              id_periode: idPeriode,
+              id_kandang: kandang._id,
+              tokenFcm: req.user.tokenFcm,
+              urutan_periode: periode ? dataPeriode[0] : 0,
+              nama_kandang: kandang.kode,
+            };
 
-        //   await axios({
-        //     method: "POST",
-        //     headers: { "content-type": "application/x-www-form-urlencoded" },
-        //     params: objectEntry,
-        //     url: `${notificationUrl}/api/rhpp`
-        //   });
-        // }
+          await axios({
+            method: "POST",
+            headers: { "content-type": "application/x-www-form-urlencoded" },
+            params: objectEntry,
+            url: `${notificationUrl}/api/rhpp`
+          });
+        }
 
         res.status(200).send({
             message: "RHPP successfully uploaded.",

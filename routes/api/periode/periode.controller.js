@@ -100,8 +100,7 @@ exports.findKegiatan = async (req, res, next) => {
             var tmp = x
             //findUmur
             const tanggal = new Date(x.tanggal)
-            // var umur = Math.round(Math.abs((tanggal - start) / ONE_DAY))
-            var umur = await formula.dailyChickenAge(periode._id)
+            var umur = Math.round(Math.abs((tanggal - start) / ONE_DAY))
             //findDeplesi
             if (umur >= 50){ umur = 50 }
             const deplesiEkor = x.deplesi
@@ -405,7 +404,8 @@ exports.ringkasan = async (req, res, next) => {
         getPeriode.isEnd == true ? FCR = await formula.FCRClosing(id) : FCR
         const atas = presentaseAyamHidup * (avgLatestWeight/1000)
         const bawah = FCR*(dataPakan.length-1)
-        var IP = (atas / bawah) * 100
+        // var IP = (atas / bawah) * 100
+        var IP = await formula.dailyIP(id)
         getPeriode.isEnd == true ? IP = await formula.IPClosing(id) : IP
 
         const detailPanen = penjualan.map(data => { return {
@@ -515,11 +515,13 @@ exports.performa = async (req, res, next) => {
             const kematian = allDeplesi + allKematian
             const atas = (100 - (((findPopulasi[0] - kematian) / findPopulasi[0]) * 100)) * avg
             const bawah = (allPakan/allTonase) * findUmur 
+            var IP = await formula.dailyIP(id)
             // console.log(avg);
             res.json({                
                 FCR: allPakan/allTonase,
                 Deplesi: ((findPopulasi[0] - kematian) / findPopulasi[0]) * 100,
-                IP : (atas / bawah) * 100
+                IP : IP
+                
             })
         }
         // console.log(tonase);
@@ -558,9 +560,10 @@ exports.hapusPPL = async (req, res, next) => {
 exports.validateTambah = async (req,res, next) => {
     const data = req.body
     const token = req.headers['authorization']
-    var url
+    let url = process.env.AUTH_URL || `https://staging-auth.chickinindonesia.com`
+    url = `${url}/api/users/`
     try {
-        process.env.DB_NAME === "chckin" ? url = `https://auth.chickinindonesia.com/api/users/` : url = `https://staging-auth.chickinindonesia.com/api/users/`
+        // process.env.DB_NAME === "chckin" ? url = `https://auth.chickinindonesia.com/api/users/` : url = `https://staging-auth.chickinindonesia.com/api/users/`
         if(!mongoose.Types.ObjectId.isValid(data.periode)) return res.json({data: null, error: 1016, message: "kandang tidak ditemukan!"})
         const results = await Model.findById(data.periode)
         const tmp = results
@@ -589,44 +592,90 @@ exports.validateTambah = async (req,res, next) => {
     }
 }
 
-exports.autoClosingCultivation = async(req, res, next) => {
-    const chickenSheds = await Kandang.find({});
-    try {
-      for (const chickenShed of chickenSheds) {
-        // Continue to next periode when periode is undefined or empty
-        const periode = await Model.findOne({ kandang: chickenShed._id }).sort({
-          updatedAt: -1,
-        });
+exports.autoClosingCultivation = async (req, res, next) => {
+  const chickenSheds = await Kandang.find({});
+  const chickenShedIds = chickenSheds.map((chickenShed) => chickenShed._id);
+  const periods = await Model.find({ kandang: { $in: chickenShedIds } });
 
-        if (periode) {
-            if (!periode.isEnd && chickenShed.isActive) {
-              const today = dayjs(Date.now());
-              const startDate = dayjs(new Date(periode.tanggalMulai));
-              const chickenShedAge = Math.round(
-                Math.abs(today.diff(startDate, "day"))
-              );
-    
-              // Add 10 days from created date periode
-              const periodeActiveDate = dayjs(periode.createdAt).add(10, "day");
-    
-              if (
-                chickenShedAge >= 50 &&
-                today.format("YYYY-MM-DD") >= periodeActiveDate.format("YYYY-MM-DD")
-              ) {
-    
-                periode.isEnd = true;
-                periode.isAutoClosing = true;
-                chickenShed.isActive = false;
-                periode.tanggalAkhir = Date.now();
-                await periode.save();
-                await chickenShed.save();
-              }
+  try {
+    await Promise.all(
+      chickenSheds.map(async (chickenShed) => {
+        const periodData = periods.filter(
+          (period) =>
+            period.kandang._id.toString() === chickenShed._id.toString()
+        );
+
+        const periode = periodData.sort((a, b) => b.updatedAt - a.updatedAt);
+        if (periode[0] && !periode[0].isEnd && chickenShed.isActive) {
+          const today = dayjs(Date.now());
+          const startDate = dayjs(new Date(periode[0].tanggalMulai));
+          const chickenShedAge = Math.round(
+            Math.abs(today.diff(startDate, "day"))
+          );
+
+          // Add 10 days from created date periode
+          const periodeActiveDate = dayjs(periode[0].createdAt).add(10, "day");
+
+          if (
+            chickenShedAge >= 50 &&
+            today.format("YYYY-MM-DD") >= periodeActiveDate.format("YYYY-MM-DD")
+          ) {
+            if (periode[0].ppl) {
+              periode[0].isActivePPL = false;
             }
+
+            periode[0].isEnd = true;
+            periode[0].isAutoClosing = true;
+            chickenShed.isActive = false;
+            periode[0].tanggalAkhir = Date.now();
+
+            await Promise.all([periode[0].save(), chickenShed.save()]);
+          }
         }
+      })
+    );
+
+    return res.json({ status: 200, message: "Successfully Auto Closing" });
+  } catch (error) {
+    return res.json({ status: 500, message: error.message });
+  }
+};
+
+exports.reActivateChickenSheds = async (req, res, next) => {
+    try {
+      const periods = await Model.find({ isEnd: true, tanggalAkhir: null });
+
+      if (!periods.length) {
+        return res.json({ status: 500, message: err.message });
       }
 
-      return res.json({ status: 200, message: "Successfully Auto Closing" });
+      const chickenShedIds = periods.map(({ kandang }) => kandang._id);
+
+      await Promise.all([
+        Model.bulkWrite([
+            {
+                "updateMany": {
+                    "filter": { "isEnd": true, "tanggalAkhir": null },
+                    "update": { "$set": { "isEnd": false, "isAutoClosing": false }}
+                }
+            },
+            {
+             "updateMany": {
+                "filter": { "ppl": { "$ne": null }},
+                "update": { "$set": { "isActivePPL": true }},
+                },
+            }
+        ]),
+
+        Kandang.updateMany({ _id: { $in: chickenShedIds }}, {$set: { isActive: true }})
+      ]);
+
+      return res.json({
+        status: 200,
+        message: "Successfully Reactivate Chicken Sheds",
+      });
+
     } catch (error) {
       return res.json({ status: 500, message: error.message });
     }
-}
+  };

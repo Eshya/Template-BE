@@ -8,6 +8,7 @@ const Promise = require("bluebird");
 const mongoose = require('mongoose');
 const ONE_DAY = 24 * 60 * 60 * 1000;
 const fetch = require('node-fetch')
+const {clearKey} = require('../../../configs/redis.conf')
 const formula = require('../../helpers/formula');
 // var urlAuth = `https://staging-auth.chickinindonesia.com`
 var urlAuth = `${process.env.AUTH_URL}`;
@@ -183,7 +184,7 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
             sort = { createdAt: -1 }
         }
 
-        const dataKandang = await Kandang.find(filter).sort(sort).select('_id');
+        const dataKandang = await Kandang.find(filter).sort(sort).select('_id').cache();
         const resultPeriods = await handlePeriode(true, token, dataKandang, populasiFrom, populasiTo, kemitraan, req.user, role, usiaFrom, usiaTo, bobotFrom, bobotTo);
         resultPeriode.push(...resultPeriods.filter(result => result));
 
@@ -258,7 +259,8 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
             sort = { createdAt: -1 }
         }
 
-        const dataKandang = await Kandang.find(filter).sort(sort).select('_id');
+        const dataKandang = await Kandang.find(filter).sort(sort).select('_id').cache()
+        // console.log(dataKandang)
         const dataKemitraan = await Kemitraan.countDocuments(filter)
 
         const resultPeriods = await handlePeriode(true, token, dataKandang, populasiFrom, populasiTo, kemitraan, req.user, role, usiaFrom, usiaTo, bobotFrom, bobotTo);
@@ -368,15 +370,15 @@ const handlePeriode = async(isKemitraan, token, dataKandang, populasiFrom, popul
         headers: {'Authorization': token,
         "Content-Type": "application/json"}
     }).then(res => res.json()).then(data => data.data)
-
+    
     return Promise.map(dataKandang, async (dataItem, index) => {
         const filterPeriod = {};
         const query = { $gte: 0 };
-        filterPeriod.kandang = dataItem.id;
+        filterPeriod.kandang = dataItem._id;
         filterPeriod.isEnd = false;
         const checkPopulasiFrom = Number.isInteger(populasiFrom) ? populasiFrom : !parseInt(populasiFrom) ? 0 : parseInt(populasiFrom);
         const checkPopulasiTo = Number.isInteger(populasiTo) ? populasiTo : !parseInt(populasiTo) ? 0 : parseInt(populasiTo);
-
+        
         if (checkPopulasiFrom > checkPopulasiTo) {
             throw new Error('Populasi awal tidak boleh melebihi populasi akhir')
         }
@@ -400,21 +402,21 @@ const handlePeriode = async(isKemitraan, token, dataKandang, populasiFrom, popul
         }
         
 
-        const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 });
+        const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 }).cache();
+        
         if (periode?.kandang && periode?.kemitraan && periode?.kandang?.createdBy) {
             // get usia
-            // const now = new Date(Date.now());
-            // const start = new Date(periode.tanggalMulai);
-            // const age = Math.round(Math.abs((now - start) / ONE_DAY));
-            const age = await formula.dailyChickenAge(periode._id);
+            const now = new Date(Date.now());
+            const start = new Date(periode.tanggalMulai);
+            const age = Math.round(Math.abs((now - start) / ONE_DAY));
 
-            const query = {periode: periode.id}
+            const query = {periode: periode._id}
             if (isKemitraan) {
                 query.berat = { $exists: true, $ne: [] }
             }
 
             // get weight actual
-            const getKegiatan = await KegiatanHarian.findOne(query).sort({'tanggal': -1}).select('-periode')
+            const getKegiatan = await KegiatanHarian.findOne(query).sort({'tanggal': -1}).select('-periode').cache()
             /**
              * Sanja Remark
              * Old logic to calculate avg latest weight
@@ -490,7 +492,7 @@ const handlePeriode = async(isKemitraan, token, dataKandang, populasiFrom, popul
                 pushData = true;
             }
             let flock = [];
-            flock = await fetch(`http://${urlIOT}/api/flock/datapool/kandang/` + periode.kandang.id, {
+            flock = await fetch(`http://${urlIOT}/api/flock/datapool/kandang/` + periode.kandang._id, {
                 method: 'get',
                 headers: {
                     'Authorization': token,
@@ -519,9 +521,9 @@ const handlePeriode = async(isKemitraan, token, dataKandang, populasiFrom, popul
                 if (!namaPemilik) {
                     return
                 }
-
+                
                 return({
-                    idKandang: periode.kandang.id,
+                    idKandang: periode.kandang._id,
                     namaKandang: periode.kandang.kode,
                     isIoTInstalled:flock?.data?.flock.length!=0 ? true : false,
                     kota: periode.kandang.kota,
@@ -529,7 +531,7 @@ const handlePeriode = async(isKemitraan, token, dataKandang, populasiFrom, popul
                     bobot: avgLatestWeight,
                     usia: age,
                     populasi: periode.populasi,
-                    IdKemitraan: periode.kemitraan ? periode.kemitraan.id : null,
+                    IdKemitraan: periode.kemitraan ? periode.kemitraan._id : null,
                     namaKemitraan: periode.kemitraan ? periode.kemitraan.name : "",
                     idPemilik: periode.kandang.createdBy ? periode.kandang.createdBy._id : null,
                     namaPemilik: namaPemilikSTR,

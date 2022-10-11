@@ -423,7 +423,9 @@ exports.findOneDataPool =  async (req, res, next) => {
 
             const atas = presentaseAyamHidup * (avgLatestWeight/1000)
             const bawah = FCR*(dataPakan.length-1)
-            var IP = (atas / bawah) * 100
+            var IP = await formula.dailyIP(periode._id)
+
+            // var IP = (atas / bawah) * 100
             periode.isEnd == true ? IP = await formula.IPClosing(periode._id) : IP
             const IPFixed = IP.toFixed(2)
             const IPResult = isFinite(IPFixed) && IPFixed || 0
@@ -783,7 +785,9 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
             periode.isEnd == true ? FCR = await formula.FCRClosing(periode._id) : FCR
             const atas = presentaseAyamHidup * (avgLatestWeight/1000)
             const bawah = FCR*(dataPakan.length-1)
-            var IP = (atas / bawah) * 100
+            // var IP = (atas / bawah) * 100
+            var IP = await formula.dailyIP(periode._id)
+
             periode.isEnd == true ? IP = await formula.IPClosing(periode._id) : IP
             const IPFixed = IP.toFixed(2)
             const IPResult = isFinite(IPFixed) && IPFixed || 0
@@ -1383,12 +1387,12 @@ exports.findPeriode = async (req, res, next) => {
         const results = await Periode.find({kandang: id}).sort('updatedAt')
         const kandang = await Model.findById(id)
         if (results.length > 0){
-            // const oneDay = 24 * 60 * 60 * 1000;
-            // const now = new Date(Date.now());
-            // const start = new Date(results[results.length - 1].tanggalMulai);
-            // const umurAyam = Math.round(Math.abs((now - start) / oneDay))
+            const oneDay = 24 * 60 * 60 * 1000;
+            const now = new Date(Date.now());
+            const start = new Date(results[results.length - 1].tanggalMulai);
+            const umurAyam = Math.round(Math.abs((now - start) / oneDay))
             const tmp = results[results.length - 1]
-            const umurAyam = await formula.dailyChickenAge(tmp._id)
+            // const umurAyam = await formula.dailyChickenAge(tmp._id)
             const findUser = await fetch(`${urlAuth}/api/users/${tmp.ppl}`, {
                 method: 'GET',
                 headers: {'Authorization': token,
@@ -1587,8 +1591,8 @@ exports.getKelola = async (req, res, next) => {
                 const now = new Date(Date.now());
                 const start = new Date(periode[i].tanggalMulai);
                 const oneDay = 24 * 60 * 60 * 1000;
-                // const umur = Math.round(Math.abs((now - start) / oneDay))
-                const umur = await formula.dailyChickenAge(periode[i].id);
+                const umur = Math.round(Math.abs((now - start) / oneDay))
+                // const umur = await formula.dailyChickenAge(periode[i].id);
 
                 const latestWeight = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0) : 0
                 const latestSampling = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {populasi}) => a + populasi, 0) : 0
@@ -1606,11 +1610,13 @@ exports.getKelola = async (req, res, next) => {
                 const FCR = await formula.FCR(periode[i].id)
                 const atas = presentaseAyamHidup * (avgLatestWeight/1000)
                 const bawah = FCR*(dataPakan.length-1)
-                const IP = (atas / bawah) * 100
+                var IP = await formula.dailyIP(periode[1].id)
+
+                // const IP = (atas / bawah) * 100
 
                 dataPeriode.push({
                     idPeriode: periode[i]._id,
-                    umurAyam: umur,
+                    umurAyam: umur - 1,
                     tanggalMulai: periode[i].tanggalMulai,
                     tanggalAkhir: periode[i].tanggalAkhir,
                     isEnd: periode[i].isEnd,
@@ -1805,15 +1811,15 @@ exports.kelolaPeternak = async (req, res, next) => {
             ])
             const now = new Date(Date.now())
             const start = new Date(findPeriode[0]?.tanggalMulai)
-            // const umur = Math.round(Math.abs((now - start) / ONE_DAY))
-            const umur = await formula.dailyChickenAge(findPeriode[0]._id);
+            const umur = Math.round(Math.abs((now - start) / ONE_DAY))
+            // const umur = await formula.dailyChickenAge(findPeriode[0]._id);
 
             const suhu = await fetch(`http://${urlIOT}/api/flock/kandang/${x._id}`,{
                 method: 'GET',
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
             }).then(res => res.json()).then(data => data.data)
-            return {...tmp.toObject(), user: findUser, umur: umur, periode: findPeriode[0], suhu: suhu?.flock ? suhu.flock.actualTemperature : 0}
+            return {...tmp.toObject(), user: findUser, umur: umur - 1, periode: findPeriode[0], suhu: suhu?.flock ? suhu.flock.actualTemperature : 0}
             
         }))
         res.json({
@@ -1844,8 +1850,8 @@ exports.kelolaPPL = async (req, res, next) => {
             }).then(res => res.json()).then(data => data.data)
             const now = new Date(Date.now())
             const start = new Date(x.tanggalMulai)
-            // const umur = Math.round(Math.abs((now - start) / ONE_DAY))
-            const umur = await formula.dailyChickenAge(x._id)
+            const umur = Math.round(Math.abs((now - start) / ONE_DAY))
+            // const umur = await formula.dailyChickenAge(x._id)
             const getKegiatan = await KegiatanHarian.findOne({periode: x._id}).sort({'tanggal': -1})
             
             const dataDeplesi = await KegiatanHarian.aggregate([
@@ -1882,7 +1888,9 @@ exports.kelolaPPL = async (req, res, next) => {
 
             const atas = presentaseAyamHidup * (avgLatestWeight/1000)
             const bawah = FCR * (dataPakan.length-1)
-            const IP = (atas/bawah) * 100
+            // const IP = (atas/bawah) * 100
+            var IP = await formula.dailyIP(x._id)
+
 
             const suhu = await fetch(`http://${urlIOT}/api/flock/kandang/${x.kandang}`,{
                 method: 'GET',
@@ -1892,7 +1900,7 @@ exports.kelolaPPL = async (req, res, next) => {
 
             const countPeriode = await Periode.countDocuments({kandang: x.kandang})
 
-            return {...findKandang.toObject(), user: findUser, IP: IP, umur: umur, periode: x, urutanKe: countPeriode,  suhu: suhu?.flock ? suhu.flock.actualTemperature : 0}
+            return {...findKandang.toObject(), user: findUser, IP: IP, umur: umur - 1, periode: x, urutanKe: countPeriode,  suhu: suhu?.flock ? suhu.flock.actualTemperature : 0}
         }))
         res.json({
             data: {
@@ -1932,8 +1940,8 @@ exports.detailKandang = async (req,res, next) => {
             const tanggalAkhir = new Date(x.tanggalAkhir)
             const finish = x.isEnd === true ? new Date(x.tanggalAkhir) : new Date(Date.now())
             const start = new Date(x.tanggalMulai)
-            // const umur = Math.round(Math.abs((finish - start) / ONE_DAY))
-            const umur = await formula.dailyChickenAge(x._id);
+            const umur = Math.round(Math.abs((finish - start) / ONE_DAY))
+            // const umur = await formula.dailyChickenAge(x._id);
             const pembelianSapronak = await Sapronak.aggregate([
                 {$match: {periode: x._id}},
                 {$unwind: '$produk'},
@@ -2197,7 +2205,7 @@ const handleChickenSheds = async (
       const start = new Date(periode.tanggalMulai);
       age = periode.isEnd
         ? Math.round(Math.abs((periode.tanggalAkhir - start) / ONE_DAY))
-        : await formula.dailyChickenAge(periode._id);
+        : Math.round(Math.abs((now - start) / ONE_DAY));
 
       resultObject = {
         idPemilik: chickenShed.createdBy ? chickenShed.createdBy._id : null,
@@ -2207,7 +2215,7 @@ const handleChickenSheds = async (
         isIoTInstalled: flock.data?.flock.length != 0 ? true : false,
         kota: chickenShed.kota,
         isActive: chickenShed.isActive ? "Aktif" : "Rehat",
-        usia: age,
+        usia: age - 1,
         periodeKe: !dataPeriode.length ? "Belum mulai Periode" : dataPeriode[0],
         lastUpdate:lastUpdateStr
       };
