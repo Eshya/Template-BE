@@ -29,9 +29,13 @@ const getKegiatanHarian = async (idPeriode) => {
     return dataPakan
 }
 
+const ageByDaily = async (idPeriode) => {
+    const findDaily = await getKegiatanHarian(idPeriode)
+    return findDaily.length - 1
+}
 const dailyChickenAge = async(idPeriode) => {
-    const dailyActivities = await KegiatanHarian.find({ periode: idPeriode }).sort({tanggal: -1});
-    const startDate = dayjs(new Date(dailyActivities[0]?.tanggal));
+    const dailyActivities = await KegiatanHarian.findOne({ periode: idPeriode }).sort({tanggal: -1});
+    const startDate = dayjs(new Date(dailyActivities?.tanggal));
     const today = dayjs(new Date());
     const age = Math.round(Math.abs(today.diff(startDate, 'day')));
     return age;
@@ -63,7 +67,7 @@ const actualRemainingChicken = async(idPeriode) => {
     const accumulateTotalHarvest = getSales.reduce((a, {totalEkor}) => a + totalEkor, 0)
     const periode = await Periode.findById(idPeriode);
     const totalDeplesi = await accumulateDeplesi(idPeriode);
-    const remainingChicken = periode.populasi - (totalDeplesi - accumulateTotalHarvest);
+    const remainingChicken = periode.populasi - totalDeplesi - accumulateTotalHarvest;
     return remainingChicken;
 }
 
@@ -109,7 +113,6 @@ const dailyFCR = async(idPeriode) => {
     const dailyActivities = await getSortedDailyActivities(idPeriode)
     const sortedDailyActivities = dailyActivities.sort((a,b) => b.tanggal - a.tanggal)
 
-    const getSales  = await getPenjualan(idPeriode)
     const accumulateTotalTonase = await totalTonase(idPeriode)
     
     const remainingChicken = await actualRemainingChicken(idPeriode);
@@ -162,6 +165,15 @@ const getFCRClosing = async (idPeriode) => {
     return FCR
 }
 
+exports.dailyIP = async (idPeriode) => {
+    const getDailyActivities = await getSortedDailyActivities(idPeriode)
+    const getLiveChickenPrecentage = await liveChickenPrecentage(idPeriode)
+    const getLatestWeight = await AvgDailyWeight(idPeriode, getDailyActivities.length - 1)
+    const getDailyFCR = await dailyFCR(idPeriode)
+    const getAge = await ageByDaily(idPeriode)
+    const IP = ((getLiveChickenPrecentage * (getLatestWeight/1000)) / (getDailyFCR*getAge)) * 100
+    return IP
+}
 
 exports.IPClosing = async (idPeriode) => {
     const persentaseAyamHidupClosing = await getpersentaseAyamHidupClosing(idPeriode)

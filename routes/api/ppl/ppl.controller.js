@@ -120,7 +120,9 @@ exports.findById = async (req, res, next) => {
                 const FCR = allPakan / (populasiAkhir * (latestWeight/1000)) 
                 const atas = presentaseAyamHidup * (latestWeight/1000)
                 const bawah = FCR*(dataPakan.length-1)
-                const IP = (atas / bawah) * 100
+                // const IP = (atas / bawah) * 100
+                var IP = await formula.dailyIP(itemPeriode.periode[0])
+
                
                 // console.log(IP)
                 // get total penjualan

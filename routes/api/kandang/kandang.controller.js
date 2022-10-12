@@ -423,7 +423,9 @@ exports.findOneDataPool =  async (req, res, next) => {
 
             const atas = presentaseAyamHidup * (avgLatestWeight/1000)
             const bawah = FCR*(dataPakan.length-1)
-            var IP = (atas / bawah) * 100
+            var IP = await formula.dailyIP(periode._id)
+
+            // var IP = (atas / bawah) * 100
             periode.isEnd == true ? IP = await formula.IPClosing(periode._id) : IP
             const IPFixed = IP.toFixed(2)
             const IPResult = isFinite(IPFixed) && IPFixed || 0
@@ -783,7 +785,9 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
             periode.isEnd == true ? FCR = await formula.FCRClosing(periode._id) : FCR
             const atas = presentaseAyamHidup * (avgLatestWeight/1000)
             const bawah = FCR*(dataPakan.length-1)
-            var IP = (atas / bawah) * 100
+            // var IP = (atas / bawah) * 100
+            var IP = await formula.dailyIP(periode._id)
+
             periode.isEnd == true ? IP = await formula.IPClosing(periode._id) : IP
             const IPFixed = IP.toFixed(2)
             const IPResult = isFinite(IPFixed) && IPFixed || 0
@@ -1606,11 +1610,13 @@ exports.getKelola = async (req, res, next) => {
                 const FCR = await formula.FCR(periode[i].id)
                 const atas = presentaseAyamHidup * (avgLatestWeight/1000)
                 const bawah = FCR*(dataPakan.length-1)
-                const IP = (atas / bawah) * 100
+                var IP = await formula.dailyIP(periode[1].id)
+
+                // const IP = (atas / bawah) * 100
 
                 dataPeriode.push({
                     idPeriode: periode[i]._id,
-                    umurAyam: umur,
+                    umurAyam: umur - 1,
                     tanggalMulai: periode[i].tanggalMulai,
                     tanggalAkhir: periode[i].tanggalAkhir,
                     isEnd: periode[i].isEnd,
@@ -1813,7 +1819,7 @@ exports.kelolaPeternak = async (req, res, next) => {
                 headers: {'Authorization': token,
                 "Content-Type": "application/json"}
             }).then(res => res.json()).then(data => data.data)
-            return {...tmp.toObject(), user: findUser, umur: umur, periode: findPeriode[0], suhu: suhu?.flock ? suhu.flock.actualTemperature : 0}
+            return {...tmp.toObject(), user: findUser, umur: umur > 0 ? umur - 1 : umur, periode: findPeriode[0], suhu: suhu?.flock ? suhu.flock.actualTemperature : 0}
             
         }))
         res.json({
@@ -1882,7 +1888,9 @@ exports.kelolaPPL = async (req, res, next) => {
 
             const atas = presentaseAyamHidup * (avgLatestWeight/1000)
             const bawah = FCR * (dataPakan.length-1)
-            const IP = (atas/bawah) * 100
+            // const IP = (atas/bawah) * 100
+            var IP = await formula.dailyIP(x._id)
+
 
             const suhu = await fetch(`http://${urlIOT}/api/flock/kandang/${x.kandang}`,{
                 method: 'GET',
@@ -1892,7 +1900,7 @@ exports.kelolaPPL = async (req, res, next) => {
 
             const countPeriode = await Periode.countDocuments({kandang: x.kandang})
 
-            return {...findKandang.toObject(), user: findUser, IP: IP, umur: umur, periode: x, urutanKe: countPeriode,  suhu: suhu?.flock ? suhu.flock.actualTemperature : 0}
+            return {...findKandang.toObject(), user: findUser, IP: IP, umur: umur > 0 ? umur - 1 : umur, periode: x, urutanKe: countPeriode,  suhu: suhu?.flock ? suhu.flock.actualTemperature : 0}
         }))
         res.json({
             data: {
@@ -2207,7 +2215,7 @@ const handleChickenSheds = async (
         isIoTInstalled: flock.data?.flock.length != 0 ? true : false,
         kota: chickenShed.kota,
         isActive: chickenShed.isActive ? "Aktif" : "Rehat",
-        usia: age,
+        usia: age - 1,
         periodeKe: !dataPeriode.length ? "Belum mulai Periode" : dataPeriode[0],
         lastUpdate:lastUpdateStr
       };

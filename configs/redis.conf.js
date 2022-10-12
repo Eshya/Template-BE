@@ -10,17 +10,8 @@ const files = fs.readdirSync(`${__dirname}/../routes/api`);
 let listNotIcludedModel = ['jenisDOC','tipe','berat','ovkPakai','jenisOVK','image','pakanPakai','jenisPakan']
 listNotIcludedModel.forEach(model =>{files.push(model)})
 console.log(files)
-const mode = process.env.NODE_ENV
-var redisNumber = 0
-if(mode == 'staging' ) {
-    redisNumber = 0
-}
-else if(mode == 'production') {
-    redisNumber = 1
-} 
-else if(mode == 'sandbox') {
-    redisNumber = 2
-} 
+
+const redisPATH = process.env.REDIS_PATH
 
 const client = redis.createClient({
     host: process.env.REDIS_HOST,
@@ -29,7 +20,7 @@ const client = redis.createClient({
     legacyMode: true,
     retry_strategy: () => 1000
 })
-client.select(redisNumber, function() { console.log(`select redis db ${redisNumber}`); })
+client.select(redisPATH, function() { console.log(`select redis db ${redisPATH}`); })
 const getAsync = util.promisify(client.hget).bind(client);
 
 // client.on("error", function(error) {
