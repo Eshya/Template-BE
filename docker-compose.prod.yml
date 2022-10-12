@@ -4,7 +4,6 @@ services:
     image: ${APP_IMAGE_PROD}:${APP_IMAGE_PROD_TAG}
     container_name: smartfarm-production
     environment:
-      NODE_ENV: production
       SERVER_PORT: 3101
       DB_HOST: mongodb
       DB_PORT: 27017
@@ -14,6 +13,11 @@ services:
       DB_NAME_AUTH: chickin-auth
       AUTH_URL: https://auth.chickinindonesia.com
       BE_URL: https://smartfarm.chickinindonesia.com
+      REDIS_PATH : 0
+      REDIS_HOST: cache
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
+      REDIS_TIME: 300
       BE_API_KEY: 74e48c8e3c0bc19f9e22dd7570037392e5d0bf80cf9dd51
     volumes:
       - /home/chickin/projects/smartfarm/upload-prod:/app/uploads
@@ -24,4 +28,8 @@ services:
     restart: always
 networks:
   chickinnetwork:
+    external: true
+volumes:
+  cache:
+    name: cache-compose_cache
     external: true
