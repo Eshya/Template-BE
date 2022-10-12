@@ -13,10 +13,13 @@ console.log(files)
 const mode = process.env.NODE_ENV
 var redisNumber = 0
 if(mode == 'staging' ) {
-  redisNumber = 0
+    redisNumber = 0
 }
 else if(mode == 'production') {
-  redisNumber = 1
+    redisNumber = 1
+} 
+else if(mode == 'sandbox') {
+    redisNumber = 2
 } 
 
 const client = redis.createClient({
