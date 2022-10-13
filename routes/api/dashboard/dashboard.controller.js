@@ -8,9 +8,11 @@ const Promise = require("bluebird");
 const mongoose = require('mongoose');
 const ONE_DAY = 24 * 60 * 60 * 1000;
 const fetch = require('node-fetch')
+const {clearKey} = require('../../../configs/redis.conf')
+const formula = require('../../helpers/formula');
 // var urlAuth = `https://staging-auth.chickinindonesia.com`
 var urlAuth = `${process.env.AUTH_URL}`;
-var urlIOT = process.env.DB_NAME === "chckin" ? `iot-production:3103` : `iot-staging:3104`
+var urlIOT = process.env.IOT_URL
 const handleQuerySort = (query) => {
     try{
       const toJSONString = ("{" + query + "}").replace(/(\w+:)|(\w+ :)/g, (matched => {
@@ -65,7 +67,7 @@ exports.dashboardKemitraan =  async (req, res, next) => {
         filter.deleted = false;
         const filterPPL = {};
 
-        const getKandang = await Kandang.find(filter);
+        const getKandang = await Kandang.find(filter).cache();
         if (getKandang.length) {
             const result = await handleResultKandang(token, getKandang, kemitraan, filterPPL, role, kemitraanId);
             resultPeternak.push(...result.peternak);
@@ -76,12 +78,12 @@ exports.dashboardKemitraan =  async (req, res, next) => {
         const totalPeternak = removeDuplicatesData(resultPeternak)
 
         // get total PPL
-        const totalKemitraan = await User.countDocuments(filterPPL);
+        const totalKemitraan = await User.countDocuments(filterPPL).cache();
 
         filterPPL.role = '61d5608d4a7ba5b05c9c7ae3';
         filterPPL.deleted = false;
 
-        const totalPPl = await User.countDocuments(filterPPL);
+        const totalPPl = await User.countDocuments(filterPPL).cache();
         return res.json({
             totalKandangActive: resultKandangActive.length,
             totalPPL: totalPPl,
@@ -106,7 +108,7 @@ exports.dashboardKemitraanPopulasi =  async (req, res, next) => {
         }
         filter.deleted = false;
 
-        const getKandang = await Kandang.find(filter);
+        const getKandang = await Kandang.find(filter).cache();
         const users = await fetch(`${urlAuth}/api/users/`, {
             method: 'GET',
             headers: {'Authorization': token,
@@ -115,7 +117,7 @@ exports.dashboardKemitraanPopulasi =  async (req, res, next) => {
 
         await Promise.map(getKandang, async (dataItem, index) => {
             let filterPeriod = {};
-            filterPeriod.kandang = dataItem.id;
+            filterPeriod.kandang = dataItem._id;
             filterPeriod.isEnd = false;
 
             if (kemitraan) {
@@ -126,7 +128,7 @@ exports.dashboardKemitraanPopulasi =  async (req, res, next) => {
                 filterPeriod.kemitraan = kemitraanId
             }
 
-            let periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 })
+            let periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 }).cache()
             if (periode && periode.kandang && periode.kemitraan && periode.kandang.createdBy) {
                 // get usia
                 let now = new Date(Date.now());
@@ -134,7 +136,7 @@ exports.dashboardKemitraanPopulasi =  async (req, res, next) => {
                 let usia = Math.round(Math.abs((now - start) / ONE_DAY))
 
                 //find detail peternak
-                const findUser = users.find(user => user._id.toString() === periode.kandang.createdBy.toString())                
+                const findUser = users.find(user => user._id.toString() === periode.kandang.createdBy.toString())               
                 let namaPemilik = findUser ? findUser.fullname : ""
                 if (namaPemilik !== "") {
                     resultPeriode.push({
@@ -182,7 +184,7 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
             sort = { createdAt: -1 }
         }
 
-        const dataKandang = await Kandang.find(filter).sort(sort).select('_id');
+        const dataKandang = await Kandang.find(filter).sort(sort).select('_id').cache();
         const resultPeriods = await handlePeriode(true, token, dataKandang, populasiFrom, populasiTo, kemitraan, req.user, role, usiaFrom, usiaTo, bobotFrom, bobotTo);
         resultPeriode.push(...resultPeriods.filter(result => result));
 
@@ -257,8 +259,9 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
             sort = { createdAt: -1 }
         }
 
-        const dataKandang = await Kandang.find(filter).sort(sort).select('_id');
-        const dataKemitraan = await Kemitraan.countDocuments(filter)
+        const dataKandang = await Kandang.find(filter).sort(sort).select('_id').cache()
+        // console.log(dataKandang)
+        const dataKemitraan = await Kemitraan.countDocuments(filter).cache()
 
         const resultPeriods = await handlePeriode(true, token, dataKandang, populasiFrom, populasiTo, kemitraan, req.user, role, usiaFrom, usiaTo, bobotFrom, bobotTo);
         
@@ -327,7 +330,7 @@ const handleResultKandang = async(token, getKandang, kemitraan, filterPPL, role,
 
     await Promise.map(getKandang, async (dataItem, index) => {
         const filterPeriod = {};
-        filterPeriod.kandang = dataItem.id;
+        filterPeriod.kandang = dataItem._id;
 
         if (kemitraan) {
             filterPeriod.kemitraan = kemitraan;
@@ -338,7 +341,7 @@ const handleResultKandang = async(token, getKandang, kemitraan, filterPPL, role,
             filterPPL.kemitraanUser = kemitraanId;
         }
 
-        const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 });
+        const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 }).cache();
         if (periode?.kandang && periode?.kemitraan && periode?.kandang?.createdBy) {
             //find detail peternak
             const findUser = users.find(user => user._id.toString() === periode?.kandang?.createdBy.toString());
@@ -349,8 +352,8 @@ const handleResultKandang = async(token, getKandang, kemitraan, filterPPL, role,
                 if (periode?.kandang?.isActive) {
                     peternak.push(idPemilik);
                     kandangActive.push({
-                        periodeId: periode.id,
-                        kandangId: periode.kandang.id,
+                        periodeId: periode._id,
+                        kandangId: periode.kandang._id,
                         user: periode.kandang.createdBy
                     });
                 }
@@ -367,15 +370,15 @@ const handlePeriode = async(isKemitraan, token, dataKandang, populasiFrom, popul
         headers: {'Authorization': token,
         "Content-Type": "application/json"}
     }).then(res => res.json()).then(data => data.data)
-
+    
     return Promise.map(dataKandang, async (dataItem, index) => {
         const filterPeriod = {};
         const query = { $gte: 0 };
-        filterPeriod.kandang = dataItem.id;
+        filterPeriod.kandang = dataItem._id;
         filterPeriod.isEnd = false;
         const checkPopulasiFrom = Number.isInteger(populasiFrom) ? populasiFrom : !parseInt(populasiFrom) ? 0 : parseInt(populasiFrom);
         const checkPopulasiTo = Number.isInteger(populasiTo) ? populasiTo : !parseInt(populasiTo) ? 0 : parseInt(populasiTo);
-
+        
         if (checkPopulasiFrom > checkPopulasiTo) {
             throw new Error('Populasi awal tidak boleh melebihi populasi akhir')
         }
@@ -399,20 +402,21 @@ const handlePeriode = async(isKemitraan, token, dataKandang, populasiFrom, popul
         }
         
 
-        const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 });
+        const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 }).cache();
+        
         if (periode?.kandang && periode?.kemitraan && periode?.kandang?.createdBy) {
             // get usia
             const now = new Date(Date.now());
             const start = new Date(periode.tanggalMulai);
             const age = Math.round(Math.abs((now - start) / ONE_DAY));
 
-            const query = {periode: periode.id}
+            const query = {periode: periode._id}
             if (isKemitraan) {
                 query.berat = { $exists: true, $ne: [] }
             }
 
             // get weight actual
-            const getKegiatan = await KegiatanHarian.findOne(query).sort({'tanggal': -1}).select('-periode')
+            const getKegiatan = await KegiatanHarian.findOne(query).sort({'tanggal': -1}).select('-periode').cache()
             /**
              * Sanja Remark
              * Old logic to calculate avg latest weight
@@ -488,7 +492,7 @@ const handlePeriode = async(isKemitraan, token, dataKandang, populasiFrom, popul
                 pushData = true;
             }
             let flock = [];
-            flock = await fetch(`http://${urlIOT}/api/flock/datapool/kandang/` + periode.kandang.id, {
+            flock = await fetch(`http://${urlIOT}/api/flock/datapool/kandang/` + periode.kandang._id, {
                 method: 'get',
                 headers: {
                     'Authorization': token,
@@ -517,9 +521,9 @@ const handlePeriode = async(isKemitraan, token, dataKandang, populasiFrom, popul
                 if (!namaPemilik) {
                     return
                 }
-
+                
                 return({
-                    idKandang: periode.kandang.id,
+                    idKandang: periode.kandang._id,
                     namaKandang: periode.kandang.kode,
                     isIoTInstalled:flock?.data?.flock.length!=0 ? true : false,
                     kota: periode.kandang.kota,
@@ -527,7 +531,7 @@ const handlePeriode = async(isKemitraan, token, dataKandang, populasiFrom, popul
                     bobot: avgLatestWeight,
                     usia: age,
                     populasi: periode.populasi,
-                    IdKemitraan: periode.kemitraan ? periode.kemitraan.id : null,
+                    IdKemitraan: periode.kemitraan ? periode.kemitraan._id : null,
                     namaKemitraan: periode.kemitraan ? periode.kemitraan.name : "",
                     idPemilik: periode.kandang.createdBy ? periode.kandang.createdBy._id : null,
                     namaPemilik: namaPemilikSTR,
