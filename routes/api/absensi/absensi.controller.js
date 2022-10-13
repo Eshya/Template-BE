@@ -44,7 +44,7 @@ exports.findAll = async (req, res, next) => {
         const data = Model.find(where).limit(limit).skip(offset).sort(sort);
         const results = await Promise.all([count, data]);
         res.json({
-            message: 'Woke',
+            message: 'Ok',
             length: results[0],
             data: results[1]
         })
@@ -60,7 +60,7 @@ exports.findById = async (req, res, next) => {
         const results = await Model.find({createdBy}).sort({ tanggal: -1 });
         res.json({
             data: delCreatorArray(results),
-            message: 'Woke'
+            message: 'Ok'
         })
     } catch (error) {
         res.send(createError(501, error.message));
@@ -76,7 +76,7 @@ exports.findToday = async (req, res, next) => {
         // console.log(new Date().tonight())
         res.json({
             data: delCreatorArray(results),
-            message: 'Woke'
+            message: 'Ok'
         })
     } catch (error) {
         res.send(createError(501, error.message));
@@ -94,7 +94,7 @@ exports.findIsAbsent = async (req, res, next) => {
             data: {
                 isAbsentAlready: diffDay === 0 ? true : false
             },
-            message: 'Woke'
+            message: 'Ok'
         })
     } catch (error) {
         res.send(createError(501, error.message));
@@ -109,7 +109,7 @@ exports.insert = async (req, res, next) => {
         const results = await Model.create(data);
         res.json({
             data: delCreator(results),
-            message: 'Woke'
+            message: 'Ok'
         })
     } catch (error) {
         res.send(createError(501, error.message));
@@ -121,7 +121,7 @@ exports.removeById = async (req, res, next) => {
         const results = await Model.findByIdAndRemove(req.params.id).exec();
         res.json({
             data: results,
-            message: 'Woke'
+            message: 'Ok'
         })
     } catch (error) {
         res.send(createError(501, error.message));
@@ -163,7 +163,7 @@ exports.findKandang = async (req, res, next) => {
         findActive.push({'_id':null,'kode':'Lainnya','pplVisitedAlready':false})
         res.json({
             data: findActive,
-            message: 'Woke'
+            message: 'Ok'
         })
     } catch (error) {
         res.send(createError(501, error.message));
