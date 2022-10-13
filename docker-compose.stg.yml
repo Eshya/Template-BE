@@ -5,14 +5,20 @@ services:
     container_name: smartfarm-staging
     environment:
       SERVER_PORT: 3102
-      NODE_ENV: staging
       MONGO_CONNECTIONSTRING: $MONGO_CONNECTIONSTRING_STG
       DB_NAME: chckin-stagging
       DB_NAME_AUTH: chickin-auth-stagging
       AUTH_URL: https://staging-auth.chickinindonesia.com
       BE_URL: https://staging-smartfarm.chickinindonesia.com
+      REDIS_PATH : 0
+      REDIS_HOST: cache
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
+      REDIS_TIME: 300
+      BE_API_KEY: 74e48c8e3c0bc19f9e22dd7570037392e5d0bf80cf9dd51
     volumes:
       - /sites/apps/smartfarm/uploads:/app/uploads
+      - cache:/data
     networks:
       - chickinnetwork
     ports:
@@ -20,6 +26,10 @@ services:
     restart: always
 networks:
   chickinnetwork:
+    external: true
+volumes:
+  cache:
+    name: cache-compose_cache
     external: true
 
 

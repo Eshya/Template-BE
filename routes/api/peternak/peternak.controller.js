@@ -8,8 +8,9 @@ const Sapronak = require("../sapronak/sapronak.model");
 const Promise = require("bluebird");
 const mongoose = require('mongoose');
 const fetch = require('node-fetch')
+const formula = require('../../helpers/formula');
 const reducer = (acc, value) => acc + value;
-var urlIOT = process.env.DB_NAME === "chckin" ? `iot-production:3103` : `iot-staging:3104`
+var urlIOT = process.env.IOT_URL
 const handleQuerySort = (query) => {
     try{
       const toJSONString = ("{" + query + "}").replace(/(\w+:)|(\w+ :)/g, (matched => {
@@ -159,12 +160,14 @@ exports.findById = async (req, res, next) => {
                 //const allPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
                 const allPakan = dataPakan.reduce((a, {totalPakan})=>a + totalPakan, 0);
                 const deplesi = (periode.populasi - (periode.populasi - (allDeplesi + allKematian))) * 100 / periode.populasi
-                const presentaseAyamHidup = 100 - deplesi
+                const presentaseAyamHidup = await formula.liveChickenPrecentage(periode._id);
                 const populasiAkhir = periode.populasi - (allDeplesi + allKematian)
-                const FCR = allPakan / (populasiAkhir * (latestWeight/1000)) 
+                const FCR = await formula.FCR(periode._id);
                 const atas = presentaseAyamHidup * (latestWeight/1000)
                 const bawah = FCR*(dataPakan.length-1)
-                IP = (atas / bawah) * 100
+                // IP = (atas / bawah) * 100
+                IP = await formula.dailyIP(periode._id)
+
 
                 // get total penjualan
                 let harian = []

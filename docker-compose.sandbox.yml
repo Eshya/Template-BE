@@ -1,0 +1,24 @@
+version: "3.7"
+services:
+  smartfarm-snbx:
+    image: ${APP_IMAGE_SNDBX}:${APP_IMAGE_SNDBX_TAG}
+    container_name: smartfarm-snbx
+    environment:
+      SERVER_PORT: 3112
+      NODE_ENV: sandbox
+      MONGO_CONNECTIONSTRING: $MONGO_CONNECTIONSTRING_SANBOX
+      DB_NAME: chckin-sandbox
+      DB_NAME_AUTH: chickin-auth-sandbox
+      AUTH_URL: https://sandbox-auth.chickinindonesia.com
+      BE_URL: https://sandbox-smartfarm.chickinindonesia.com
+    volumes:
+      - /sites/apps/smartfarm/uploads:/app/uploads
+    networks:
+      - chickinnetwork
+    ports:
+      - "3112:3112"
+    restart: always
+networks:
+  chickinnetwork:
+    external: true
+

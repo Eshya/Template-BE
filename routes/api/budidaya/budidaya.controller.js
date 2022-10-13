@@ -8,6 +8,7 @@ const PeternakModel = require('../peternak/peternak.model');
 const Promise = require("bluebird");
 const reducer = (acc, value) => acc + value;
 const mongoose = require('mongoose');
+const formula = require('../../helpers/formula');
 const {parseQuery} = require('../../helpers');
 const ONE_DAY = 24 * 60 * 60 * 1000;
 const logic_sort = (a, b , code) => {
@@ -105,12 +106,15 @@ exports.riwayatBudidaya =  async (req, res, next) => {
                 const deplesi = (periodeChild.populasi - (periodeChild.populasi - (allDeplesi + allKematian))) * 100 / periodeChild.populasi
                 const totalDeplesi = (allDeplesi + allKematian)
                 const batasDeplesi = ((2 / 100) * periodeChild.populasi)
-                const presentaseAyamHidup = 100 - deplesi
+                // const presentaseAyamHidup = 100 - deplesi
+                const presentaseAyamHidup = await formula.liveChickenPrecentage(periodeChild._id)
                 const populasiAkhir = periodeChild.populasi - (allDeplesi + allKematian)
-                const FCR = allPakan / (populasiAkhir * (avgLatestWeight/1000)) 
+                const FCR = await formula.FCR(periodeChild._id);
                 const atas = presentaseAyamHidup * (avgLatestWeight/1000)
                 const bawah = FCR*(dataPakan.length-1)
-                const IP = (atas / bawah) * 100
+                // const IP = (atas / bawah) * 100
+                var IP = await formula.dailyIP(id)
+
                 const IPFixed = IP.toFixed(2)
                 const IPResult = isFinite(IPFixed) && IPFixed || 0
     
