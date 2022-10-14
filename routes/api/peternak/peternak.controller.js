@@ -10,7 +10,7 @@ const mongoose = require('mongoose');
 const fetch = require('node-fetch')
 const formula = require('../../helpers/formula');
 const reducer = (acc, value) => acc + value;
-var urlIOT = process.env.DB_NAME === "chckin" ? `iot-production:3103` : `iot-staging:3104`
+var urlIOT = process.env.IOT_URL
 const handleQuerySort = (query) => {
     try{
       const toJSONString = ("{" + query + "}").replace(/(\w+:)|(\w+ :)/g, (matched => {

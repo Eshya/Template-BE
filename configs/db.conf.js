@@ -11,16 +11,11 @@ const dbName = process.env.DB_NAME || 'chickin'
 const mongoString = process.env.MONGO_CONNECTIONSTRING
 const db = mongoose.connection
 
-const mysql = require('mysql2/promise');
-const config = require('./mysql.conf');
-
-async function query(sql, params) {
-    const connection = await mysql.createConnection(config.db);
-    const [result] = await connection.execute(sql, params)
-    return result;
-}
-
 const options = {
+    useFindAndModify: false,
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useCreateIndex: true,
     dbName
 }
 
@@ -57,4 +52,3 @@ exports.connect = () => {
 }
 
 exports.connection = db;
-exports.query = query

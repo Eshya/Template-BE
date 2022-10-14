@@ -122,41 +122,7 @@ const keyExists = (obj) => {
             }
         }
     });
-    // if (obj.hasOwnProperty('kandang')){
-    //   obj['kandang']=keyExists(obj['kandang'])
-    // }
-    // if (obj.hasOwnProperty('periode')){
-    //     obj['periode']= keyExists(obj['kandang'])
-    // }
-    // if (obj.hasOwnProperty('produk')){
-    //     obj['produk']=keyExists(obj['produk'])
-    // }
-    // if (obj.hasOwnProperty('jenisDOC')){
-    //     obj['jenisDOC']=keyExists(obj['jenisDOC'])
-    // }
-    // if (obj.hasOwnProperty('kemitraan')){
-    //     obj['kemitraan']=keyExists(obj['kemitraan'])
-    // }
-    // if (obj.hasOwnProperty('tipe')){
-    //     obj['tipe']=keyExists(obj['tipe'])
-    // }
-    // if (obj.hasOwnProperty('berat')){
-    //     obj['tipe']=keyExists(obj['tipe'])
-    // }
-    // if (obj.hasOwnProperty('province')){
-    //     obj['province']=keyExists(obj['province'])
-    // }
-    // if (obj.hasOwnProperty('regency')){
-    //     obj['regency']=keyExists(obj['regency'])
-    // }
-    // if (obj.hasOwnProperty('ovkPakai')){
-    //     obj['ovkPakai']=arrayJson(keyExists(obj['ovkPakai']))
-    // }
-    // if (obj.hasOwnProperty('jenisOVK')){
-    //     obj['jenisOVK']=keyExists(obj['jenisOVK'])
-        
-    // }
-    // console.log(obj)
+    
     return obj;
   };
 

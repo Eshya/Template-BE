@@ -20,7 +20,7 @@ const excelJS = require("exceljs");
 const dayjs = require('dayjs');
 const formula = require('../../helpers/formula')
 
-var urlIOT = process.env.DB_NAME === "chckin" ? `iot-production:3103` : `iot-staging:3104`
+var urlIOT = process.env.IOT_URL
 var urlAuth =`${process.env.AUTH_URL}`
 const handleQuerySort = (query) => {
     try{
