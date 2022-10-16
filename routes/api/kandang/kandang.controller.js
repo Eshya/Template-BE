@@ -2062,8 +2062,11 @@ exports.feedIntakeChart = async (req, res, next) => {
     if (chickenShed) {
         const periods = await Periode.find({ kandang: chickenShed._id }).sort({tanggalMulai: 1})
         const feedIntakeChart = await Promise.map(periods, async(periodeData, index) => {
-            const totalDeplesi = periodeData ? await formula.accumulateDeplesi(periodeData._id) : 0;
-            const dailyActivities = periodeData ? await formula.getKegiatanHarian(periodeData._id) : 0;
+            const [totalDeplesi, dailyActivities] = await Promise.all([
+                periodeData ? formula.accumulateDeplesi(periodeData._id) : 0,
+                periodeData ? formula.getKegiatanHarian(periodeData._id) : 0,
+            ]);
+
             const dailyFeedIntake = dailyActivities.reduce((a, {totalPakan}) => a + totalPakan, 0);
             const currentPopulation = periodeData.populasi - totalDeplesi
             const feedIntake = (dailyFeedIntake * 1000) / currentPopulation;
@@ -2080,6 +2083,7 @@ exports.feedIntakeChart = async (req, res, next) => {
 
     return res.json({ data: actual });
   } catch (error) {
+    console.log(error)
     return res.json({ status: 500, message: error.message });
   }
 };
