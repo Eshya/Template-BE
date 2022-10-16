@@ -2024,11 +2024,11 @@ exports.deplesiChart = async (req, res, next) => {
 exports.feedIntakeChart = async (req, res, next) => {
   try {
     const [period, chickenShed] = await Promise.all([
-        await Periode.findOne({ _id: req.params.id }).sort({
+        Periode.findOne({ _id: req.params.id }).sort({
             createdAt: 1,
           }),
 
-        await Model.findById(req.params.id)
+        Model.findById(req.params.id)
     ])
 
     const actual = [];
@@ -2066,7 +2066,7 @@ exports.feedIntakeChart = async (req, res, next) => {
             const dailyActivities = periodeData ? await formula.getKegiatanHarian(periodeData._id) : 0;
             const dailyFeedIntake = dailyActivities.reduce((a, {totalPakan}) => a + totalPakan, 0);
             const currentPopulation = periodeData.populasi - totalDeplesi
-            const feedIntake = dailyFeedIntake * 1000 / currentPopulation;
+            const feedIntake = (dailyFeedIntake * 1000) / currentPopulation;
             const periodIndex = periods.findIndex(index => index._id === periodeData._id);
             return {
                 actual: feedIntake,
