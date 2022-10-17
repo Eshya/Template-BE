@@ -2079,8 +2079,7 @@ exports.feedIntakeChart = async (req, res, next) => {
         actual.push(...feedIntakeChart)
     }
 
-
-    return res.json({ data: actual });
+    return res.json({ data: actual, message: 'success', status: 200 });
   } catch (error) {
     return res.json({ status: 500, message: error.message });
   }
