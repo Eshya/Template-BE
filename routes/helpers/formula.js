@@ -199,10 +199,6 @@ exports.dailyChickenAge = dailyChickenAge
 exports.FCR = dailyFCR
 exports.liveChickenPrecentage = liveChickenPrecentage
 exports.actualRemainingChicken = actualRemainingChicken
-<<<<<<< HEAD
-exports.accumulateDeplesi = accumulateDeplesi
-=======
 exports.accumulateDeplesi = accumulateDeplesi
 exports.getKegiatanHarian = getKegiatanHarian
 exports.getFeedIntake = getFeedIntake
->>>>>>> Sprint/CA-1655
