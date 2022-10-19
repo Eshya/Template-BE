@@ -1947,37 +1947,63 @@ exports.deplesiChart = async (req, res, next) => {
 
 exports.feedIntakeChart = async (req, res, next) => {
   try {
-    const periode = await Periode.findOne({ _id: req.params.id }).sort({
-      createdAt: 1,
-    });
+    const [period, chickenShed] = await Promise.all([
+        Periode.findOne({ _id: req.params.id }).sort({
+            createdAt: 1,
+          }),
+
+        Model.findById(req.params.id)
+    ])
 
     const actual = [];
-    const [standardData, dailyActivities] = await Promise.all([
-        DataSTD.find()
-            .sort({ day: 1 })
-            .select("day dailyIntake"),
-
-        KegiatanHarian.find({ 
-            periode: periode.id,
-        })
-            .select("-periode")
-            .sort({ tanggal: 1 }),
-
-    ]);
-
-    for (let i = 0; i < dailyActivities.length; i++) {
-      const pakanPakai = dailyActivities[i] ? dailyActivities[i]?.pakanPakai.reduce((a, {beratPakan}) => a + beratPakan, 0) : 0;
-      const populasiAkhir = periode.populasi - (dailyActivities[i]?.deplesi + dailyActivities[i]?.pemusnahan);
-
-      actual.push({
-        actual: (pakanPakai * 1000) / populasiAkhir,
-        standard: standardData[i].dailyIntake,
-        day: standardData[i].day,
-        label: dailyActivities[i]?.tanggal,
-      });
+    if (period) {
+        const [standardData, dailyActivities] = await Promise.all([
+            DataSTD.find()
+                .sort({ day: 1 })
+                .select("day dailyIntake"),
+    
+            KegiatanHarian.find({ 
+                periode: period.id,
+            })
+                .select("-periode")
+                .sort({ tanggal: 1 }),
+    
+        ]);
+    
+        for (let i = 0; i < dailyActivities.length; i++) {
+          const pakanPakai = dailyActivities[i] ? dailyActivities[i]?.pakanPakai.reduce((a, {beratPakan}) => a + beratPakan, 0) : 0;
+          const populasiAkhir = period.populasi - (dailyActivities[i]?.deplesi + dailyActivities[i]?.pemusnahan);
+    
+          actual.push({
+            actual: (pakanPakai * 1000) / populasiAkhir,
+            standard: standardData[i].dailyIntake,
+            day: standardData[i].day,
+            label: dailyActivities[i]?.tanggal,
+          });
+        }
     }
 
-    return res.json({ data: actual });
+    if (chickenShed) {
+        const periods = await Periode.find({ kandang: chickenShed._id }).sort({tanggalMulai: 1})
+        const feedIntakeChart = await Promise.map(periods, async(periodeData, index) => {
+            const [totalDeplesi, dailyFeedIntake] = await Promise.all([
+                periodeData ? formula.accumulateDeplesi(periodeData._id) : 0,
+                periodeData ? formula.getFeedIntake(periodeData._id) : 0,
+            ]);
+
+            const currentPopulation = periodeData.populasi - totalDeplesi
+            const feedIntake = (dailyFeedIntake * 1000) / currentPopulation;
+            const periodIndex = periods.findIndex(index => index._id === periodeData._id);
+            return {
+                actual: feedIntake,
+                periode: `Periode ${periodIndex+1}`
+            }
+        })
+
+        actual.push(...feedIntakeChart)
+    }
+
+    return res.json({ data: actual, message: 'success', status: 200 });
   } catch (error) {
     return res.json({ status: 500, message: error.message });
   }
@@ -2005,12 +2031,7 @@ exports.bobotChart = async (req, res, next) => {
       const totalBerat = [];
 
       for (let n = 0; n < dailyActivities[i]?.berat?.length; n++) {
-        let populasi = 0;
-        if (dailyActivities[i]?.berat[n]?.populasi === 0) {
-          populasi = 1;
-        } else {
-          populasi = dailyActivities[i]?.berat[n]?.populasi;
-        }
+        const populasi = dailyActivities[i]?.berat[n]?.populasi || 1
         totalBerat.push(dailyActivities[i]?.berat[n]?.beratTimbang / populasi);
       }
 

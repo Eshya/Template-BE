@@ -221,6 +221,12 @@ const estimateRevenue = async (idPeriode) => {
 
 
 
+const getFeedIntake = async(idPeriode) => {
+    const dailyFeedIntake = await getKegiatanHarian(idPeriode);
+    const accumulateFeedIntake = dailyFeedIntake.reduce((a, {totalPakan}) => a + totalPakan, 0);
+    return accumulateFeedIntake
+}
+
 exports.FCRClosing = getFCRClosing
 exports.persentaseAyamHidupClosing = getpersentaseAyamHidupClosing
 exports.weightClosing = getWeightClosing
@@ -235,3 +241,5 @@ exports.penjualanAyamBesar = penjualanAyamBesar
 exports.pembelianSapronak = getPembelianSapronak
 exports.pembelianDOC = getPembelianDOC
 exports.accumulateDeplesi = accumulateDeplesi
+exports.getKegiatanHarian = getKegiatanHarian
+exports.getFeedIntake = getFeedIntake
