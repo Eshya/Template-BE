@@ -1890,35 +1890,56 @@ exports.detailKandang = async (req,res, next) => {
 }
 
 exports.deplesiChart = async (req, res, next) => {
+  const actual = [];
   try {
-    const periode = await Periode.findOne({ _id: req.params.id }).sort({
-      createdAt: 1,
-    });
+    const [period, chickenShed] = await Promise.all([
+        Periode.findOne({ _id: req.params.id }).sort({
+            createdAt: 1,
+        }),
 
-    const actual = [];
-    const [standardData, dailyActivities] = await Promise.all([
-        DataSTD.find()
-            .sort({ day: 1 })
-            .select("day deplesi"),
+        Model.findById({ _id: req.params.id }),
+    ])
 
-        KegiatanHarian.find({ periode: periode.id })
-            .select("-periode")
-            .sort({ tanggal: 1 })
+    if (period) {
+        const [standardData, dailyActivities] = await Promise.all([
+            DataSTD.find()
+                .sort({ day: 1 })
+                .select("day deplesi"),
+    
+            KegiatanHarian.find({ periode: period.id })
+                .select("-periode")
+                .sort({ tanggal: 1 })
+    
+        ]);
 
-    ]);
-
-    for (let i = 0; i < dailyActivities.length; i++) {
-      dailyActivities[i].deplesi = (dailyActivities[i].deplesi + dailyActivities[i].pemusnahan) / periode.populasi
-      const deplesi = (periode.populasi - (periode.populasi - (dailyActivities[i].deplesi + dailyActivities[i].pemusnahan))) * 100 / periode.populasi
-      actual.push({
-        actual: deplesi,
-        standard: standardData[i].deplesi,
-        day: standardData[i].day,
-        label: dailyActivities[i]?.tanggal,
-      });
+        for (let i = 0; i < dailyActivities.length; i++) {
+          dailyActivities[i].deplesi = (dailyActivities[i].deplesi + dailyActivities[i].pemusnahan) / period.populasi
+          const deplesi = (period.populasi - (period.populasi - (dailyActivities[i].deplesi + dailyActivities[i].pemusnahan))) * 100 / period.populasi
+          actual.push({
+            actual: deplesi,
+            standard: standardData[i].deplesi,
+            day: standardData[i].day,
+            label: dailyActivities[i]?.tanggal,
+          });
+        }
     }
 
-    return res.json({ data: actual });
+    if (chickenShed) {
+        const periods = await Periode.find({kandang: chickenShed._id}).sort({tanggalMulai: 1});
+        const deplesiChart = await Promise.map(periods, async(periodeData, index) => {
+            const totalDeplesi = periodeData ? await formula.accumulateDeplesi(periodeData._id) : 0;
+            const deplesi = (periodeData.populasi - (periodeData.populasi - totalDeplesi)) * 100 / periodeData.populasi;
+            const periodIndex = periods.findIndex(index => index._id === periodeData._id);
+            return {
+                actual: deplesi,
+                periode: `Periode ${periodIndex+1}`
+            }
+        })
+
+        actual.push(...deplesiChart)
+    }
+
+    return res.json({ data: actual, message: 'success', status: 200 });
   } catch (error) {
     return res.json({ status: 500, message: error.message });
   }

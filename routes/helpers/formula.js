@@ -234,3 +234,4 @@ exports.estimateRevenue = estimateRevenue
 exports.penjualanAyamBesar = penjualanAyamBesar
 exports.pembelianSapronak = getPembelianSapronak
 exports.pembelianDOC = getPembelianDOC
+exports.accumulateDeplesi = accumulateDeplesi
