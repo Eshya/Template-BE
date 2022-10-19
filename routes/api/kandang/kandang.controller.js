@@ -1704,7 +1704,7 @@ const _findPPL = async (req, isActive) => {
             "Content-Type": "application/json"}
         }).then(res => res.json()).then(data => data.data)
         const countPeriode = await Periode.countDocuments({kandang: x._id})
-        const estimasi = await formula.estimateRevenue(x._id)
+        const estimasi = await formula.estimateRevenue(x.periode[0])
         return {...findKandang.toObject(), user: findUser, periode: findPeriode, urutanKe: countPeriode, estimasiPendapatan: estimasi, isDeleted: "false"}
     }))
     return map
