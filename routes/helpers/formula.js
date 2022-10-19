@@ -1,6 +1,7 @@
 const Periode = require('../api/periode/periode.model')
 const Penjualan = require('../api/penjualan/penjualan.model')
 const KegiatanHarian = require('../api/kegiatan-harian/kegiatan-harian.model')
+const Sapronak = require('../api/sapronak/sapronak.model')
 const ONE_DAY = 24 * 60 * 60 * 1000;
 const dayjs = require('dayjs');
 const mongoose = require('mongoose')
@@ -8,10 +9,29 @@ const mongoose = require('mongoose')
 const getPenjualan = async (idPeriode) => {
     const penjualan = await Penjualan.aggregate([
         {$match: {periode: mongoose.Types.ObjectId(idPeriode)}},
-        {$group: {_id: '$_id', tanggal: {$push: '$tanggal'}, totalEkor: {$sum: '$qty'}, tonase: {$sum: '$beratBadan'}}},
-        {$project: {tanggal: '$tanggal', totalTonase: {$multiply: ['$totalEkor', '$tonase']}, totalEkor: '$totalEkor'}}
+        {$addFields: {penjualan: {$multiply: ['$qty', '$harga', '$beratBadan']}}},
+        {$group: {_id: '$_id', tanggal: {$push: '$tanggal'}, totalEkor: {$sum: '$qty'}, tonase: {$sum: '$beratBadan'}, totalPenjualan: {$sum: '$penjualan'}}},
+        {$project: {tanggal: '$tanggal', totalTonase: {$multiply: ['$totalEkor', '$tonase']}, totalEkor: '$totalEkor', totalPenjualan: '$totalPenjualan'}}
     ])
     return penjualan
+}
+
+const getPembelianDOC = async (idPeriode) => {
+    const periode = await Periode.findById(idPeriode).select('populasi hargaSatuan -kemitraan -kandang -jenisDOC')
+    const pembelianDOC = periode.populasi * periode.hargaSatuan
+    return pembelianDOC
+}
+
+const getPembelianSapronak = async (idPeriode) => {
+    const findSapronak = await Sapronak.find({periode: idPeriode})
+    const filterOVK = findSapronak.filter((x) => {return x.produk?.jenis === "OVK"})
+    const filterPakan = findSapronak.filter((x) => {return x.produk?.jenis === "PAKAN"})
+    const pembelianPakan = filterPakan.map((x) => {return x.zak * x.hargaSatuan})
+    const pembelianOVK = filterOVK.map((x) => {return x.kuantitas * x.hargaSatuan})
+    const totalPembelianPakan = pembelianPakan.reduce((a, b) => a + b, 0)
+    const totalPembelianOVK = pembelianOVK.reduce((a, b) => a + b, 0)
+    const totalPembelianSapronak = totalPembelianOVK + totalPembelianPakan
+    return {totalPembelianOVK, totalPembelianPakan, totalPembelianSapronak}
 }
 
 const totalTonase = async(idPeriode) => {
@@ -184,6 +204,23 @@ exports.IPClosing = async (idPeriode) => {
     return IP
 }
 
+const penjualanAyamBesar = async (idPeriode) => {
+    const penjualan = await getPenjualan(idPeriode)
+    const akumulasiPenjualan = penjualan.reduce((a, {totalPenjualan}) => a + totalPenjualan, 0)
+    return akumulasiPenjualan
+}
+
+const estimateRevenue = async (idPeriode) => {
+    const akumulasiPenjualan = await penjualanAyamBesar(idPeriode)
+    const pembelianDOC = await getPembelianDOC(idPeriode)
+    const pembelianSapronak = await getPembelianSapronak(idPeriode)
+    const revenue = akumulasiPenjualan - pembelianDOC - pembelianSapronak.totalPembelianSapronak
+    console.log(akumulasiPenjualan, pembelianDOC, pembelianSapronak.totalPembelianSapronak)
+    return revenue
+}
+
+
+
 const getFeedIntake = async(idPeriode) => {
     const dailyFeedIntake = await getKegiatanHarian(idPeriode);
     const accumulateFeedIntake = dailyFeedIntake.reduce((a, {totalPakan}) => a + totalPakan, 0);
@@ -199,6 +236,10 @@ exports.dailyChickenAge = dailyChickenAge
 exports.FCR = dailyFCR
 exports.liveChickenPrecentage = liveChickenPrecentage
 exports.actualRemainingChicken = actualRemainingChicken
+exports.estimateRevenue = estimateRevenue
+exports.penjualanAyamBesar = penjualanAyamBesar
+exports.pembelianSapronak = getPembelianSapronak
+exports.pembelianDOC = getPembelianDOC
 exports.accumulateDeplesi = accumulateDeplesi
 exports.getKegiatanHarian = getKegiatanHarian
 exports.getFeedIntake = getFeedIntake
