@@ -29,7 +29,7 @@ router.get('/periode/:id', auth, permition('superadmin', 'peternak', 'ppl'), per
 router.get('/:id', auth, paramCek, c.findById);
 router.get('/chart/deplesi/:id', c.deplesiChart);
 router.get('/chart/feedIntake/:id', c.feedIntakeChart);
-router.get('/chart/bobot/:id', c.bobotChart);
+router.get('/chart/bobot/:id', c.weightChart);
 router.post('/', auth, permition('superadmin', 'peternak', 'ppl'), permitionPPL, schemaCek(schema), after, c.insert);
 router.put('/', auth, c.updateWhere);
 router.put('/:id', auth, paramCek, c.updateById);
