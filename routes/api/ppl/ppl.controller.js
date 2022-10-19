@@ -89,64 +89,8 @@ exports.findById = async (req, res, next) => {
             
             if (itemPeriode.periode) {
                 // get IP
-                const penjualan = await Penjualan.aggregate([
-                    {$match: {periode: mongoose.Types.ObjectId(itemPeriode.periode[0])}},
-                    {$group: {_id: '$_id', terjual: {$sum: '$qty'}}}
-                ])
-    
-                const dataPakan = await KegiatanHarian.aggregate([
-                    {$match: {periode: mongoose.Types.ObjectId(itemPeriode.periode[0])}},
-                    {$unwind: {'path': '$pakanPakai', "preserveNullAndEmptyArrays": true}},
-                    {$group: {_id: '$_id', totalPakan: {$sum: '$pakanPakai.beratPakan'}}}
-                ])
-    
-                const dataDeplesi = await KegiatanHarian.aggregate([
-                    {$match: {periode: mongoose.Types.ObjectId(itemPeriode.periode[0])}},
-                    {$group: {_id: '$_id', totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
-                ])
-    
-                const getKegiatan = await KegiatanHarian.find({periode: itemPeriode.periode[0]}).sort({'tanggal': -1}).limit(1).select('-periode')
-                const latestWeight =  getKegiatan[0] ? await getKegiatan[0].berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0) : 0
-                
-    
-                const allDeplesi = await dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
-                const allKematian = await dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
-                
-                const allPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
-                const allPakan = await dataPakan.reduce((a, {totalPakan})=>a + totalPakan, 0);
-                const deplesi = (findKandang.populasi - (findKandang.populasi - (allDeplesi + allKematian))) * 100 / findKandang.populasi
-                const presentaseAyamHidup = 100 - deplesi
-                const populasiAkhir = findKandang.populasi - (allDeplesi + allKematian )
-                const FCR = allPakan / (populasiAkhir * (latestWeight/1000)) 
-                const atas = presentaseAyamHidup * (latestWeight/1000)
-                const bawah = FCR*(dataPakan.length-1)
-                // const IP = (atas / bawah) * 100
                 var IP = await formula.dailyIP(itemPeriode.periode[0])
-
-               
-                // console.log(IP)
-                // get total penjualan
-                let harian = []
-                let flock = []
-                let pembelianPakan = 0
-                let pembelianOVK = 0
-                const getSapronak = await Sapronak.find({periode: itemPeriode.periode[0]});
-                for (let i = 0; i < getSapronak.length; i++) {
-                    if (getSapronak[i].produk && (getSapronak[i].produk.jenis === 'PAKAN')) {
-                        const compliment = getSapronak[i].kuantitas * getSapronak[i].hargaSatuan
-                        pembelianPakan += compliment
-                    } else {
-                        const compliment = getSapronak[i].kuantitas * getSapronak[i].hargaSatuan
-                        pembelianOVK += compliment
-                    }
-                }
-                const pembelianDoc = findKandang.populasi * getSapronak[0]?.hargaSatuan
-                const getPenjualan = await Penjualan.find({periode: itemPeriode.periode[0]})
-                getPenjualan.forEach(x => {
-                    harian.push(x.beratBadan * x.harga * x.qty)
-                })
-                const penjualanAyamBesar = await harian.reduce(reducer, 0);
-                const pendapatanPeternak = penjualanAyamBesar - pembelianDoc - pembelianOVK - pembelianPakan
+                const pendapatanPeternak = await formula.estimateRevenue(itemPeriode.periode[0])
                 // console.log(pendapatanPeternak)
                 const peternak = await PeternakModel.findById(findKandang.createdBy._id).select('fullname')
                 // fund flock iot
