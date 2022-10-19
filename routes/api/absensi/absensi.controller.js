@@ -1,5 +1,6 @@
 const {parseQuery, createError} = require('../../helpers');
 const Model = require('./absensi.model');
+const PPL = require('../peternak/peternak.model')
 const mongoose = require('mongoose');
 const moment = require('moment')
 const Periode = require('../periode/periode.model')
@@ -7,6 +8,8 @@ const Kandang = require('../kandang/kandang.model')
 const PPL = require('../peternak/peternak.model')
 const _MS_PER_DAY = 1000 * 60 * 60 * 24;
 const GMT_TIME = 7;
+var urlAuth = `${process.env.AUTH_URL}`;
+
 let dateDiffInDays = (a, b) => {
     // Discard the time and time-zone information.
     const utc1 = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
@@ -251,6 +254,31 @@ exports.findListPPL = async (req,res,next) =>{
     }
     catch (error) {
         res.send(createError(500, error.message));
+        next(error)
+    }
+}
+
+const filterByRef = (arr1, arr2) => {
+    let tmp = []
+    tmp = arr1.filter(x => {
+        return !arr2.find(e => {
+            return e.createdBy === x._id 
+        })
+    })
+    return tmp
+}
+
+exports.findPPLNotAttend = async (req, res, next) => {
+    const {limit, offset} = parseQuery(req.query);
+    try {
+        const now  = new Date()
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+        const findPPL = await PPL.find({isPPLActive: true}, {kemitraanUser: 0, province: 0, regency: 0, role: 0}).limit(limit).skip(offset).select('fullname')
+        const findAttendToday = await Model.find({tanggal: {$gte: today}}).select('createdBy -idKandang -fotoRecording -fotoKandang')
+        const results = filterByRef(findPPL, findAttendToday)
+        res.status(200).json({data: results, message: "success", status: res.statusCode})
+    } catch (error) {
+        res.status(500).json({error: res.statusCode, message: error.message})
         next(error)
     }
 }
