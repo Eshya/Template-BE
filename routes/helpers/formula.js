@@ -193,3 +193,4 @@ exports.dailyChickenAge = dailyChickenAge
 exports.FCR = dailyFCR
 exports.liveChickenPrecentage = liveChickenPrecentage
 exports.actualRemainingChicken = actualRemainingChicken
+exports.accumulateDeplesi = accumulateDeplesi
