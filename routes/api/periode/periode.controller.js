@@ -8,7 +8,11 @@ const Penjualan = require("../penjualan/penjualan.model");
 const Sapronak = require("../sapronak/sapronak.model");
 const Data = require('../data/data.model');
 const selectPublic = '-createdAt -updatedAt'
+<<<<<<< HEAD
 const mongoose = require('mongoose')
+=======
+const mongoose = require('mongoose');
+>>>>>>> Feature/Chart
 const Promise = require("bluebird");
 const fetch = require('node-fetch')
 const dayjs = require('dayjs');
@@ -268,62 +272,27 @@ exports.removeById = async (req, res, next) => {
 exports.getBudidaya = async (req, res, next) => {
     const id = req.params.id
     try {
-        let harian = []
         let kematian = []
-        let pembelianPakan = 0
-        let pembelianOVK = 0
         const doc = await Model.findById(id);
-        const pembelianDoc = doc.populasi * doc.hargaSatuan
-        const getSapronak = await Sapronak.find({periode: id});
-        // const penjualanAyamBesar = await 
-        for (let i = 0; i < getSapronak.length; i++) {
-            if (getSapronak[i]?.produk?.jenis === 'PAKAN') {
-                const compliment = getSapronak[i].zak  * getSapronak[i].hargaSatuan
-                pembelianPakan += compliment
-                // console.log(`${getSapronak[i].zak} :: ${getSapronak[i].hargaSatuan} :: ${compliment} :: ${pembelianPakan}  `)
-            } else {
-                const compliment = getSapronak[i].kuantitas * getSapronak[i].hargaSatuan
-                pembelianOVK += compliment
-            }
-        }
+        const pembelianDOC = await formula.pembelianDOC(id)
         const getKegiatan = await KegiatanHarian.find({periode: id})
         getKegiatan.forEach(x => {
             kematian.push(x.deplesi + x.pemusnahan)
         });
         const totalKematian = kematian.reduce(reducer, 0);
         const populasiAkhir = doc.populasi - totalKematian
-        const akumulasiPenjualan = await Penjualan.aggregate([
-            {$match: {periode: mongoose.Types.ObjectId(id)}},
-            {$project: {penjualan: {$multiply: ['$qty', '$harga', '$beratBadan']}}},
-            {$group: {_id: '$periode', totalPenjualan: {$sum: '$penjualan'}}}
-        ])
-       
-        // const pembelianSapronak = await Sapronak.aggregate([
-        //     {$match: {periode: mongoose.Types.ObjectId(id)}},
-        //     {$unwind: '$produk'},
-        //     {$project: {pembelianSapronak: {$cond: {if: '$product.jenis' === 'PAKAN', then: {$multiply: ['$zak', '$hargaSatuan']}, else: {$multiply: ['$kuantitas', '$hargaSatuan']}}}}},
-        //     {$group: {_id: '$periode', totalSapronak: {$sum: '$pembelianSapronak'}}}
-        // ])
-        const sapronak = pembelianPakan + pembelianOVK;
-        const penjualanAyamBesar = akumulasiPenjualan[0] ? akumulasiPenjualan[0].totalPenjualan : 0
-        const pendapatanPeternak = penjualanAyamBesar -pembelianDoc - sapronak
+        const penjualanAyamBesar = await formula.penjualanAyamBesar(id)
+        const pendapatanPeternak = await formula.estimateRevenue(id)
         const pendapatanPerEkor = pendapatanPeternak / populasiAkhir
-        const totalPembelianSapronak = sapronak + pembelianDoc
-        // console.log(penjualanAyamBesar)
-        // console.log(pembelianPakan)
-        // console.log(pembelianOVK)
-        // console.log(pembelianDoc)
-        // console.log(pendapatanPeternak)
-        // console.log(pendapatanPerEkor)
-        // console.log(totalPembelianSapronak)
+        const pembelianSapronak = await formula.pembelianSapronak(id)
         res.json({
             'penjualanAyamBesar': penjualanAyamBesar,
-            'pembelianPakan': pembelianPakan,
-            'pembelianOVK': pembelianOVK,
-            'pembelianDOC': pembelianDoc,
+            'pembelianPakan': pembelianSapronak.totalPembelianPakan,
+            'pembelianOVK': pembelianSapronak.totalPembelianOVK,
+            'pembelianDOC': pembelianDOC,
             'pendapatanPeternak': pendapatanPeternak,
             'pendapatanPerEkor': pendapatanPerEkor,
-            'totalPembelianSapronak': totalPembelianSapronak,
+            'totalPembelianSapronak': pembelianSapronak.totalPembelianSapronak,
             message: 'Ok'
         })
     } catch (error) {
@@ -681,10 +650,35 @@ exports.reActivateChickenSheds = async (req, res, next) => {
     }
   };
 
-  exports.weightChart = async (req, res, next) => {
+exports.deplesiChart = async (req, res, next) => {
+    const actual = [];
+    try {
+      const chickenShed = await Kandang.findById({ _id: req.params.id });
+      if (chickenShed) {
+          const periods = await Model.find({kandang: chickenShed._id}).sort({tanggalMulai: 1});
+          const deplesiChart = await Promise.map(periods, async(periodeData, index) => {
+              const totalDeplesi = periodeData ? await formula.accumulateDeplesi(periodeData._id) : 0;
+              const deplesi = (periodeData.populasi - (periodeData.populasi - totalDeplesi)) * 100 / periodeData.populasi;
+              const periodIndex = periods.findIndex(index => index._id === periodeData._id);
+              return {
+                  actual: deplesi,
+                  periode: `Periode ${periodIndex+1}`
+              }
+          })
+  
+          actual.push(...deplesiChart)
+      }
+  
+      return res.json({ data: actual, message: 'success', status: 200 });
+    } catch (error) {
+      return res.json({ status: 500, message: error.message });
+    }
+};
+
+exports.weightChart = async (req, res, next) => {
     try {
       const chickenShed = await Kandang.findById(req.params.id);
-  
+   
       // actual
       const actual = [];
       if (chickenShed) {
@@ -717,9 +711,9 @@ exports.reActivateChickenSheds = async (req, res, next) => {
               actual.push(...weightChart);
           }
       }
-  
+   
       return res.json({ data: actual, message: 'success', status: 200  });
     } catch (error) {
       return res.json({ status: 500, message: error.message });
     }
-  };
+}
