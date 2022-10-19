@@ -2061,87 +2061,52 @@ exports.feedIntakeChart = async (req, res, next) => {
 
 exports.weightChart = async (req, res, next) => {
   try {
-    const [periode, chickenShed] = await Promise.all([
-        Periode.findOne({ _id: req.params.id }).sort({
-            createdAt: 1,
-          }),
-
-        Model.findById(req.params.id)
-    ]);
+    const periode = await Periode.findOne({ _id: req.params.id }).sort({
+        createdAt: 1,
+    });
 
     // actual
     const actual = [];
-    if (periode) {
-        const [standardData, dailyActivities] = await Promise.all([
-            DataSTD.find()
-                .sort({ day: 1 })
-                .select("day bodyWeight"),
-    
-            KegiatanHarian.find({ periode: periode.id })
-                .select("-periode")
-                .sort({ tanggal: 1 })
-        ]);
-    
-        for (let i = 0; i < dailyActivities.length; i++) {
-          const totalBerat = [];
-    
-          for (let n = 0; n < dailyActivities[i]?.berat?.length; n++) {
-            let populasi = 0;
-            if (dailyActivities[i]?.berat[n]?.populasi === 0) {
-              populasi = 1;
-            } else {
-              populasi = dailyActivities[i]?.berat[n]?.populasi;
-            }
-            totalBerat.push(dailyActivities[i]?.berat[n]?.beratTimbang / populasi);
-          }
-    
-          const totalberatSum = totalBerat.reduce(function (acc, val) {
-            return acc + val;
-          }, 0);
-    
-          const bobotResult = totalberatSum / dailyActivities[i]?.berat?.length;
-          const bobotFixed = Number.isInteger(bobotResult)
-            ? bobotResult
-            : bobotResult.toFixed(2);
-    
-          const totalBobot = (isFinite(bobotFixed) && bobotFixed) || 0;
-    
-          actual.push({
-            actual: totalBobot,
-            standard: standardData[i].bodyWeight,
-            day: standardData[i].day,
-            label: dailyActivities[i]?.tanggal,
-          });
+    const [standardData, dailyActivities] = await Promise.all([
+        DataSTD.find()
+            .sort({ day: 1 })
+            .select("day bodyWeight"),
+
+        KegiatanHarian.find({ periode: periode.id })
+            .select("-periode")
+            .sort({ tanggal: 1 })
+    ]);
+
+    for (let i = 0; i < dailyActivities.length; i++) {
+      const totalBerat = [];
+
+      for (let n = 0; n < dailyActivities[i]?.berat?.length; n++) {
+        let populasi = 0;
+        if (dailyActivities[i]?.berat[n]?.populasi === 0) {
+          populasi = 1;
+        } else {
+          populasi = dailyActivities[i]?.berat[n]?.populasi;
         }
-    }
+        totalBerat.push(dailyActivities[i]?.berat[n]?.beratTimbang / populasi);
+      }
 
-    if (chickenShed) {
-        const periods = await Periode.find({kandang: chickenShed._id}).sort({tanggalMulai: 1});
-        const periodeIds = periods.map(periode => periode._id);
-        const dailyActivitiesData = await KegiatanHarian.aggregate([
-            {$match: {periode: {$in: periodeIds}}},
-            {$unwind: {'path': '$berat', "preserveNullAndEmptyArrays": true}},
-            {$group: {
-                _id: '$_id', 
-                populasi: {$sum: '$berat.populasi'},
-                beratTimbang: {$sum: '$berat.beratTimbang'},
-                periode: { $first: '$$ROOT.periode' }
-            }}
-        ]);
+      const totalberatSum = totalBerat.reduce(function (acc, val) {
+        return acc + val;
+      }, 0);
 
-        const weightChart = await Promise.map(periods, async(periodeData, index) => {
-            const dailyActivities = dailyActivitiesData.filter(dailyActivity => dailyActivity.periode.toString() === periodeData._id.toString());
-            const dailyWeight = !dailyActivities.length ? 0 : dailyActivities.reduce((a, {beratTimbang}) => a + beratTimbang, 0);
-            const dailyWeightSample = !dailyActivities.length ? 0 : dailyActivities.reduce((a, {populasi}) => a + populasi, 0);
-            const avgWeight = dailyWeight/dailyWeightSample;
-            const periodIndex = periods.findIndex(index => index._id === periodeData._id);
-            return {
-                actual: avgWeight ? avgWeight : 0,
-                periode: `Periode ${periodIndex+1}`
-            }
-        })
+      const bobotResult = totalberatSum / dailyActivities[i]?.berat?.length;
+      const bobotFixed = Number.isInteger(bobotResult)
+        ? bobotResult
+        : bobotResult.toFixed(2);
 
-        actual.push(...weightChart);
+      const totalBobot = (isFinite(bobotFixed) && bobotFixed) || 0;
+
+      actual.push({
+        actual: totalBobot,
+        standard: standardData[i].bodyWeight,
+        day: standardData[i].day,
+        label: dailyActivities[i]?.tanggal,
+      });
     }
 
     return res.json({ data: actual, message: 'success', status: 200  });

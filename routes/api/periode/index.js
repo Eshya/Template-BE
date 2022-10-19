@@ -27,5 +27,6 @@ router.put('/', auth, c.updateWhere);
 router.delete('/', auth, c.remove);
 router.delete('/:id', auth, paramCek, c.removeById);
 router.post('/script/reActivateChickenSheds', c.reActivateChickenSheds);
+router.get('/chart/bobot/:id', auth, c.weightChart);
 module.exports = router;
 
