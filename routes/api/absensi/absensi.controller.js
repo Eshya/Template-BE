@@ -1,15 +1,21 @@
 const {parseQuery, createError} = require('../../helpers');
 const Model = require('./absensi.model');
 const mongoose = require('mongoose');
+const moment = require('moment')
 const Periode = require('../periode/periode.model')
 const Kandang = require('../kandang/kandang.model')
+const PPL = require('../peternak/peternak.model')
 const _MS_PER_DAY = 1000 * 60 * 60 * 24;
+const GMT_TIME = 7;
 let dateDiffInDays = (a, b) => {
     // Discard the time and time-zone information.
     const utc1 = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
     const utc2 = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
   
     return Math.floor((utc2 - utc1) / _MS_PER_DAY);
+}
+function paginate(array, page_size, page_number) {
+    return array.slice((page_number - 1) * page_size, page_number * page_size);
 }
 function delCreator(obj){
     obj.createdBy = undefined
@@ -23,16 +29,16 @@ function delCreatorArray(array){
     });
     return array
 }
-Date.prototype.addHours= function(h){
-    this.setHours(this.getHours()+h);
+Date.prototype.addHours= function(gmt){
+    this.setHours(this.getHours()+gmt);
     return this;
 }
-Date.prototype.today= function(d){
+Date.prototype.today= function(gmt){
     this.setHours(0)
     this.setMinutes(1)
     return this;
 }
-Date.prototype.tonight= function(d){
+Date.prototype.tonight= function(gmt){
     this.setHours(23)
     this.setMinutes(59)
     return this;
@@ -106,7 +112,11 @@ exports.insert = async (req, res, next) => {
     try {
         const createdBy = req.user._id
         data.createdBy=createdBy
+        data.tanggal = new Date().addHours(GMT_TIME)
+        let minutesFormat = data.tanggal.getMinutes() >=10 ? data.tanggal.getMinutes() : '0'+data.tanggal.getMinutes();
+        data.jamKunjungan = `${data.tanggal.getHours()}:${minutesFormat} WIB`
         const results = await Model.create(data);
+
         res.json({
             data: delCreator(results),
             message: 'Ok'
@@ -167,6 +177,80 @@ exports.findKandang = async (req, res, next) => {
         })
     } catch (error) {
         res.send(createError(501, error.message));
+        next(error)
+    }
+}
+
+exports.findKunjunganHistory = async (req,res,next) =>{
+    try {
+        let {limit, offset,startDate,endDate,idPPL} = req.query;
+        let queryMoongose = new Object()
+        let newData = []
+        if(isNaN(limit))limit=10;
+        if(isNaN(offset))offset=0;
+        if(idPPL !== undefined)queryMoongose.createdBy=mongoose.Types.ObjectId(idPPL);
+        queryMoongose.tanggal = {
+            $gte:new Date(startDate).addHours(GMT_TIME).today(),
+            $lt:new Date(endDate).addHours(GMT_TIME).tonight()
+        }
+        let findAbsensi = await Model.find(queryMoongose).sort({ tanggal: -1 });
+        let groupByDate = findAbsensi.reduce((group,value)=>{
+            let strTanggal = moment(value.tanggal).add(GMT_TIME,'hours').format('YYYY-MM-DD')
+            group[strTanggal] = group[strTanggal] ?? []
+            group[strTanggal].push(value)
+            return group;
+        },{})
+        Object.keys(groupByDate).forEach(key => {
+            let newGroupByDate = new Object()
+            newGroupByDate.tanggal =  key;
+            newGroupByDate.detail = groupByDate[key]
+            newData.push(newGroupByDate)
+        });
+        let offsetPaging;
+        if (offset == 0) {
+            offsetPaging = 1
+        } else {
+            offsetPaging = (offset / 10 + 1)
+        }
+        console.log(newData.length)
+        newData = paginate(newData,parseInt(limit),parseInt(offsetPaging)) 
+        res.status(200).json({
+            data:newData,
+            message:"success",
+            status: 200
+        })
+    } catch (error) {
+        res.send(createError(500, error.message));
+        next(error)
+    }
+}
+
+exports.findListPPL = async (req,res,next) =>{
+    try {
+        const {limit, offset,search} = parseQuery(req.query);
+        const filter = {}
+        if (search) {
+            filter.fullname = new RegExp(search, 'i') 
+        }
+        if(isNaN(limit))limit=10;
+        if(isNaN(offset))offset=0;
+        filter.role = "61d5608d4a7ba5b05c9c7ae3";
+        filter.deleted = false;
+        filter.isPPLActive = true
+        const listPPL = await PPL.find(filter).limit(limit).skip(offset).sort({ fullname: 1 }).select('_id fullname')
+        let newData = []
+        listPPL.forEach(element=>{
+            newData.push({_id:element._id,namaPPL:element.fullname})
+        })
+        res.status(200).json({
+            data:newData,
+            message:"success",
+            status: 200
+        })
+
+    }
+    catch (error) {
+        res.send(createError(500, error.message));
         next(error)
     }
 }
