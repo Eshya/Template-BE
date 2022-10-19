@@ -184,6 +184,12 @@ exports.IPClosing = async (idPeriode) => {
     return IP
 }
 
+const getFeedIntake = async(idPeriode) => {
+    const dailyFeedIntake = await getKegiatanHarian(idPeriode);
+    const accumulateFeedIntake = dailyFeedIntake.reduce((a, {totalPakan}) => a + totalPakan, 0);
+    return accumulateFeedIntake
+}
+
 exports.FCRClosing = getFCRClosing
 exports.persentaseAyamHidupClosing = getpersentaseAyamHidupClosing
 exports.weightClosing = getWeightClosing
@@ -193,4 +199,10 @@ exports.dailyChickenAge = dailyChickenAge
 exports.FCR = dailyFCR
 exports.liveChickenPrecentage = liveChickenPrecentage
 exports.actualRemainingChicken = actualRemainingChicken
+<<<<<<< HEAD
 exports.accumulateDeplesi = accumulateDeplesi
+=======
+exports.accumulateDeplesi = accumulateDeplesi
+exports.getKegiatanHarian = getKegiatanHarian
+exports.getFeedIntake = getFeedIntake
+>>>>>>> Sprint/CA-1655
