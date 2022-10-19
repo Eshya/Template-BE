@@ -50,6 +50,16 @@ const scheme = new Schema({
     createdBy: {
         type: Schema.Types.ObjectId,
         default: null
+    },
+    device: {
+        id: {
+            type: String,
+            default: null
+        },
+        name: {
+            type: String,
+            default: null
+        }
     }
 }, {versionKey: false, timestamps: true})
 scheme.plugin(require('mongoose-autopopulate'));
