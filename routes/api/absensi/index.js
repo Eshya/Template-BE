@@ -14,6 +14,7 @@ router.get('/ppl', auth, paramCek,permitionPPL, c.findIsAbsent);
 router.get('/kunjungan-history',auth,paramCek,c.findKunjunganHistory)
 router.get('/list-ppl',auth,paramCek,c.findListPPL)
 router.post('/ppl', auth, permition('superadmin', 'peternak', 'ppl'), permitionPPL, after, c.insert);
+router.get('/ppl/kunjungan',auth, paramCek,permitionPPL,c.findKunjungan)
 // router.put('/ppl', auth, c.updateWhere);
 // router.put('/:id', auth, permition('superadmin', 'peternak', 'ppl'), permitionPPL, paramCek, c.updateById);
 // router.delete('/', auth, c.remove);
