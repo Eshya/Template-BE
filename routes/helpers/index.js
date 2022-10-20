@@ -6,8 +6,12 @@ const passport = require('passport');
 const {JWT_SECRET} = require('../../passport/secret')
 const jwt = require('jsonwebtoken')
 const {permit, permitPPL} = require('./permition')
+const {arrSkip, arrLimit} = require('./custom.helper')
 
 // exports.auth = passport.authenticate('jwt', {session: false});
+// exports.arrGroup = arrGroup
+exports.arrLimit = arrLimit
+exports.arrSkip = arrSkip
 exports.permition = permit
 exports.permitionPPL = permitPPL
 exports.schemaCek = checkSchema;

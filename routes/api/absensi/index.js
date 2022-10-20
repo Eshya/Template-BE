@@ -10,6 +10,7 @@ router.get('/ppl/history', auth, queryCek,permitionPPL, c.findById);
 router.get('/ppl/history-today', auth, queryCek,permitionPPL, c.findToday);
 router.get('/ppl/kandang', auth, queryCek,permitionPPL, c.findKandang);
 router.get('/ppl/today', auth, queryCek, c.findPPLNotAttend);
+router.get('/ppl/kandang-today', auth, queryCek, c.kandangNotVisit);
 router.get('/ppl', auth, paramCek,permitionPPL, c.findIsAbsent);
 router.get('/kunjungan-history',auth,paramCek,c.findKunjunganHistory)
 router.get('/list-ppl',auth,paramCek,c.findListPPL)
