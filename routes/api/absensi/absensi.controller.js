@@ -2,14 +2,15 @@ const {parseQuery, createError} = require('../../helpers');
 const Model = require('./absensi.model');
 const PPL = require('../peternak/peternak.model')
 const mongoose = require('mongoose');
+const Promise = require("bluebird");
 const moment = require('moment')
 const Periode = require('../periode/periode.model')
 const Kandang = require('../kandang/kandang.model')
 const PPL = require('../peternak/peternak.model')
+const {clearKey} = require('../../../configs/redis.conf')
 const _MS_PER_DAY = 1000 * 60 * 60 * 24;
 const GMT_TIME = 7;
-var urlAuth = `${process.env.AUTH_URL}`;
-
+const CACHE_ABSENSI_TIME = 1 * 24 * 60 * 60;
 let dateDiffInDays = (a, b) => {
     // Discard the time and time-zone information.
     const utc1 = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
@@ -31,6 +32,14 @@ function delCreatorArray(array){
         element.idKandang = undefined
     });
     return array
+}
+function filterKunjugan(array,search){
+    return array.filter(function(arr) {
+        let regex = new RegExp(search, 'i')
+        if(regex.test(JSON.stringify(arr.namaKandang)))return true;
+        else if(regex.test(JSON.stringify(arr.createdBy.fullname)))return true;
+        else return false;
+    })
 }
 Date.prototype.addHours= function(gmt){
     this.setHours(this.getHours()+gmt);
@@ -183,7 +192,6 @@ exports.findKandang = async (req, res, next) => {
         next(error)
     }
 }
-
 exports.findKunjunganHistory = async (req,res,next) =>{
     try {
         let {limit, offset,startDate,endDate,idPPL} = req.query;
@@ -279,6 +287,58 @@ exports.findPPLNotAttend = async (req, res, next) => {
         res.status(200).json({data: results, message: "success", status: res.statusCode})
     } catch (error) {
         res.status(500).json({error: res.statusCode, message: error.message})
+        next(error)
+    }
+}
+exports.findKunjungan = async (req, res, next) => {
+    try{
+        let {limit, offset,tanggal,search} = req.query;
+        let queryMoongose = new Object()
+        let newData = []
+        if(isNaN(limit))limit=10;
+        if(isNaN(offset))offset=0;
+        if(search===undefined)search="";
+        queryMoongose.tanggal = {
+            $gte:new Date(tanggal).addHours(GMT_TIME).today(),
+            $lt:new Date(tanggal).addHours(GMT_TIME).tonight()
+        }
+        let findAbsensi = await Model.find(queryMoongose).sort({ tanggal: -1 }).cache({time:CACHE_ABSENSI_TIME});
+        let GroupByCreator = findAbsensi.reduce((group,value)=>{
+            group[value.createdBy._id] = group[value.createdBy._id] ?? []
+            group[value.createdBy._id].push(value)
+            return group;
+        },{})
+        Object.keys(GroupByCreator).forEach(key=>{
+            GroupByCreator[key].forEach((element,index)=>{
+                element.kunjunganKe = GroupByCreator[key].length - index;
+                newData.push(element)
+            })
+        })
+        let offsetPaging;
+        if (offset == 0) {
+            offsetPaging = 1
+        } else {
+            offsetPaging = (offset / 10 + 1)
+        }
+        
+        newData = filterKunjugan(newData,search)
+        let count = newData.length
+        newData = paginate(newData,parseInt(limit),parseInt(offsetPaging)) 
+        // findAbsensi.forEach(element =>{
+
+        // })
+        return res.send({
+                count: count,
+                data: newData,
+                message: "success",
+                status: 200
+            })
+        // await Promise.map(findAbsensi, async (dataItem, index) => {
+        // })
+        
+    }
+    catch(error){
+        res.send(createError(500, error.message));
         next(error)
     }
 }
