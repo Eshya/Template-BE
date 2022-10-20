@@ -1,4 +1,4 @@
-const {parseQuery, createError} = require('../../helpers');
+const {parseQuery, createError, arrSkip, arrLimit} = require('../../helpers');
 const Model = require('./absensi.model');
 const PPL = require('../peternak/peternak.model')
 const mongoose = require('mongoose');
@@ -266,24 +266,37 @@ exports.findListPPL = async (req,res,next) =>{
     }
 }
 
-const filterByRef = (arr1, arr2) => {
-    let tmp = []
-    tmp = arr1.filter(x => {
-        return !arr2.find(e => {
-            return e.createdBy === x._id 
-        })
-    })
-    return tmp
+function filterByRef(array1, array2) {
+    return array1.filter(object1 => {
+      return !array2.some(object2 => {
+        return object1.createdBy === object2._id;
+      });
+    });
+  }
+
+function arrGroup (c) {
+    return function group(array) {
+        return array.reduce((acc, obj) => {
+          const property = obj[c];
+          acc[property] = acc[property] || [];
+          acc[property].push(obj);
+          return acc;
+        }, {});
+      };
 }
 
 exports.findPPLNotAttend = async (req, res, next) => {
+    Array.prototype.limit = arrLimit
+    Array.prototype.skip = arrSkip
     const {limit, offset} = parseQuery(req.query);
     try {
         const now  = new Date()
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-        const findPPL = await PPL.find({isPPLActive: true}, {kemitraanUser: 0, province: 0, regency: 0, role: 0}).limit(limit).skip(offset).select('fullname')
+        const findPPL = await PPL.find({isPPLActive: true}, {kemitraanUser: 0, province: 0, regency: 0, role: 0}).select('fullname')
         const findAttendToday = await Model.find({tanggal: {$gte: today}}).select('createdBy -idKandang -fotoRecording -fotoKandang')
-        const results = filterByRef(findPPL, findAttendToday)
+        var results = [...filterByRef(findPPL, findAttendToday), ...filterByRef(findAttendToday, findPPL)];
+        results = Number.isNaN(offset) ? results : results.skip(offset)
+        results = Number.isNaN(limit) ? results : results.limit(limit)
         res.status(200).json({data: results, message: "success", status: res.statusCode})
     } catch (error) {
         res.status(500).json({error: res.statusCode, message: error.message})
@@ -339,6 +352,33 @@ exports.findKunjungan = async (req, res, next) => {
     }
     catch(error){
         res.send(createError(500, error.message));
+    }
+}
+
+exports.kandangNotVisit = async (req, res, next) => {
+    Array.prototype.limit = arrLimit
+    Array.prototype.skip = arrSkip
+    const {limit, offset} = parseQuery(req.query);
+    try {
+        const tmp = []
+        const now  = new Date()
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+        const findAttendToday = await Model.find({tanggal: {$lt: today}}).select('tanggal createdBy -fotoRecording -fotoKandang')
+        console.log(findAttendToday)
+        findAttendToday.forEach(e => {
+            e.idKandang?._id ? tmp.push(e.idKandang?._id) : true
+        })
+        const findPeriode = await Periode.find({isEnd: false, kandang: tmp}, {jenisDOC: 0, ppl: 1, kemitraan: 0}).select('kandang')
+        const groupPeriode = arrGroup('ppl')
+        var results = await Promise.all(Object.keys(groupPeriode(findPeriode)).map(async(x) => {
+            const findPPL = mongoose.Types.ObjectId.isValid(x) ? await PPL.findById(x) : null
+            return {_idPPL: x, namePPL: findPPL ? findPPL.namePPL : null, image: findPPL ? findPPL?.image : null, kandang: groupPeriode(findPeriode)[x]};
+        }))
+        results = Number.isNaN(offset) ? results : results.skip(offset)
+        results = Number.isNaN(limit) ? results : results.limit(limit)
+        res.status(200).json({count: results.length, data: results, message: "success", status: res.statusCode})
+    } catch (error) {
+        res.status(500).json({error: res.statusCode, message: error.message})
         next(error)
     }
 }
