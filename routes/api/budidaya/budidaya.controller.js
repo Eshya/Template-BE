@@ -113,7 +113,7 @@ exports.riwayatBudidaya =  async (req, res, next) => {
                 const atas = presentaseAyamHidup * (avgLatestWeight/1000)
                 const bawah = FCR*(dataPakan.length-1)
                 // const IP = (atas / bawah) * 100
-                var IP = await formula.dailyIP(periodeChild._id)
+                var IP = await formula.dailyIP(id)
 
                 const IPFixed = IP.toFixed(2)
                 const IPResult = isFinite(IPFixed) && IPFixed || 0
