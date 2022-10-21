@@ -203,7 +203,7 @@ exports.findKunjunganHistory = async (req,res,next) =>{
             $gte:new Date(startDate).addHours(GMT_TIME).today(),
             $lt:new Date(endDate).addHours(GMT_TIME).tonight()
         }
-        let findAbsensi = await Model.find(queryMoongose).sort({ tanggal: -1 });
+        let findAbsensi = await Model.find(queryMoongose).sort({ tanggal: -1 }).cache({ time: CACHE_ABSENSI_TIME,codeCRUD:0 });;
         let groupByDate = findAbsensi.reduce((group,value)=>{
             let strTanggal = moment(value.tanggal).add(GMT_TIME,'hours').format('YYYY-MM-DD')
             group[strTanggal] = group[strTanggal] ?? []
@@ -314,7 +314,7 @@ exports.findKunjungan = async (req, res, next) => {
             $gte:new Date(tanggal).addHours(GMT_TIME).today(),
             $lt:new Date(tanggal).addHours(GMT_TIME).tonight()
         }
-        let findAbsensi = await Model.find(queryMoongose).sort({ tanggal: -1 }).cache({time:CACHE_ABSENSI_TIME});
+        let findAbsensi = await Model.find(queryMoongose).sort({ tanggal: -1 }).cache({ time: CACHE_ABSENSI_TIME,codeCRUD:0 });;
         let GroupByCreator = findAbsensi.reduce((group,value)=>{
             group[value.createdBy._id] = group[value.createdBy._id] ?? []
             group[value.createdBy._id].push(value)

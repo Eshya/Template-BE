@@ -19,7 +19,7 @@ const moment = require('moment');
 const excelJS = require("exceljs");
 const dayjs = require('dayjs');
 const formula = require('../../helpers/formula')
-
+const {clearKey} = require('../../../configs/redis.conf')
 var urlIOT = process.env.IOT_URL
 var urlAuth =`${process.env.AUTH_URL}`
 const handleQuerySort = (query) => {
@@ -129,7 +129,7 @@ exports.findAllDataPool =  async (req, res, next) => {
         switch (role) {
           case "adminkemitraan":
             let offsetPaging;
-            const chickenSheds = await Model.find(filter).sort();
+            const chickenSheds = await Model.find(filter).sort().cache({ time: process.env.REDIS_TIME,codeCRUD:0 });
             const resultKemitraan = await handleChickenSheds(
               true,
               token,
@@ -151,12 +151,12 @@ exports.findAllDataPool =  async (req, res, next) => {
             break;
     
           default:
-            count = await Model.countDocuments(filter);
+            count = await Model.countDocuments(filter)
             const chickenShedsData = await Model.find(filter)
               .limit(limit)
               .skip(offset)
-              .sort(sort);
-    
+              .sort(sort)
+              .cache({ time: process.env.REDIS_TIME,codeCRUD:0 });
             const resultNonKemitraan = await handleChickenSheds(
               false,
               token,
@@ -2113,14 +2113,14 @@ const handleChickenSheds = async (
   const resultNonKemitraan = [];
 
   for (const chickenShed of chickenSheds) {
-    filterPeriod.kandang = chickenShed.id;
+    filterPeriod.kandang = chickenShed._id;
     if (isKemitraan) {
       filterPeriod.kemitraan = kemitraanId;
     }
-
+    
     const periode = await Periode.findOne(filterPeriod).sort({
       createdAt: -1,
-    });
+    }).cache({ time: process.env.REDIS_TIME,codeCRUD:1 });
 
     const user = await users.find(
       (userData) => userData._id.toString() === chickenShed.createdBy.toString()
@@ -2154,13 +2154,15 @@ const handleChickenSheds = async (
         return result.json();
       }
     });
-
+    
     if (periode && periode?.kandang) {
+
       const chickenShedPeriods = await Periode.find(filterPeriod).sort(
         "tanggalMulai"
-      );
-      const lastKegiatanHarian = await KegiatanHarian.find({periode: periode.id}).sort({'tanggal': -1}).limit(1).select('-periode')
-            
+      ).cache({ time: process.env.REDIS_TIME,codeCRUD:0 });
+      //use this command untuk membedakan find and findOne
+      const lastKegiatanHarian = await KegiatanHarian.find({periode: periode._id}).sort({'tanggal': -1}).limit(1).select('-periode').cache({ time: process.env.REDIS_TIME,codeCRUD:0 });
+    
       let dataPeriode = [];
       await Promise.map(chickenShedPeriods, async (chickenShedItem, index) => {
         if (chickenShedItem._id.toString() === periode._id.toString()) {

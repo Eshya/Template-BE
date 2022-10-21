@@ -7,6 +7,7 @@ const Periode = require('../routes/api/periode/periode.model')
 const KegiatanHarian = require('../routes/api/kegiatan-harian/kegiatan-harian.model')
 const fs = require('fs');
 const files = fs.readdirSync(`${__dirname}/../routes/api`);
+const PATH_REDIS_SPACE = 6 ;
 let listNotIcludedModel = ['createdBy','jenisDOC','tipe','berat','ovkPakai','jenisOVK','image','pakanPakai','jenisPakan','idKandang','fotoKandang','fotoRecording']
 listNotIcludedModel.forEach(model =>{files.push(model)})
 console.log(files)
@@ -28,11 +29,15 @@ const getAsync = util.promisify(client.hget).bind(client);
 //   });
 const exec = mongoose.Query.prototype.exec;
 
-mongoose.Query.prototype.cache = function(options = { time: process.env.REDIS_TIME }) {
+//use this command untuk membedakan find and findOne
+// if findOne query => codeCRUD = 1
+// if find query => codeCRUD = 0
+
+mongoose.Query.prototype.cache = function(options = { time: process.env.REDIS_TIME,codeCRUD:0 }) {
     this.useCache = true;
     this.time = options.time;
     this.hashKey = JSON.stringify(options.key || this.mongooseCollection.name);
-  
+    this.codeCRUD = options.codeCRUD;
     return this;
 };
 
@@ -41,9 +46,12 @@ mongoose.Query.prototype.exec = async function() {
     if (!this.useCache) {
     return await exec.apply(this, arguments);
     }
-
+    if(this.codeCRUD==0)client.select(redisPATH)
+    else if(this.codeCRUD==1)client.select(parseInt(redisPATH) + PATH_REDIS_SPACE)
+    else client.select(redisPATH)
+    
     const key = JSON.stringify({
-    ...this.getQuery()
+    ...this.getQuery(),...this.getOptions()
     });
     
     // const cacheValue = await client.HGETALL(this.hashKey, key);

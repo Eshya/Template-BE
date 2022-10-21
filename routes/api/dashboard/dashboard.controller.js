@@ -67,7 +67,7 @@ exports.dashboardKemitraan =  async (req, res, next) => {
         filter.deleted = false;
         const filterPPL = {};
 
-        const getKandang = await Kandang.find(filter).cache();
+        const getKandang = await Kandang.find(filter).cache({ time: process.env.REDIS_TIME,codeCRUD:0 });
         if (getKandang.length) {
             const result = await handleResultKandang(token, getKandang, kemitraan, filterPPL, role, kemitraanId);
             resultPeternak.push(...result.peternak);
@@ -78,12 +78,12 @@ exports.dashboardKemitraan =  async (req, res, next) => {
         const totalPeternak = removeDuplicatesData(resultPeternak)
 
         // get total PPL
-        const totalKemitraan = await User.countDocuments(filterPPL).cache();
+        const totalKemitraan = await User.countDocuments(filterPPL)
 
         filterPPL.role = '61d5608d4a7ba5b05c9c7ae3';
         filterPPL.deleted = false;
 
-        const totalPPl = await User.countDocuments(filterPPL).cache();
+        const totalPPl = await User.countDocuments(filterPPL)
         return res.json({
             totalKandangActive: resultKandangActive.length,
             totalPPL: totalPPl,
@@ -108,7 +108,7 @@ exports.dashboardKemitraanPopulasi =  async (req, res, next) => {
         }
         filter.deleted = false;
 
-        const getKandang = await Kandang.find(filter).cache();
+        const getKandang = await Kandang.find(filter).cache({ time: process.env.REDIS_TIME,codeCRUD:0 });;
         const users = await fetch(`${urlAuth}/api/users/`, {
             method: 'GET',
             headers: {'Authorization': token,
@@ -128,7 +128,7 @@ exports.dashboardKemitraanPopulasi =  async (req, res, next) => {
                 filterPeriod.kemitraan = kemitraanId
             }
 
-            let periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 }).cache()
+            let periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 }).cache({ time: process.env.REDIS_TIME,codeCRUD:1 });
             if (periode && periode.kandang && periode.kemitraan && periode.kandang.createdBy) {
                 // get usia
                 let now = new Date(Date.now());
@@ -184,7 +184,7 @@ exports.dashboardKemitraanKetersediaan =  async (req, res, next) => {
             sort = { createdAt: -1 }
         }
 
-        const dataKandang = await Kandang.find(filter).sort(sort).select('_id').cache();
+        const dataKandang = await Kandang.find(filter).sort(sort).select('_id').cache({ time: process.env.REDIS_TIME,codeCRUD:0 });;
         const resultPeriods = await handlePeriode(true, token, dataKandang, populasiFrom, populasiTo, kemitraan, req.user, role, usiaFrom, usiaTo, bobotFrom, bobotTo);
         resultPeriode.push(...resultPeriods.filter(result => result));
 
@@ -259,9 +259,9 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
             sort = { createdAt: -1 }
         }
 
-        const dataKandang = await Kandang.find(filter).sort(sort).select('_id').cache()
+        const dataKandang = await Kandang.find(filter).sort(sort).select('_id').cache({ time: process.env.REDIS_TIME,codeCRUD:0 });
         // console.log(dataKandang)
-        const dataKemitraan = await Kemitraan.countDocuments(filter).cache()
+        const dataKemitraan = await Kemitraan.countDocuments(filter)
 
         const resultPeriods = await handlePeriode(true, token, dataKandang, populasiFrom, populasiTo, kemitraan, req.user, role, usiaFrom, usiaTo, bobotFrom, bobotTo);
         
@@ -341,7 +341,7 @@ const handleResultKandang = async(token, getKandang, kemitraan, filterPPL, role,
             filterPPL.kemitraanUser = kemitraanId;
         }
 
-        const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 }).cache();
+        const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 }).cache({ time: process.env.REDIS_TIME,codeCRUD:1 });
         if (periode?.kandang && periode?.kemitraan && periode?.kandang?.createdBy) {
             //find detail peternak
             const findUser = users.find(user => user._id.toString() === periode?.kandang?.createdBy.toString());
@@ -402,7 +402,7 @@ const handlePeriode = async(isKemitraan, token, dataKandang, populasiFrom, popul
         }
         
 
-        const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 }).cache();
+        const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 }).cache({ time: process.env.REDIS_TIME,codeCRUD:1 });
         
         if (periode?.kandang && periode?.kemitraan && periode?.kandang?.createdBy) {
             // get usia
