@@ -10,8 +10,6 @@ router.get('/ppl/history', auth, queryCek,permitionPPL, c.findById);
 router.get('/ppl/history-today', auth, queryCek,permitionPPL, c.findToday);
 router.get('/ppl/kandang', auth, queryCek,permitionPPL, c.findKandang);
 router.get('/ppl', auth, paramCek,permitionPPL, c.findIsAbsent);
-router.get('/kunjungan-history',auth,paramCek,c.findKunjunganHistory)
-router.get('/list-ppl',auth,paramCek,c.findListPPL)
 router.post('/ppl', auth, permition('superadmin', 'peternak', 'ppl'), permitionPPL, after, c.insert);
 // router.put('/ppl', auth, c.updateWhere);
 // router.put('/:id', auth, permition('superadmin', 'peternak', 'ppl'), permitionPPL, paramCek, c.updateById);
