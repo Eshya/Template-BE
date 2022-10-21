@@ -8,11 +8,7 @@ const Penjualan = require("../penjualan/penjualan.model");
 const Sapronak = require("../sapronak/sapronak.model");
 const Data = require('../data/data.model');
 const selectPublic = '-createdAt -updatedAt'
-<<<<<<< HEAD
-const mongoose = require('mongoose')
-=======
 const mongoose = require('mongoose');
->>>>>>> Feature/Chart
 const Promise = require("bluebird");
 const fetch = require('node-fetch')
 const dayjs = require('dayjs');
