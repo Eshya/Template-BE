@@ -18,6 +18,7 @@ router.get('/sapronak/:id', auth, permition('superadmin', 'peternak', 'ppl'), pe
 router.get('/budidaya/:id', auth, permition('superadmin', 'peternak', 'ppl'), permitionPPL, paramCek, c.getBudidaya);
 router.get('/:id', auth, paramCek, c.findById);
 router.get('/chart/deplesi/:id', auth, c.deplesiChart);
+router.get('/chart/feedIntake/:id', auth, c.feedIntakeChart);
 router.post('/validate', auth, permition('superadmin', 'ppl'), permitionPPL, c.validateTambah)
 router.post('/', auth, schemaCek(schema), after, c.insert);
 // router.post('/autoClosingCultivate', verifyApiKey, c.autoClosingCultivation );
