@@ -2108,12 +2108,7 @@ exports.weightChart = async (req, res, next) => {
       const totalBerat = [];
 
       for (let n = 0; n < dailyActivities[i]?.berat?.length; n++) {
-        let populasi = 0;
-        if (dailyActivities[i]?.berat[n]?.populasi === 0) {
-          populasi = 1;
-        } else {
-          populasi = dailyActivities[i]?.berat[n]?.populasi;
-        }
+        const populasi = dailyActivities[i]?.berat[n]?.populasi || 1;
         totalBerat.push(dailyActivities[i]?.berat[n]?.beratTimbang / populasi);
       }
 
