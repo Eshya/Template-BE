@@ -1,6 +1,7 @@
 const { Schema, model } = require("mongoose");
 const AbsensiImage = require('../absensi-image/absensi-image.model')
 const Kandang = require('../kandang/kandang.model')
+const PPL = require('../peternak/peternak.model')
 const scheme = new Schema({
     namaKandang: {
         type: String,
@@ -49,7 +50,19 @@ const scheme = new Schema({
     }],
     createdBy: {
         type: Schema.Types.ObjectId,
+        ref: PPL, select: true,
+        autopopulate: {maxDepth: 1},
         default: null
+    },
+    device: {
+        id: {
+            type: String,
+            default: null
+        },
+        name: {
+            type: String,
+            default: null
+        }
     }
 }, {versionKey: false, timestamps: true})
 scheme.plugin(require('mongoose-autopopulate'));

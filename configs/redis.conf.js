@@ -7,7 +7,7 @@ const Periode = require('../routes/api/periode/periode.model')
 const KegiatanHarian = require('../routes/api/kegiatan-harian/kegiatan-harian.model')
 const fs = require('fs');
 const files = fs.readdirSync(`${__dirname}/../routes/api`);
-let listNotIcludedModel = ['jenisDOC','tipe','berat','ovkPakai','jenisOVK','image','pakanPakai','jenisPakan']
+let listNotIcludedModel = ['createdBy','jenisDOC','tipe','berat','ovkPakai','jenisOVK','image','pakanPakai','jenisPakan','idKandang','fotoKandang','fotoRecording']
 listNotIcludedModel.forEach(model =>{files.push(model)})
 console.log(files)
 
@@ -82,7 +82,9 @@ const keyExists = (obj) => {
       obj['_id']=mongoose.Types.ObjectId(obj['_id'])
     }
     if (obj.hasOwnProperty('createdBy')) {
-        obj['createdBy'] = mongoose.Types.ObjectId(obj['createdBy'])
+        if(mongoose.Types.ObjectId.isValid(obj['createdBy'])){
+            obj['createdBy'] = mongoose.Types.ObjectId(obj['createdBy'])
+        }
     }
 
 

@@ -10,7 +10,7 @@ const mongoose = require('mongoose');
 const fetch = require('node-fetch')
 const formula = require('../../helpers/formula');
 const reducer = (acc, value) => acc + value;
-var urlIOT = process.env.DB_NAME === "chckin" ? `iot-production:3103` : `iot-staging:3104`
+var urlIOT = process.env.IOT_URL
 const handleQuerySort = (query) => {
     try{
       const toJSONString = ("{" + query + "}").replace(/(\w+:)|(\w+ :)/g, (matched => {
@@ -135,62 +135,9 @@ exports.findById = async (req, res, next) => {
             let pendapatanPeternak;
             let flock = [];
             if (periode && periode.kandang) {
-                // get IP
-                const penjualan = await Penjualan.aggregate([
-                    {$match: {periode: mongoose.Types.ObjectId(periode.id)}},
-                    {$group: {_id: '$_id', terjual: {$sum: '$qty'}}}
-                ])
-
-                const dataPakan = await KegiatanHarian.aggregate([
-                    {$match: {periode: mongoose.Types.ObjectId(periode.id)}},
-                    {$unwind: {'path': '$pakanPakai', "preserveNullAndEmptyArrays": true}},
-                    {$group: {_id: '$_id', totalPakan: {$sum: '$pakanPakai.beratPakan'}}}
-                ])
-
-                const dataDeplesi = await KegiatanHarian.aggregate([
-                    {$match: {periode: mongoose.Types.ObjectId(periode.id)}},
-                    {$group: {_id: '$_id', totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
-                ])
-
-                const getKegiatan = await KegiatanHarian.find({periode: periode.id}).sort({'tanggal': -1}).limit(1).select('-periode')
-                const latestWeight = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0) : 0
-
-                const allDeplesi = dataDeplesi.reduce((a, {totalDeplesi}) => a + totalDeplesi, 0);
-                const allKematian = dataDeplesi.reduce((a, {totalKematian}) => a + totalKematian, 0);
-                //const allPenjualan = penjualan.reduce((a, {terjual}) => a + terjual, 0);
-                const allPakan = dataPakan.reduce((a, {totalPakan})=>a + totalPakan, 0);
-                const deplesi = (periode.populasi - (periode.populasi - (allDeplesi + allKematian))) * 100 / periode.populasi
-                const presentaseAyamHidup = await formula.liveChickenPrecentage(periode._id);
-                const populasiAkhir = periode.populasi - (allDeplesi + allKematian)
-                const FCR = await formula.FCR(periode._id);
-                const atas = presentaseAyamHidup * (latestWeight/1000)
-                const bawah = FCR*(dataPakan.length-1)
-                // IP = (atas / bawah) * 100
                 IP = await formula.dailyIP(periode._id)
-
-
                 // get total penjualan
-                let harian = []
-                let pembelianPakan = 0
-                let pembelianOVK = 0
-                const getSapronak = await Sapronak.find({periode: periode._id});
-                for (let i = 0; i < getSapronak.length; i++) {
-                    if (getSapronak[i].produk && (getSapronak[i].produk.jenis === 'PAKAN')) {
-                        const compliment = getSapronak[i].kuantitas * getSapronak[i].hargaSatuan
-                        pembelianPakan += compliment
-                    } else {
-                        const compliment = getSapronak[i].kuantitas * getSapronak[i].hargaSatuan
-                        pembelianOVK += compliment
-                    }
-                }
-                const pembelianDoc = periode.populasi * periode.hargaSatuan
-                const getPenjualan = await Penjualan.find({periode: periode._id})
-                getPenjualan.forEach(x => {
-                    harian.push(x.beratBadan * x.harga * x.qty)
-                })
-                const penjualanAyamBesar = harian.reduce(reducer, 0);
-                pendapatanPeternak = penjualanAyamBesar - pembelianDoc - pembelianOVK - pembelianPakan
-
+                pendapatanPeternak = await formula.estimateRevenue(periode._id)
                 // get periode ke
                 const kandang = await Periode.find({kandang: periode.kandang._id}).sort('tanggalMulai')
                 await Promise.map(kandang, async (itemKandang, index) => {

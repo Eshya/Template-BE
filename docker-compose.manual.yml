@@ -1,0 +1,25 @@
+# Cara pakai: docker-compose -f docker-compose.manual.yml up --build --force-recreate --no-deps -d smartfarm-prod
+
+version: '3.9'
+services:
+  smartfarm-prod:
+    build: .
+    container_name: smartfarm-production
+    environment:
+      SERVER_PORT: 3101
+      DB_HOST: mongodb
+      DB_PORT: 27017
+      DB_USER: chickindb
+      DB_PASS: IniDBch1ck1n
+      DB_NAME: chckin
+      DB_NAME_AUTH: chickin-auth
+    volumes:
+      - /home/chickin/projects/smartfarm/upload-prod:/app/uploads
+    networks:
+      - chickinnetwork
+    ports:
+      - "3101:3101"
+    restart: always
+networks:
+  chickinnetwork:
+    external: true
