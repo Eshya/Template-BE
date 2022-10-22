@@ -129,7 +129,7 @@ exports.findAllDataPool =  async (req, res, next) => {
         switch (role) {
           case "adminkemitraan":
             let offsetPaging;
-            const chickenSheds = await Model.find(filter).sort().cache({ time: process.env.REDIS_TIME,codeCRUD:0 });
+            const chickenSheds = await Model.find(filter).sort().cache();
             const resultKemitraan = await handleChickenSheds(
               true,
               token,
@@ -151,12 +151,12 @@ exports.findAllDataPool =  async (req, res, next) => {
             break;
     
           default:
-            count = await Model.countDocuments(filter)
+            count = await Model.countDocuments(filter).cache()
             const chickenShedsData = await Model.find(filter)
               .limit(limit)
               .skip(offset)
               .sort(sort)
-              .cache({ time: process.env.REDIS_TIME,codeCRUD:0 });
+              .cache();
             const resultNonKemitraan = await handleChickenSheds(
               false,
               token,
@@ -2120,7 +2120,7 @@ const handleChickenSheds = async (
     
     const periode = await Periode.findOne(filterPeriod).sort({
       createdAt: -1,
-    }).cache({ time: process.env.REDIS_TIME,codeCRUD:1 });
+    }).cache();
 
     const user = await users.find(
       (userData) => userData._id.toString() === chickenShed.createdBy.toString()
@@ -2159,9 +2159,9 @@ const handleChickenSheds = async (
 
       const chickenShedPeriods = await Periode.find(filterPeriod).sort(
         "tanggalMulai"
-      ).cache({ time: process.env.REDIS_TIME,codeCRUD:0 });
+      ).cache();
       //use this command untuk membedakan find and findOne
-      const lastKegiatanHarian = await KegiatanHarian.find({periode: periode._id}).sort({'tanggal': -1}).limit(1).select('-periode').cache({ time: process.env.REDIS_TIME,codeCRUD:0 });
+      const lastKegiatanHarian = await KegiatanHarian.find({periode: periode._id}).sort({'tanggal': -1}).limit(1).select('-periode').cache()
     
       let dataPeriode = [];
       await Promise.map(chickenShedPeriods, async (chickenShedItem, index) => {
