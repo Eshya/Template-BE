@@ -17,9 +17,6 @@ let dateDiffInDays = (a, b) => {
   
     return Math.floor((utc2 - utc1) / _MS_PER_DAY);
 }
-function paginate(array, page_size, page_number) {
-    return array.slice((page_number - 1) * page_size, page_number * page_size);
-}
 function delCreator(obj){
     obj.createdBy = undefined
     obj.idKandang = undefined
@@ -44,12 +41,12 @@ Date.prototype.addHours= function(gmt){
     this.setHours(this.getHours()+gmt);
     return this;
 }
-Date.prototype.today= function(gmt){
+Date.prototype.today= function(d){
     this.setHours(0)
     this.setMinutes(1)
     return this;
 }
-Date.prototype.tonight= function(gmt){
+Date.prototype.tonight= function(d){
     this.setHours(23)
     this.setMinutes(59)
     return this;
@@ -123,11 +120,7 @@ exports.insert = async (req, res, next) => {
     try {
         const createdBy = req.user._id
         data.createdBy=createdBy
-        data.tanggal = new Date().addHours(GMT_TIME)
-        let minutesFormat = data.tanggal.getMinutes() >=10 ? data.tanggal.getMinutes() : '0'+data.tanggal.getMinutes();
-        data.jamKunjungan = `${data.tanggal.getHours()}:${minutesFormat} WIB`
         const results = await Model.create(data);
-
         res.json({
             data: delCreator(results),
             message: 'Success'

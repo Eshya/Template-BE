@@ -53,16 +53,6 @@ const scheme = new Schema({
         ref: PPL, select: true,
         autopopulate: {maxDepth: 1},
         default: null
-    },
-    device: {
-        id: {
-            type: String,
-            default: null
-        },
-        name: {
-            type: String,
-            default: null
-        }
     }
 }, {versionKey: false, timestamps: true})
 scheme.plugin(require('mongoose-autopopulate'));

@@ -8,7 +8,8 @@ const Penjualan = require("../penjualan/penjualan.model");
 const Sapronak = require("../sapronak/sapronak.model");
 const Data = require('../data/data.model');
 const selectPublic = '-createdAt -updatedAt'
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
+const Promise = require("bluebird");
 const fetch = require('node-fetch')
 const dayjs = require('dayjs');
 const formula = require('../../helpers/formula')
@@ -267,27 +268,62 @@ exports.removeById = async (req, res, next) => {
 exports.getBudidaya = async (req, res, next) => {
     const id = req.params.id
     try {
+        let harian = []
         let kematian = []
+        let pembelianPakan = 0
+        let pembelianOVK = 0
         const doc = await Model.findById(id);
-        const pembelianDOC = await formula.pembelianDOC(id)
+        const pembelianDoc = doc.populasi * doc.hargaSatuan
+        const getSapronak = await Sapronak.find({periode: id});
+        // const penjualanAyamBesar = await 
+        for (let i = 0; i < getSapronak.length; i++) {
+            if (getSapronak[i]?.produk?.jenis === 'PAKAN') {
+                const compliment = getSapronak[i].zak  * getSapronak[i].hargaSatuan
+                pembelianPakan += compliment
+                // console.log(`${getSapronak[i].zak} :: ${getSapronak[i].hargaSatuan} :: ${compliment} :: ${pembelianPakan}  `)
+            } else {
+                const compliment = getSapronak[i].kuantitas * getSapronak[i].hargaSatuan
+                pembelianOVK += compliment
+            }
+        }
         const getKegiatan = await KegiatanHarian.find({periode: id})
         getKegiatan.forEach(x => {
             kematian.push(x.deplesi + x.pemusnahan)
         });
         const totalKematian = kematian.reduce(reducer, 0);
         const populasiAkhir = doc.populasi - totalKematian
-        const penjualanAyamBesar = await formula.penjualanAyamBesar(id)
-        const pendapatanPeternak = await formula.estimateRevenue(id)
+        const akumulasiPenjualan = await Penjualan.aggregate([
+            {$match: {periode: mongoose.Types.ObjectId(id)}},
+            {$project: {penjualan: {$multiply: ['$qty', '$harga', '$beratBadan']}}},
+            {$group: {_id: '$periode', totalPenjualan: {$sum: '$penjualan'}}}
+        ])
+       
+        // const pembelianSapronak = await Sapronak.aggregate([
+        //     {$match: {periode: mongoose.Types.ObjectId(id)}},
+        //     {$unwind: '$produk'},
+        //     {$project: {pembelianSapronak: {$cond: {if: '$product.jenis' === 'PAKAN', then: {$multiply: ['$zak', '$hargaSatuan']}, else: {$multiply: ['$kuantitas', '$hargaSatuan']}}}}},
+        //     {$group: {_id: '$periode', totalSapronak: {$sum: '$pembelianSapronak'}}}
+        // ])
+        const sapronak = pembelianPakan + pembelianOVK;
+        const penjualanAyamBesar = akumulasiPenjualan[0] ? akumulasiPenjualan[0].totalPenjualan : 0
+        const pendapatanPeternak = penjualanAyamBesar -pembelianDoc - sapronak
         const pendapatanPerEkor = pendapatanPeternak / populasiAkhir
-        const pembelianSapronak = await formula.pembelianSapronak(id)
+        const totalPembelianSapronak = sapronak + pembelianDoc
+        // console.log(penjualanAyamBesar)
+        // console.log(pembelianPakan)
+        // console.log(pembelianOVK)
+        // console.log(pembelianDoc)
+        // console.log(pendapatanPeternak)
+        // console.log(pendapatanPerEkor)
+        // console.log(totalPembelianSapronak)
         res.json({
             'penjualanAyamBesar': penjualanAyamBesar,
-            'pembelianPakan': pembelianSapronak.totalPembelianPakan,
-            'pembelianOVK': pembelianSapronak.totalPembelianOVK,
-            'pembelianDOC': pembelianDOC,
+            'pembelianPakan': pembelianPakan,
+            'pembelianOVK': pembelianOVK,
+            'pembelianDOC': pembelianDoc,
             'pendapatanPeternak': pendapatanPeternak,
             'pendapatanPerEkor': pendapatanPerEkor,
-            'totalPembelianSapronak': pembelianSapronak.totalPembelianSapronak,
+            'totalPembelianSapronak': totalPembelianSapronak,
             message: 'Ok'
         })
     } catch (error) {
@@ -640,6 +676,52 @@ exports.reActivateChickenSheds = async (req, res, next) => {
         message: "Successfully Reactivate Chicken Sheds",
       });
 
+    } catch (error) {
+      return res.json({ status: 500, message: error.message });
+    }
+  };
+
+exports.revenueChart = async(req, res, next) => {
+    try {
+        const chickenShed = await Kandang.findById(req.params.id);
+        const periods = await Model.find({ kandang: chickenShed._id }, {_id: 1, populasi: 1, hargaSatuan: 1}).sort('tanggalMulai');
+
+        const totalRevenue = await Promise.map(periods, async(periode, index) => {
+            const estimateRevenue = await formula.estimateRevenue(periode._id);
+            const periodIndex = periods.findIndex(index => index._id === periode._id);
+            return {
+                actual: estimateRevenue,
+                periode: `Periode ${periodIndex+1}`
+            }
+        })
+
+        return res.json({ data: totalRevenue, message: 'success', status: 200})
+    } catch(error) {
+        return res.json({ status: 500, message: error.message });
+    }
+}
+
+exports.deplesiChart = async (req, res, next) => {
+    const actual = [];
+    try {
+      const chickenShed = await Kandang.findById({ _id: req.params.id });
+  
+      if (chickenShed) {
+          const periods = await Model.find({kandang: chickenShed._id}).sort({tanggalMulai: 1});
+          const deplesiChart = await Promise.map(periods, async(periodeData, index) => {
+              const totalDeplesi = periodeData ? await formula.accumulateDeplesi(periodeData._id) : 0;
+              const deplesi = (periodeData.populasi - (periodeData.populasi - totalDeplesi)) * 100 / periodeData.populasi;
+              const periodIndex = periods.findIndex(index => index._id === periodeData._id);
+              return {
+                  actual: deplesi,
+                  periode: `Periode ${periodIndex+1}`
+              }
+          })
+  
+          actual.push(...deplesiChart)
+      }
+  
+      return res.json({ data: actual, message: 'success', status: 200 });
     } catch (error) {
       return res.json({ status: 500, message: error.message });
     }
