@@ -726,3 +726,40 @@ exports.deplesiChart = async (req, res, next) => {
       return res.json({ status: 500, message: error.message });
     }
   };
+
+  exports.feedIntakeChart = async (req, res, next) => {
+    try {
+      const actual = [];
+      const periods = await Model.find({ kandang: req.params.id }, {_id: 1, populasi: 1}).sort({
+        tanggalMulai: 1,
+      });
+
+      if (periods?.length) {
+        const feedIntakeChart = await Promise.map(
+          periods,
+          async (periodeData) => {
+            const [totalDeplesi, dailyFeedIntake] = await Promise.all([
+              periodeData ? formula.accumulateDeplesi(periodeData._id) : 0,
+              periodeData ? formula.getFeedIntake(periodeData._id) : 0,
+            ]);
+  
+            const currentPopulation = periodeData.populasi - totalDeplesi;
+            const feedIntake = (dailyFeedIntake * 1000) / currentPopulation;
+            const periodIndex = periods.findIndex(
+              (index) => index._id === periodeData._id
+            );
+            return {
+              actual: feedIntake,
+              periode: `Periode ${periodIndex + 1}`,
+            };
+          }
+        );
+  
+        actual.push(...feedIntakeChart);
+      }
+  
+      return res.json({ data: actual, message: "success", status: 200 });
+    } catch (error) {
+      return res.json({ status: 500, message: error.message });
+    }
+  };
