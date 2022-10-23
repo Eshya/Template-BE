@@ -681,6 +681,26 @@ exports.reActivateChickenSheds = async (req, res, next) => {
     }
   };
 
+exports.revenueChart = async(req, res, next) => {
+    try {
+        const chickenShed = await Kandang.findById(req.params.id);
+        const periods = await Model.find({ kandang: chickenShed._id }, {_id: 1, populasi: 1, hargaSatuan: 1}).sort('tanggalMulai');
+
+        const totalRevenue = await Promise.map(periods, async(periode, index) => {
+            const estimateRevenue = await formula.estimateRevenue(periode._id);
+            const periodIndex = periods.findIndex(index => index._id === periode._id);
+            return {
+                actual: estimateRevenue,
+                periode: `Periode ${periodIndex+1}`
+            }
+        })
+
+        return res.json({ data: totalRevenue, message: 'success', status: 200})
+    } catch(error) {
+        return res.json({ status: 500, message: error.message });
+    }
+}
+
 exports.deplesiChart = async (req, res, next) => {
     const actual = [];
     try {
