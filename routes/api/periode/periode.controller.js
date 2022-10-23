@@ -701,27 +701,39 @@ exports.revenueChart = async(req, res, next) => {
     }
 }
 
-exports.deplesiChart = async (req, res, next) => {
-    const actual = [];
+exports.weightChart = async (req, res, next) => {
     try {
-      const chickenShed = await Kandang.findById({ _id: req.params.id });
+      // actual
+      const actual = [];
+      const periods = await Model.find({kandang: req.params.id}).sort({tanggalMulai: 1}).distinct("_id");
+      if (periods.length) {
+          const dailyActivitiesData = await KegiatanHarian.aggregate([
+              {$match: {periode: {$in: periods}}},
+              {$unwind: {'path': '$berat', "preserveNullAndEmptyArrays": true}},
+              {$group: {
+                  _id: '$_id', 
+                  populasi: {$sum: '$berat.populasi'},
+                  beratTimbang: {$sum: '$berat.beratTimbang'},
+                  periode: { $first: '$$ROOT.periode' }
+              }}
+          ]);
   
-      if (chickenShed) {
-          const periods = await Model.find({kandang: chickenShed._id}).sort({tanggalMulai: 1});
-          const deplesiChart = await Promise.map(periods, async(periodeData, index) => {
-              const totalDeplesi = periodeData ? await formula.accumulateDeplesi(periodeData._id) : 0;
-              const deplesi = (periodeData.populasi - (periodeData.populasi - totalDeplesi)) * 100 / periodeData.populasi;
-              const periodIndex = periods.findIndex(index => index._id === periodeData._id);
+          const weightChart = await Promise.map(periods, async(periodeData) => {
+              const dailyActivities = dailyActivitiesData.filter(dailyActivity => dailyActivity.periode.toString() === periodeData.toString());
+              const dailyWeight = !dailyActivities.length ? 0 : dailyActivities.reduce((a, {beratTimbang}) => a + beratTimbang, 0);
+              const dailyWeightSample = !dailyActivities.length ? 0 : dailyActivities.reduce((a, {populasi}) => a + populasi, 0);
+              const avgWeight = dailyWeight/dailyWeightSample;
+              const periodIndex = periods.findIndex(index => index._id === periodeData);
               return {
-                  actual: deplesi,
+                  actual: avgWeight || 0,
                   periode: `Periode ${periodIndex+1}`
               }
           })
   
-          actual.push(...deplesiChart)
+          actual.push(...weightChart);
       }
-  
-      return res.json({ data: actual, message: 'success', status: 200 });
+   
+      return res.json({ data: actual, message: 'success', status: 200  });
     } catch (error) {
       return res.json({ status: 500, message: error.message });
     }
