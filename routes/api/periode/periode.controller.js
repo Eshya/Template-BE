@@ -775,3 +775,27 @@ exports.weightChart = async (req, res, next) => {
       return res.json({ status: 500, message: error.message });
     }
   };
+
+  exports.deplesiChart = async (req, res, next) => {
+    const actual = [];
+    try {
+      const periods = await Model.find({kandang: req.params.id}, {_id: 1, populasi: 1}).sort({tanggalMulai: 1});
+      if (periods?.length) {
+          const deplesiChart = await Promise.map(periods, async(periodeData) => {
+              const totalDeplesi = periodeData ? await formula.accumulateDeplesi(periodeData._id) : 0;
+              const deplesi = (periodeData.populasi - (periodeData.populasi - totalDeplesi)) * 100 / periodeData.populasi;
+              const periodIndex = periods.findIndex(index => index._id === periodeData._id);
+              return {
+                  actual: deplesi,
+                  periode: `Periode ${periodIndex+1}`
+              }
+          })
+      
+          actual.push(...deplesiChart)
+      }
+
+      return res.json({ data: actual, message: 'success', status: 200 });
+    } catch (error) {
+      return res.json({ status: 500, message: error.message });
+    }
+  };
