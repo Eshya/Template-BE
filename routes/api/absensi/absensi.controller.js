@@ -363,7 +363,6 @@ exports.kandangNotVisit = async (req, res, next) => {
         const now  = new Date()
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
         const findAttendToday = await Model.find({tanggal: {$lt: today}}).select('tanggal createdBy -fotoRecording -fotoKandang')
-        console.log(findAttendToday)
         findAttendToday.forEach(e => {
             e.idKandang?._id ? tmp.push(e.idKandang?._id) : true
         })
@@ -371,7 +370,7 @@ exports.kandangNotVisit = async (req, res, next) => {
         const groupPeriode = arrGroup('ppl')
         var results = await Promise.all(Object.keys(groupPeriode(findPeriode)).map(async(x) => {
             const findPPL = mongoose.Types.ObjectId.isValid(x) ? await PPL.findById(x) : null
-            return {_idPPL: x, namePPL: findPPL ? findPPL.namePPL : null, image: findPPL ? findPPL?.image : null, kandang: groupPeriode(findPeriode)[x]};
+            return {_idPPL: x, namaPPL: findPPL ? findPPL.fullname : null, image: findPPL ? findPPL?.image : null, kandang: groupPeriode(findPeriode)[x]};
         }))
         results = Number.isNaN(offset) ? results : results.skip(offset)
         results = Number.isNaN(limit) ? results : results.limit(limit)
