@@ -265,10 +265,10 @@ exports.findListPPL = async (req,res,next) =>{
     }
 }
 
-function filterByRef(array1, array2) {
+function filterByRef(array1, array2, var1, var2) {
     return array1.filter(object1 => {
       return !array2.some(object2 => {
-        return object1.createdBy === object2._id;
+        return object1[var1] === object2[var2];
       });
     });
   }
@@ -293,7 +293,7 @@ exports.findPPLNotAttend = async (req, res, next) => {
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
         const findPPL = await PPL.find({isPPLActive: true}, {kemitraanUser: 0, province: 0, regency: 0, role: 0}).select('fullname')
         const findAttendToday = await Model.find({tanggal: {$gte: today}}).select('createdBy -idKandang -fotoRecording -fotoKandang')
-        var results = [...filterByRef(findPPL, findAttendToday), ...filterByRef(findAttendToday, findPPL)];
+        var results = [...filterByRef(findPPL, findAttendToday, '_id', 'createdBy'), ...filterByRef(findAttendToday, findPPL, '_id', 'createdBy')];
         results = Number.isNaN(offset) ? results : results.skip(offset)
         results = Number.isNaN(limit) ? results : results.limit(limit)
         res.status(200).json({data: results, message: "success", status: res.statusCode})
