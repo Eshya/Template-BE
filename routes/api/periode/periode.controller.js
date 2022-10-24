@@ -691,7 +691,7 @@ exports.revenueChart = async(req, res, next) => {
             const periodIndex = periods.findIndex(index => index._id === periode._id);
             return {
                 actual: estimateRevenue,
-                periode: `Periode ${periodIndex+1}`
+                urutanPeriode: periodIndex+1
             }
         })
 

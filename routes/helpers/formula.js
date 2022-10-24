@@ -1,6 +1,7 @@
 const Periode = require('../api/periode/periode.model')
 const Penjualan = require('../api/penjualan/penjualan.model')
 const KegiatanHarian = require('../api/kegiatan-harian/kegiatan-harian.model')
+const Sapronak = require('../api/sapronak/sapronak.model')
 const ONE_DAY = 24 * 60 * 60 * 1000;
 const dayjs = require('dayjs');
 const mongoose = require('mongoose')
