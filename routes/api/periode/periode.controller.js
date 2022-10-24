@@ -726,7 +726,7 @@ exports.weightChart = async (req, res, next) => {
               const periodIndex = periods.findIndex(index => index._id === periodeData);
               return {
                   actual: avgWeight || 0,
-                  periode: `Periode ${periodIndex+1}`
+                  urutanPeriode: periodIndex+1
               }
           })
   
@@ -762,7 +762,7 @@ exports.weightChart = async (req, res, next) => {
             );
             return {
               actual: feedIntake,
-              periode: `Periode ${periodIndex + 1}`,
+              urutanPeriode: periodIndex+1,
             };
           }
         );
@@ -787,7 +787,7 @@ exports.weightChart = async (req, res, next) => {
               const periodIndex = periods.findIndex(index => index._id === periodeData._id);
               return {
                   actual: deplesi,
-                  periode: `Periode ${periodIndex+1}`
+                  urutanPeriode: periodIndex+1
               }
           })
       
