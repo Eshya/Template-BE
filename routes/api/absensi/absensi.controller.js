@@ -6,7 +6,6 @@ const Promise = require("bluebird");
 const moment = require('moment')
 const Periode = require('../periode/periode.model')
 const Kandang = require('../kandang/kandang.model')
-const PPL = require('../peternak/peternak.model')
 const {clearKey} = require('../../../configs/redis.conf')
 const _MS_PER_DAY = 1000 * 60 * 60 * 24;
 const GMT_TIME = 7;
