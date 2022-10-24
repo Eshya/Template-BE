@@ -26,7 +26,7 @@ const getPembelianSapronak = async (idPeriode) => {
     const filterPakan = findSapronak.filter((x) => {return x.produk?.jenis === "PAKAN"})
     const pembelianPakan = filterPakan.map((x) => {return x.zak * x.hargaSatuan})
     const pembelianOVK = filterOVK.map((x) => {return x.kuantitas * x.hargaSatuan})
-    const totalPembelianOVK = pembelianOVK.reduce((a, b) => a + b, 0)\
+    const totalPembelianOVK = pembelianOVK.reduce((a, b) => a + b, 0)
     const totalPembelianPakan = pembelianPakan.reduce((a, b) => a + b, 0)
     const totalPembelianSapronak = totalPembelianOVK + totalPembelianPakan
     return {totalPembelianOVK, totalPembelianPakan, totalPembelianSapronak}
