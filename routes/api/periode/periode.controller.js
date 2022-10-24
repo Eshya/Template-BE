@@ -690,7 +690,7 @@ exports.revenueChart = async(req, res, next) => {
             const estimateRevenue = await formula.estimateRevenue(periode._id);
             const periodIndex = periods.findIndex(index => index._id === periode._id);
             return {
-                actual: estimateRevenue,
+                actual: estimateRevenue || 0,
                 urutanPeriode: periodIndex+1
             }
         })
