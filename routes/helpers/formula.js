@@ -208,6 +208,13 @@ const getFeedIntake = async(idPeriode) => {
     return accumulateFeedIntake
 }
 
+const penjualanAyamBesar = async (idPeriode) => {
+    const penjualan = await getPenjualan(idPeriode)
+    const akumulasiPenjualan = penjualan.reduce((a, {totalPenjualan}) => a + totalPenjualan, 0)
+    
+    return akumulasiPenjualan
+}
+
 const estimateRevenue = async (idPeriode) => {
     const akumulasiPenjualan = await penjualanAyamBesar(idPeriode)
     const pembelianDOC = await getPembelianDOC(idPeriode)
