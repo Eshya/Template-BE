@@ -17,8 +17,8 @@ const getPenjualan = async (idPeriode) => {
 }
 
 const getPembelianDOC = async (idPeriode) => {
-    const pembelianDOC = periode.populasi * periode.hargaSatuan
     const periode = await Periode.findById(idPeriode).select('populasi hargaSatuan -kemitraan -kandang -jenisDOC')
+    const pembelianDOC = periode.populasi * periode.hargaSatuan
     return pembelianDOC
 }
 
@@ -205,8 +205,8 @@ exports.IPClosing = async (idPeriode) => {
 }
 
 const penjualanAyamBesar = async (idPeriode) => {
-    const akumulasiPenjualan = penjualan.reduce((a, {totalPenjualan}) => a + totalPenjualan, 0)
     const penjualan = await getPenjualan(idPeriode)
+    const akumulasiPenjualan = penjualan.reduce((a, {totalPenjualan}) => a + totalPenjualan, 0)
     return akumulasiPenjualan
 }
 
