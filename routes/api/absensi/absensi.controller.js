@@ -17,6 +17,9 @@ let dateDiffInDays = (a, b) => {
   
     return Math.floor((utc2 - utc1) / _MS_PER_DAY);
 }
+function paginate(array, page_size, page_number) {
+    return array.slice((page_number - 1) * page_size, page_number * page_size);
+}
 function delCreator(obj){
     obj.createdBy = undefined
     obj.idKandang = undefined
@@ -120,7 +123,11 @@ exports.insert = async (req, res, next) => {
     try {
         const createdBy = req.user._id
         data.createdBy=createdBy
+        data.tanggal = new Date().addHours(GMT_TIME)
+        let minutesFormat = data.tanggal.getMinutes() >=10 ? data.tanggal.getMinutes() : '0'+data.tanggal.getMinutes();
+        data.jamKunjungan = `${data.tanggal.getHours()}:${minutesFormat} WIB`
         const results = await Model.create(data);
+        
         res.json({
             data: delCreator(results),
             message: 'Success'
