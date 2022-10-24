@@ -207,6 +207,7 @@ exports.IPClosing = async (idPeriode) => {
 const penjualanAyamBesar = async (idPeriode) => {
     const penjualan = await getPenjualan(idPeriode)
     const akumulasiPenjualan = penjualan.reduce((a, {totalPenjualan}) => a + totalPenjualan, 0)
+    
     return akumulasiPenjualan
 }
 
