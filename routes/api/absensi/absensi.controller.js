@@ -193,8 +193,8 @@ exports.findKunjunganHistory = async (req,res,next) =>{
         if(isNaN(offset))offset=0;
         if(idPPL !== undefined)queryMoongose.createdBy=mongoose.Types.ObjectId(idPPL);
         queryMoongose.tanggal = {
-            $gte:new Date(startDate).addHours(GMT_TIME).today(),
-            $lt:new Date(endDate).addHours(GMT_TIME).tonight()
+            $gte: new Date(startDate).addHours(GMT_TIME).today(),
+            $lt: new Date(endDate).addHours(GMT_TIME).tonight()
         }
         let findAbsensi = await Model.find(queryMoongose).sort({ tanggal: -1 });
         let groupByDate = findAbsensi.reduce((group,value)=>{
@@ -235,8 +235,8 @@ exports.findListPPL = async (req,res,next) =>{
         if (search) {
             filter.fullname = new RegExp(search, 'i') 
         }
-        if(isNaN(limit))limit=10;
-        if(isNaN(offset))offset=0;
+        if(isNaN(limit)) limit=10;
+        if(isNaN(offset)) offset=0;
         filter.role = "61d5608d4a7ba5b05c9c7ae3";
         filter.deleted = false;
         filter.isPPLActive = true
