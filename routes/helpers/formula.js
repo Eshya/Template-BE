@@ -11,7 +11,7 @@ const getPenjualan = async (idPeriode) => {
         {$match: {periode: mongoose.Types.ObjectId(idPeriode)}},
         {$addFields: {penjualan: {$multiply: ['$qty', '$harga', '$beratBadan']}}},
         {$group: {_id: '$_id', tanggal: {$push: '$tanggal'}, totalEkor: {$sum: '$qty'}, tonase: {$sum: '$beratBadan'}, totalPenjualan: {$sum: '$penjualan'}}},
-        {$project: {tanggal: '$tanggal', totalTonase: {$multiply: ['$totalEkor', '$tonase']}, totalEkor: '$totalEkor', totalPenjualan: '$totalPenjualan'}}
+        {$project: {tanggal: '$tanggal',totalTonase: {$multiply: ['$totalEkor', '$tonase']}, totalEkor: '$totalEkor', totalPenjualan: '$totalPenjualan'}}
     ])
     return penjualan
 }
@@ -28,7 +28,7 @@ const getPembelianSapronak = async (idPeriode) => {
     const filterPakan = findSapronak.filter((x) => {return x.produk?.jenis === "PAKAN"})
     const pembelianPakan = filterPakan.map((x) => {return x.zak * x.hargaSatuan})
     const pembelianOVK = filterOVK.map((x) => {return x.kuantitas * x.hargaSatuan})
-    const totalPembelianOVK = pembelianOVK.reduce((a, b) => a + b, 0)\
+    const totalPembelianOVK = pembelianOVK.reduce((a, b) => a + b, 0)
     const totalPembelianPakan = pembelianPakan.reduce((a, b) => a + b, 0)
     const totalPembelianSapronak = totalPembelianOVK + totalPembelianPakan
     return {totalPembelianOVK, totalPembelianPakan, totalPembelianSapronak}
