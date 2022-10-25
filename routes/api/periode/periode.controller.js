@@ -268,12 +268,15 @@ exports.getBudidaya = async (req, res, next) => {
     const id = req.params.id
     try {
         let kematian = []
+        
         const doc = await Model.findById(id);
-        const pembelianDOC = await formula.pembelianDOC(id)
         const getKegiatan = await KegiatanHarian.find({periode: id})
+        const pembelianDOC = await formula.pembelianDOC(id)
+
         getKegiatan.forEach(x => {
             kematian.push(x.deplesi + x.pemusnahan)
         });
+
         const totalKematian = kematian.reduce(reducer, 0);
         const populasiAkhir = doc.populasi - totalKematian
         const penjualanAyamBesar = await formula.penjualanAyamBesar(id)
