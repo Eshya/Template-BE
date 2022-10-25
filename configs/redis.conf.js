@@ -69,6 +69,7 @@ mongoose.Query.prototype.exec = async function() {
     else if(this.cmd==2)client.select((parseInt(redisPATH) + (PATH_REDIS_SPACE*2)))
     else client.select(redisPATH)
     
+    RegExp.prototype.toJSON = RegExp.prototype.toString;
     const key = JSON.stringify({
     ...this.getQuery(),...this.getOptions()
     });
