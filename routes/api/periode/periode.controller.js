@@ -278,12 +278,12 @@ exports.getBudidaya = async (req, res, next) => {
         const populasiAkhir = doc.populasi - totalKematian
         const penjualanAyamBesar = await formula.penjualanAyamBesar(id)
         const pendapatanPeternak = await formula.estimateRevenue(id)
-        const pendapatanPerEkor = pendapatanPeternak / populasiAkhir
         const pembelianSapronak = await formula.pembelianSapronak(id)
+        const pendapatanPerEkor = pendapatanPeternak / populasiAkhir
         res.json({
             'penjualanAyamBesar': penjualanAyamBesar,
-            'pembelianPakan': pembelianSapronak.totalPembelianPakan,
             'pembelianOVK': pembelianSapronak.totalPembelianOVK,
+            'pembelianPakan': pembelianSapronak.totalPembelianPakan,
             'pembelianDOC': pembelianDOC,
             'pendapatanPeternak': pendapatanPeternak,
             'pendapatanPerEkor': pendapatanPerEkor,
