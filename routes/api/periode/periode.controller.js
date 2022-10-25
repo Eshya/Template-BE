@@ -618,7 +618,7 @@ exports.reActivateChickenSheds = async (req, res, next) => {
 exports.revenueChart = async(req, res, next) => {
     try {
         const chickenShed = await Kandang.findById(req.params.id);
-        const periods = await Model.find({ kandang: chickenShed._id }, {_id: 1, populasi: 1, hargaSatuan: 1}).sort('tanggalMulai');
+        const periods = await Model.find({ kandang: chickenShed._id, isEnd: true }, {_id: 1, populasi: 1, hargaSatuan: 1}).sort('tanggalMulai');
 
         const totalRevenue = await Promise.map(periods, async(periode, index) => {
             const estimateRevenue = await formula.estimateRevenue(periode._id);
@@ -639,7 +639,7 @@ exports.weightChart = async (req, res, next) => {
     try {
       // actual
       const actual = [];
-      const periods = await Model.find({kandang: req.params.id}).sort({tanggalMulai: 1}).distinct("_id");
+      const periods = await Model.find({kandang: req.params.id, isEnd: true}).sort({tanggalMulai: 1}).distinct("_id");
       if (periods.length) {
           const dailyActivitiesData = await KegiatanHarian.aggregate([
               {$match: {periode: {$in: periods}}},
@@ -676,7 +676,7 @@ exports.weightChart = async (req, res, next) => {
   exports.feedIntakeChart = async (req, res, next) => {
     try {
       const actual = [];
-      const periods = await Model.find({ kandang: req.params.id }, {_id: 1, populasi: 1}).sort({
+      const periods = await Model.find({ kandang: req.params.id, isEnd: true }, {_id: 1, populasi: 1}).sort({
         tanggalMulai: 1,
       });
 
@@ -713,7 +713,7 @@ exports.weightChart = async (req, res, next) => {
   exports.deplesiChart = async (req, res, next) => {
     const actual = [];
     try {
-      const periods = await Model.find({kandang: req.params.id}, {_id: 1, populasi: 1}).sort({tanggalMulai: 1});
+      const periods = await Model.find({kandang: req.params.id, isEnd: true}, {_id: 1, populasi: 1}).sort({tanggalMulai: 1});
       if (periods?.length) {
           const deplesiChart = await Promise.map(periods, async(periodeData) => {
               const totalDeplesi = periodeData ? await formula.accumulateDeplesi(periodeData._id) : 0;
