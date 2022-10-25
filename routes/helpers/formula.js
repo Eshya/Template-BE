@@ -9,8 +9,9 @@ const mongoose = require('mongoose')
 const getPenjualan = async (idPeriode) => {
     const penjualan = await Penjualan.aggregate([
         {$match: {periode: mongoose.Types.ObjectId(idPeriode)}},
-        {$group: {_id: '$_id', tanggal: {$push: '$tanggal'}, totalEkor: {$sum: '$qty'}, tonase: {$sum: '$beratBadan'}}},
-        {$project: {tanggal: '$tanggal', totalTonase: {$multiply: ['$totalEkor', '$tonase']}, totalEkor: '$totalEkor'}}
+        {$addFields: {penjualan: {$multiply: ['$qty', '$harga', '$beratBadan']}}},
+        {$group: {_id: '$_id', tanggal: {$push: '$tanggal'}, totalEkor: {$sum: '$qty'}, tonase: {$sum: '$beratBadan'}, totalPenjualan: {$sum: '$penjualan'}}},
+        {$project: {tanggal: '$tanggal',totalTonase: {$multiply: ['$totalEkor', '$tonase']}, totalEkor: '$totalEkor', totalPenjualan: '$totalPenjualan'}}
     ])
     return penjualan
 }
