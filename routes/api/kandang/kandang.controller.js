@@ -1877,7 +1877,7 @@ exports.detailKandang = async (req,res, next) => {
                     lokasi: !findPeriode.length ? findKandang.alamat : map[0].kandang.alamat,
                     jenis: !findPeriode.length ? findKandang.tipe.tipe : map[0].kandang.tipe.tipe,
                     kapasitas: !findPeriode.length ? findKandang.populasi : map[0].kandang.populasi,
-                    penghasilan: !findPeriode.length ? 0 : map[0].kandang.estimasi,
+                    penghasilan: !findPeriode.length ? 0 : map[0].estimasi,
                 },
                 iot: suhu,
                 budidaya: map
