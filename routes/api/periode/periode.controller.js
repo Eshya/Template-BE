@@ -265,72 +265,6 @@ exports.removeById = async (req, res, next) => {
     }
 }
 
-exports.getBudidaya = async (req, res, next) => {
-    const id = req.params.id
-    try {
-        let harian = []
-        let kematian = []
-        let pembelianPakan = 0
-        let pembelianOVK = 0
-        const doc = await Model.findById(id);
-        const pembelianDoc = doc.populasi * doc.hargaSatuan
-        const getSapronak = await Sapronak.find({periode: id});
-        // const penjualanAyamBesar = await 
-        for (let i = 0; i < getSapronak.length; i++) {
-            if (getSapronak[i]?.produk?.jenis === 'PAKAN') {
-                const compliment = getSapronak[i].zak  * getSapronak[i].hargaSatuan
-                pembelianPakan += compliment
-                // console.log(`${getSapronak[i].zak} :: ${getSapronak[i].hargaSatuan} :: ${compliment} :: ${pembelianPakan}  `)
-            } else {
-                const compliment = getSapronak[i].kuantitas * getSapronak[i].hargaSatuan
-                pembelianOVK += compliment
-            }
-        }
-        const getKegiatan = await KegiatanHarian.find({periode: id})
-        getKegiatan.forEach(x => {
-            kematian.push(x.deplesi + x.pemusnahan)
-        });
-        const totalKematian = kematian.reduce(reducer, 0);
-        const populasiAkhir = doc.populasi - totalKematian
-        const akumulasiPenjualan = await Penjualan.aggregate([
-            {$match: {periode: mongoose.Types.ObjectId(id)}},
-            {$project: {penjualan: {$multiply: ['$qty', '$harga', '$beratBadan']}}},
-            {$group: {_id: '$periode', totalPenjualan: {$sum: '$penjualan'}}}
-        ])
-       
-        // const pembelianSapronak = await Sapronak.aggregate([
-        //     {$match: {periode: mongoose.Types.ObjectId(id)}},
-        //     {$unwind: '$produk'},
-        //     {$project: {pembelianSapronak: {$cond: {if: '$product.jenis' === 'PAKAN', then: {$multiply: ['$zak', '$hargaSatuan']}, else: {$multiply: ['$kuantitas', '$hargaSatuan']}}}}},
-        //     {$group: {_id: '$periode', totalSapronak: {$sum: '$pembelianSapronak'}}}
-        // ])
-        const sapronak = pembelianPakan + pembelianOVK;
-        const penjualanAyamBesar = akumulasiPenjualan[0] ? akumulasiPenjualan[0].totalPenjualan : 0
-        const pendapatanPeternak = penjualanAyamBesar -pembelianDoc - sapronak
-        const pendapatanPerEkor = pendapatanPeternak / populasiAkhir
-        const totalPembelianSapronak = sapronak + pembelianDoc
-        // console.log(penjualanAyamBesar)
-        // console.log(pembelianPakan)
-        // console.log(pembelianOVK)
-        // console.log(pembelianDoc)
-        // console.log(pendapatanPeternak)
-        // console.log(pendapatanPerEkor)
-        // console.log(totalPembelianSapronak)
-        res.json({
-            'penjualanAyamBesar': penjualanAyamBesar,
-            'pembelianPakan': pembelianPakan,
-            'pembelianOVK': pembelianOVK,
-            'pembelianDOC': pembelianDoc,
-            'pendapatanPeternak': pendapatanPeternak,
-            'pendapatanPerEkor': pendapatanPerEkor,
-            'totalPembelianSapronak': totalPembelianSapronak,
-            message: 'Ok'
-        })
-    } catch (error) {
-        next(error)
-    }
-}
-
 const rataBW = async (req, day) => {
     const getPeriode = await Model.findById(req)
     const start = new Date(getPeriode.tanggalMulai);
@@ -799,3 +733,37 @@ exports.weightChart = async (req, res, next) => {
       return res.json({ status: 500, message: error.message });
     }
   };
+
+exports.getBudidaya = async (req, res, next) => {
+    const id = req.params.id
+    try {
+        let kematian = []
+        
+        const doc = await Model.findById(id);
+        const getKegiatan = await KegiatanHarian.find({periode: id})
+        const pembelianDOC = await formula.pembelianDOC(id)
+
+        getKegiatan.forEach(x => {
+            kematian.push(x.deplesi + x.pemusnahan)
+        });
+
+        const totalKematian = kematian.reduce(reducer, 0);
+        const populasiAkhir = doc.populasi - totalKematian
+        const penjualanAyamBesar = await formula.penjualanAyamBesar(id)
+        const pendapatanPeternak = await formula.estimateRevenue(id)
+        const pembelianSapronak = await formula.pembelianSapronak(id)
+        const pendapatanPerEkor = pendapatanPeternak / populasiAkhir
+        res.json({
+            'penjualanAyamBesar': penjualanAyamBesar,
+            'pembelianOVK': pembelianSapronak.totalPembelianOVK,
+            'pembelianPakan': pembelianSapronak.totalPembelianPakan,
+            'pembelianDOC': pembelianDOC,
+            'pendapatanPeternak': pendapatanPeternak,
+            'pendapatanPerEkor': pendapatanPerEkor,
+            'totalPembelianSapronak': pembelianSapronak.totalPembelianSapronak,
+            message: 'Ok'
+        })
+    } catch (error) {
+        next(error)
+    }
+}
