@@ -264,40 +264,6 @@ exports.removeById = async (req, res, next) => {
     }
 }
 
-exports.getBudidaya = async (req, res, next) => {
-    const id = req.params.id
-    try {
-        let kematian = []
-        
-        const doc = await Model.findById(id);
-        const getKegiatan = await KegiatanHarian.find({periode: id})
-        const pembelianDOC = await formula.pembelianDOC(id)
-
-        getKegiatan.forEach(x => {
-            kematian.push(x.deplesi + x.pemusnahan)
-        });
-
-        const totalKematian = kematian.reduce(reducer, 0);
-        const populasiAkhir = doc.populasi - totalKematian
-        const penjualanAyamBesar = await formula.penjualanAyamBesar(id)
-        const pendapatanPeternak = await formula.estimateRevenue(id)
-        const pembelianSapronak = await formula.pembelianSapronak(id)
-        const pendapatanPerEkor = pendapatanPeternak / populasiAkhir
-        res.json({
-            'penjualanAyamBesar': penjualanAyamBesar,
-            'pembelianOVK': pembelianSapronak.totalPembelianOVK,
-            'pembelianPakan': pembelianSapronak.totalPembelianPakan,
-            'pembelianDOC': pembelianDOC,
-            'pendapatanPeternak': pendapatanPeternak,
-            'pendapatanPerEkor': pendapatanPerEkor,
-            'totalPembelianSapronak': pembelianSapronak.totalPembelianSapronak,
-            message: 'Ok'
-        })
-    } catch (error) {
-        next(error)
-    }
-}
-
 const rataBW = async (req, day) => {
     const getPeriode = await Model.findById(req)
     const start = new Date(getPeriode.tanggalMulai);
@@ -647,3 +613,38 @@ exports.reActivateChickenSheds = async (req, res, next) => {
       return res.json({ status: 500, message: error.message });
     }
   };
+
+
+exports.getBudidaya = async (req, res, next) => {
+    const id = req.params.id
+    try {
+        let kematian = []
+        
+        const doc = await Model.findById(id);
+        const getKegiatan = await KegiatanHarian.find({periode: id})
+        const pembelianDOC = await formula.pembelianDOC(id)
+
+        getKegiatan.forEach(x => {
+            kematian.push(x.deplesi + x.pemusnahan)
+        });
+
+        const totalKematian = kematian.reduce(reducer, 0);
+        const populasiAkhir = doc.populasi - totalKematian
+        const penjualanAyamBesar = await formula.penjualanAyamBesar(id)
+        const pendapatanPeternak = await formula.estimateRevenue(id)
+        const pembelianSapronak = await formula.pembelianSapronak(id)
+        const pendapatanPerEkor = pendapatanPeternak / populasiAkhir
+        res.json({
+            'penjualanAyamBesar': penjualanAyamBesar,
+            'pembelianOVK': pembelianSapronak.totalPembelianOVK,
+            'pembelianPakan': pembelianSapronak.totalPembelianPakan,
+            'pembelianDOC': pembelianDOC,
+            'pendapatanPeternak': pendapatanPeternak,
+            'pendapatanPerEkor': pendapatanPerEkor,
+            'totalPembelianSapronak': pembelianSapronak.totalPembelianSapronak,
+            message: 'Ok'
+        })
+    } catch (error) {
+        next(error)
+    }
+}
