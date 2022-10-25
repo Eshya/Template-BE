@@ -1780,6 +1780,53 @@ exports.listKandangPPL = async (req, res, next) => {
     }
 }
 
+exports.detailKandang = async (req,res, next) => {
+    const id = req.params.id
+    const token = req.headers['authorization']
+    try {
+        // console.log(req.user)
+        var findKandang, findPeriode
+        req.user.isPPLActive === true ? findKandang = await Model.findOneWithDeleted({_id: id}) : findKandang = await Model.findById(id)
+        req.user.isPPLActive === true ? findPeriode = await Periode.find({kandang: id, isActivePPL: true}, {}, {autopopulate: false}).populate({path: 'kandang', options: {withDeleted: true}}).sort({createdAt: 1}) : findPeriode = await Periode.find({kandang: id}).sort({ createdAt: 1})
+        // const findPeriode = await Periode.find({ppl: user, isActivePPL: true}, {}, {autopopulate: false}).populate({path: 'kandang', options: {withDeleted: true}})
+
+        const map = await Promise.all(findPeriode.map(async(x) => {
+            const findUser = await fetch(`${urlAuth}/api/users/${x.createdBy}`, {
+                method: 'GET',
+                headers: {'Authorization': token,
+                "Content-Type": "application/json"}
+            }).then(res => res.json()).then(data => data.data)
+            const finish = x.isEnd === true ? new Date(x.tanggalAkhir) : new Date(Date.now())
+            const start = new Date(x.tanggalMulai)
+            const umur = Math.round(Math.abs((finish - start) / ONE_DAY))
+            const estimasi = await formula.estimateRevenue(x._id)
+
+            return {...x.toObject(), umur: umur, estimasi: estimasi, user: findUser}
+        }))
+        const suhu = await fetch(`http://${urlIOT}/api/flock/kandang/${id}`,{
+                method: 'GET',
+                headers: {'Authorization': token,
+                "Content-Type": "application/json"}
+            }).then(res => res.json()).then(data => data.data)
+        res.json({
+            data: {
+                informasiKandang: {
+                    nama: !findPeriode.length ? findKandang.kode : map[0].kandang.kode,
+                    lokasi: !findPeriode.length ? findKandang.alamat : map[0].kandang.alamat,
+                    jenis: !findPeriode.length ? findKandang.tipe.tipe : map[0].kandang.tipe.tipe,
+                    kapasitas: !findPeriode.length ? findKandang.populasi : map[0].kandang.populasi,
+                    penghasilan: !findPeriode.length ? 0 : map[0].estimasi,
+                },
+                iot: suhu,
+                budidaya: map
+            },
+            message: 'Ok'
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
 const _kelolaPeternak = async (req) => {
     const user = req.user._id
     const findAktif = Model.find({createdBy: user, isActive: true})
@@ -1915,76 +1962,7 @@ exports.kelolaPPL = async (req, res, next) => {
     }
 }
 
-exports.detailKandang = async (req,res, next) => {
-    const id = req.params.id
-    const token = req.headers['authorization']
-    try {
-        // console.log(req.user)
-        var findKandang, findPeriode
-        req.user.isPPLActive === true ? findKandang = await Model.findOneWithDeleted({_id: id}) : findKandang = await Model.findById(id)
-        req.user.isPPLActive === true ? findPeriode = await Periode.find({kandang: id, isActivePPL: true}, {}, {autopopulate: false}).populate({path: 'kandang', options: {withDeleted: true}}).sort({createdAt: 1}) : findPeriode = await Periode.find({kandang: id}).sort({ createdAt: 1})
-        // const findPeriode = await Periode.find({ppl: user, isActivePPL: true}, {}, {autopopulate: false}).populate({path: 'kandang', options: {withDeleted: true}})
 
-        const map = await Promise.all(findPeriode.map(async(x) => {
-            const findUser = await fetch(`${urlAuth}/api/users/${x.createdBy}`, {
-                method: 'GET',
-                headers: {'Authorization': token,
-                "Content-Type": "application/json"}
-            }).then(res => res.json()).then(data => data.data)
-            // const ppl = await fetch(`https://${urlAuth}/api/users/${x.ppl}`, {
-            //     method: 'GET',
-            //     headers: {'Authorization': token,
-            //     "Content-Type": "application/json"}
-            // }).then(res => res.json()).then(data => data.data)
-            const now = new Date(Date.now())
-            const tanggalAkhir = new Date(x.tanggalAkhir)
-            const finish = x.isEnd === true ? new Date(x.tanggalAkhir) : new Date(Date.now())
-            const start = new Date(x.tanggalMulai)
-            const umur = Math.round(Math.abs((finish - start) / ONE_DAY))
-            // const umur = await formula.dailyChickenAge(x._id);
-            const pembelianSapronak = await Sapronak.aggregate([
-                {$match: {periode: x._id}},
-                {$unwind: '$produk'},
-                {$project: {pembelianSapronak: {$cond: {if: '$product.jenis' === 'PAKAN', then: {$multiply: ['$zak', '$hargaSatuan']}, else: {$multiply: ['$kuantitas', '$hargaSatuan']}}}}},
-                {$group: {_id: '$periode', totalSapronak: {$sum: '$pembelianSapronak'}}}
-            ])
-            const pembelianDoc = x.populasi * x.hargaSatuan
-            const findPenjualan = await Penjualan.find({periode: x._id})
-            const akumulasiPenjualan = await Penjualan.aggregate([
-                {$match: {periode: x._id}},
-                {$project: {penjualan: {$multiply: ['$qty', '$harga', '$beratBadan']}}},
-                {$group: {_id: '$periode', totalPenjualan: {$sum: '$penjualan'}}}
-            ])
-            // console.log(akumulasiPenjualan)
-            const penjualan = findPenjualan.length == 0 ? 0 : akumulasiPenjualan[0].totalPenjualan
-            const sapronak = pembelianSapronak.length === 0 ? 0 : pembelianSapronak[0].totalSapronak
-            const estimasi = penjualan - pembelianDoc - sapronak
-
-            return {...x.toObject(), umur: umur, estimasi: estimasi, user: findUser}
-        }))
-        const suhu = await fetch(`http://${urlIOT}/api/flock/kandang/${id}`,{
-                method: 'GET',
-                headers: {'Authorization': token,
-                "Content-Type": "application/json"}
-            }).then(res => res.json()).then(data => data.data)
-        res.json({
-            data: {
-                informasiKandang: {
-                    nama: !findPeriode.length ? findKandang.kode : map[0].kandang.kode,
-                    lokasi: !findPeriode.length ? findKandang.alamat : map[0].kandang.alamat,
-                    jenis: !findPeriode.length ? findKandang.tipe.tipe : map[0].kandang.tipe.tipe,
-                    kapasitas: !findPeriode.length ? findKandang.populasi : map[0].kandang.populasi,
-                    penghasilan: !findPeriode.length ? 0 : map[0].estimasi,
-                },
-                iot: suhu,
-                budidaya: map
-            },
-            message: 'Ok'
-        })
-    } catch (error) {
-        next(error)
-    }
-}
 
 exports.deplesiChart = async (req, res, next) => {
     const actual = [];
