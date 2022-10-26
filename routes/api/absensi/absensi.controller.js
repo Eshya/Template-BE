@@ -10,6 +10,8 @@ const {clearKey} = require('../../../configs/redis.conf')
 const _MS_PER_DAY = 1000 * 60 * 60 * 24;
 const GMT_TIME = 7;
 const CACHE_ABSENSI_TIME = 1 * 24 * 60 * 60;
+const fetch = require('node-fetch')
+
 let dateDiffInDays = (a, b) => {
     // Discard the time and time-zone information.
     const utc1 = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
@@ -265,10 +267,10 @@ exports.findListPPL = async (req,res,next) =>{
     }
 }
 
-function filterByRef(array1, array2, var1, var2) {
+function filterByRef(array1, array2) {
     return array1.filter(object1 => {
       return !array2.some(object2 => {
-        return object1[var1] === object2[var2];
+        return object1.createdBy === object2._id;
       });
     });
   }
@@ -288,12 +290,29 @@ exports.findPPLNotAttend = async (req, res, next) => {
     Array.prototype.limit = arrLimit
     Array.prototype.skip = arrSkip
     const {limit, offset} = parseQuery(req.query);
+    const token = req.headers['authorization']
     try {
+        let tmp = []
         const now  = new Date()
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-        const findPPL = await PPL.find({isPPLActive: true}, {kemitraanUser: 0, province: 0, regency: 0, role: 0}).select('fullname')
-        const findAttendToday = await Model.find({tanggal: {$gte: today}}).select('createdBy -idKandang -fotoRecording -fotoKandang')
-        var results = [...filterByRef(findPPL, findAttendToday, '_id', 'createdBy'), ...filterByRef(findAttendToday, findPPL, '_id', 'createdBy')];
+        // const findPPL = await PPL.find({isPPLActive: true}, {kemitraanUser: 0, province: 0, regency: 0, role: 0}).select('fullname')
+        const findPPL = await fetch(`${process.env.AUTH_URL}/api/users?where[isPPLActive]=true`, {
+            method: 'GET',
+            headers: {'Authorization': token,  "Content-Type": "application/json"}
+        }).then(res => res.json()).then(data => data.data)
+        findPPL.forEach(c => {
+            tmp.push(c._id)
+        })
+        const findAttendToday = await Model.find({createdBy: tmp, tanggal: {$gte: today}}).select('createdBy -idKandang -fotoRecording -fotoKandang')
+        const filter = findPPL.filter(c => {
+            return !findAttendToday.some(x => {
+                return c._id === x.createdBy._id
+            })
+        })
+        let results = []
+        filter.forEach(c => {
+            results.push({_id: c._id, namaPPL: c.fullname, image: c.image})
+        })
         results = Number.isNaN(offset) ? results : results.skip(offset)
         results = Number.isNaN(limit) ? results : results.limit(limit)
         res.status(200).json({data: results, message: "success", status: res.statusCode})
