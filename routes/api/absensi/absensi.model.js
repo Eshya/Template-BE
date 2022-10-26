@@ -48,6 +48,16 @@ const scheme = new Schema({
         autopopulate: {maxDepth: 1},
         default: null
     }],
+    device: {
+        id: {
+            type: String,
+            default: null
+        },
+        name: {
+            type: String,
+            default: null
+        }
+    },
     createdBy: {
         type: Schema.Types.ObjectId,
         ref: PPL, select: true,
