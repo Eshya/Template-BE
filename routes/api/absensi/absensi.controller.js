@@ -311,7 +311,7 @@ exports.findPPLNotAttend = async (req, res, next) => {
         })
         let results = []
         filter.forEach(c => {
-            results.push({_id: c._id, namaPPL: c.fullname, image: c.image})
+            results.push({_id: c._id, fullname: c.fullname, image: c.image})
         })
         results = Number.isNaN(offset) ? results : results.skip(offset)
         results = Number.isNaN(limit) ? results : results.limit(limit)

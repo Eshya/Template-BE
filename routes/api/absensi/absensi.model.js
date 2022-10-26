@@ -63,7 +63,7 @@ const scheme = new Schema({
         ref: PPL, select: true,
         autopopulate: {maxDepth: 1},
         default: null
-    }
+    },
 }, {versionKey: false, timestamps: true})
 scheme.plugin(require('mongoose-autopopulate'));
 module.exports = model('Absensi', scheme, 'absensi');
