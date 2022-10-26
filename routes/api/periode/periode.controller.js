@@ -617,7 +617,7 @@ exports.reActivateChickenSheds = async (req, res, next) => {
 
 exports.revenueChart = async(req, res, next) => {
     try {
-        const periods = await Model.find({ kandang: req.params.id, isEnd: true }, {_id: 1, populasi: 1, hargaSatuan: 1}).sort('tanggalMulai');
+        const periods = await Model.find({ kandang: req.params.id, isEnd: true }, {_id: 1, populasi: 1, hargaSatuan: 1}).sort({tanggalMulai: 1});
 
         const totalRevenue = await Promise.map(periods, async(periode, index) => {
             const estimateRevenue = await formula.estimateRevenue(periode._id);
