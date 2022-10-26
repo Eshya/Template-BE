@@ -41,11 +41,10 @@ mongoose.Query.prototype.exec = async function() {
     if (!this.useCache) {
     return await exec.apply(this, arguments);
     }
-
+    RegExp.prototype.toJSON = RegExp.prototype.toString;
     const key = JSON.stringify({
     ...this.getQuery()
     });
-    // console.log(key)
     
     // const cacheValue = await client.HGETALL(this.hashKey, key);
     const cacheValue = await getAsync(this.hashKey,key)
