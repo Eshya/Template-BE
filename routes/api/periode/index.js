@@ -22,7 +22,7 @@ router.get('/chart/pendapatan/:id', auth, c.revenueChart);
 router.get('/chart/feedIntake/:id', auth, c.feedIntakeChart);
 router.post('/validate', auth, permition('superadmin', 'ppl'), permitionPPL, c.validateTambah)
 router.post('/', auth, schemaCek(schema), after, c.insert);
-// router.post('/autoClosingCultivate', verifyApiKey, c.autoClosingCultivation );
+router.post('/autoClosingCultivate', verifyApiKey, c.autoClosingCultivation );
 router.put('/tambah/ppl/:id', auth, permition('superadmin', 'ppl'), permitionPPL, paramCek, c.tambahPPL)
 router.put('/hapus/ppl/:id', auth, permition('superadmin', 'ppl'), permitionPPL, paramCek, c.hapusPPL)
 router.put('/:id', auth, paramCek, c.updateById);
@@ -31,5 +31,7 @@ router.delete('/', auth, c.remove);
 router.delete('/:id', auth, paramCek, c.removeById);
 router.post('/script/reActivateChickenSheds', c.reActivateChickenSheds);
 router.get('/chart/bobot/:id', auth, c.weightChart);
+router.post('/script/reactivatePPLChickenShed', c.reactivatePPLChickenShed);
+router.post('/script/reactivateIsAutoClosing', c.reactivateIsAutoClosing);
 module.exports = router;
 

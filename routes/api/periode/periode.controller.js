@@ -552,9 +552,10 @@ exports.autoClosingCultivation = async (req, res, next) => {
           const periodeActiveDate = dayjs(periode[0].createdAt).add(10, "day");
 
           if (
-            chickenShedAge >= 50 &&
+            chickenShedAge >= 60 &&
             today.format("YYYY-MM-DD") >= periodeActiveDate.format("YYYY-MM-DD")
           ) {
+
             if (periode[0].ppl) {
               periode[0].isActivePPL = false;
             }
@@ -579,35 +580,18 @@ exports.autoClosingCultivation = async (req, res, next) => {
 exports.reActivateChickenSheds = async (req, res, next) => {
     try {
       const periods = await Model.find({ isEnd: true, tanggalAkhir: null });
+      const chickenShedIds = periods.map(({ kandang }) => kandang?._id);
 
-      if (!periods.length) {
-        return res.json({ status: 500, message: err.message });
-      }
-
-      const chickenShedIds = periods.map(({ kandang }) => kandang._id);
-
-      await Promise.all([
-        Model.bulkWrite([
-            {
-                "updateMany": {
-                    "filter": { "isEnd": true, "tanggalAkhir": null },
-                    "update": { "$set": { "isEnd": false, "isAutoClosing": false }}
-                }
-            },
-            {
-             "updateMany": {
-                "filter": { "ppl": { "$ne": null }},
-                "update": { "$set": { "isActivePPL": true }},
-                },
-            }
-        ]),
-
-        Kandang.updateMany({ _id: { $in: chickenShedIds }}, {$set: { isActive: true }})
+      const [updatedPeriode, updatedKandang] = await Promise.all([
+        // Update periode when is end is true and doesn't have tanggal akhir will be update isEnd status to false
+        Model.updateMany({ isEnd: true, tanggalAkhir: null },{ $set: { isEnd: false, isAutoClosing: false }}),
+        // Activate kandang
+        Kandang.updateMany({ _id: { $in: chickenShedIds }, deleted: false}, { $set: { isActive: true }})
       ]);
 
       return res.json({
         status: 200,
-        message: "Successfully Reactivate Chicken Sheds",
+        message: `Successfully Reactivate ${updatedPeriode.nModified} periode, and ${updatedKandang.nModified} kandang`,
       });
 
     } catch (error) {
@@ -630,6 +614,27 @@ exports.revenueChart = async(req, res, next) => {
 
         return res.json({ data: totalRevenue, message: 'success', status: 200})
     } catch(error) {
+        return res.json({ status: 500, message: error.message });
+    }
+}
+exports.reactivatePPLChickenShed = async(req, res, next) => {
+    try {
+        const periods = await Model.find({ tanggalAkhir: {$ne: null}, ppl: {$ne: null}, isEnd: true, isActivePPL: true });
+        const chickenShedIds = periods.map(({ kandang }) => kandang?._id);
+
+        const [updatedPeriode, updatedKandang] = await Promise.all([
+          // Update periode when is end is true, isActivePPL true, and have tanggal akhir will be update isEnd status to false and isActivePPL status to true
+          Model.updateMany({ tanggalAkhir: { $ne: null }, ppl: {$ne: null}, isEnd: true, isActivePPL: true },{ $set: { isEnd: false, isActivePPL: true }}),
+          // Update periode with have ppl and tanggal akhir, but isEnd is true will be updated status isActivePPL to false
+          Kandang.updateMany({ _id: { $in: chickenShedIds }, deleted: false}, { $set: { isActive: true }})
+        ]);
+
+        return res.json({
+          status: 200,
+          message: `Successfully Reactivate ${updatedPeriode.nModified} periode, and ${updatedKandang.nModified} kandang`,
+        });
+
+      } catch (error) {
         return res.json({ status: 500, message: error.message });
     }
 }
@@ -764,5 +769,35 @@ exports.getBudidaya = async (req, res, next) => {
         })
     } catch (error) {
         next(error)
+    }
+}
+exports.reactivateIsAutoClosing = async(req, res, next) => {
+    try {
+        const periods = await Model.find({ tanggalAkhir: {$ne: null}, ppl: {$ne: null}, isEnd: true, isActivePPL: true, isAutoClosing: true });
+        const chickenShedIds = periods.map(({ kandang }) => kandang?._id);
+
+        const [updatedPeriode, updatedKandang] = await Promise.all([
+          // Update periode when is end is true, isActivePPL true, and have tanggal akhir will be update isEnd status to false and isActivePPL status to true
+          Model.updateMany({ 
+            tanggalAkhir: {$ne: null},
+            ppl: {$ne: null},
+            isEnd: true,
+            isActivePPL: true,
+            isAutoClosing: true
+        }, { 
+            $set: { isEnd: false, isActivePPL: true, isAutoClosing: false }
+        }),
+
+        // Update periode with have ppl and tanggal akhir, but isEnd is true will be updated status isActivePPL to false
+          Kandang.updateMany({ _id: { $in: chickenShedIds }, deleted: false}, { $set: { isActive: true }})
+        ]);
+
+        return res.json({
+          status: 200,
+          message: `Successfully Reactivate ${updatedPeriode.nModified} periode, and ${updatedKandang.nModified} kandang`,
+        });
+
+      } catch (error) {
+        return res.json({ status: 500, message: error.message });
     }
 }
