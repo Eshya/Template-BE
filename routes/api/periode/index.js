@@ -19,7 +19,7 @@ router.get('/budidaya/:id', auth, permition('superadmin', 'peternak', 'ppl'), pe
 router.get('/:id', auth, paramCek, c.findById);
 router.post('/validate', auth, permition('superadmin', 'ppl'), permitionPPL, c.validateTambah)
 router.post('/', auth, schemaCek(schema), after, c.insert);
-// router.post('/autoClosingCultivate', verifyApiKey, c.autoClosingCultivation );
+router.post('/autoClosingCultivate', verifyApiKey, c.autoClosingCultivation );
 router.put('/tambah/ppl/:id', auth, permition('superadmin', 'ppl'), permitionPPL, paramCek, c.tambahPPL)
 router.put('/hapus/ppl/:id', auth, permition('superadmin', 'ppl'), permitionPPL, paramCek, c.hapusPPL)
 router.put('/:id', auth, paramCek, c.updateById);
@@ -27,5 +27,7 @@ router.put('/', auth, c.updateWhere);
 router.delete('/', auth, c.remove);
 router.delete('/:id', auth, paramCek, c.removeById);
 router.post('/script/reActivateChickenSheds', c.reActivateChickenSheds);
+router.post('/script/reactivatePPLChickenShed', c.reactivatePPLChickenShed);
+router.post('/script/reactivateIsAutoClosing', c.reactivateIsAutoClosing);
 module.exports = router;
 
