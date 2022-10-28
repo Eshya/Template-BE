@@ -645,22 +645,8 @@ exports.weightChart = async (req, res, next) => {
       const actual = [];
       const periods = await Model.find({kandang: req.params.id, isEnd: true}).sort({tanggalMulai: 1}).distinct("_id");
       if (periods.length) {
-          const dailyActivitiesData = await KegiatanHarian.aggregate([
-              {$match: {periode: {$in: periods}}},
-              {$unwind: {'path': '$berat', "preserveNullAndEmptyArrays": true}},
-              {$group: {
-                  _id: '$_id', 
-                  populasi: {$sum: '$berat.populasi'},
-                  beratTimbang: {$sum: '$berat.beratTimbang'},
-                  periode: { $first: '$$ROOT.periode' }
-              }}
-          ]);
-  
           const weightChart = await Promise.map(periods, async(periodeData) => {
-              const dailyActivities = dailyActivitiesData.filter(dailyActivity => dailyActivity.periode.toString() === periodeData.toString());
-              const dailyWeight = !dailyActivities.length ? 0 : dailyActivities.reduce((a, {beratTimbang}) => a + beratTimbang, 0);
-              const dailyWeightSample = !dailyActivities.length ? 0 : dailyActivities.reduce((a, {populasi}) => a + populasi, 0);
-              const avgWeight = dailyWeight/dailyWeightSample;
+              const avgWeight = await formula.weightClosing(periodeData._id);
               const periodIndex = periods.findIndex(index => index._id === periodeData);
               return {
                   actual: avgWeight || 0,
