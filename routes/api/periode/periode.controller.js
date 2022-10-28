@@ -641,7 +641,7 @@ exports.getBudidaya = async (req, res, next) => {
             'pembelianDOC': pembelianDOC,
             'pendapatanPeternak': pendapatanPeternak,
             'pendapatanPerEkor': pendapatanPerEkor,
-            'totalPembelianSapronak': pembelianSapronak.totalPembelianSapronak,
+            'totalPembelianSapronak': pembelianSapronak.totalPembelianSapronak + pembelianDOC,
             message: 'Ok'
         })
     } catch (error) {
