@@ -2,6 +2,7 @@ const Model = require('./penjualan.model')
 const {parseQuery} = require('../../helpers');
 const KegiatanHarian = require('../kegiatan-harian/kegiatan-harian.model');
 const mongoose = require('mongoose');
+const {clearKey} = require('../../../configs/redis.conf')
 
 exports.findAll = async (req, res, next) => {
     const {where, limit, offset, sort} = parseQuery(req.query);
