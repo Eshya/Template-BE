@@ -10,6 +10,7 @@ const mongoose = require('mongoose');
 const formula = require('../../helpers/formula');
 const reducer = (acc, value) => acc + value;
 const fs = require('fs');
+const {clearKey} = require('../../../configs/redis.conf')
 
 const handleQuerySort = (query) => {
     try{
@@ -191,6 +192,7 @@ exports.insert = async (req, res, next) => {
         const findNumber = await Model.findOne({phoneNumber: data.phoneNumber})
         if(findNumber) throw res.json({error: 400, message: 'phone number already registered'})
         const result = await Model.create(data)
+        clearKey(Model.collection.collectionName);
         res.json({
             data: result,
             message: 'Ok'
@@ -215,6 +217,7 @@ exports.updateById = async (req, res, next) => {
         }
 
         const result = await Model.findByIdAndUpdate(id, data, {new: true}).exec()
+        clearKey(Model.collection.collectionName);
         res.json({
             data: result,
             message: 'Ok'

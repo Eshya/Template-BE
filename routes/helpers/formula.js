@@ -5,25 +5,25 @@ const Sapronak = require('../api/sapronak/sapronak.model')
 const ONE_DAY = 24 * 60 * 60 * 1000;
 const dayjs = require('dayjs');
 const mongoose = require('mongoose')
-
+const {clearKey} = require('../../configs/redis.conf')
 const getPenjualan = async (idPeriode) => {
     const penjualan = await Penjualan.aggregate([
         {$match: {periode: mongoose.Types.ObjectId(idPeriode)}},
         {$addFields: {penjualan: {$multiply: ['$qty', '$harga', '$beratBadan']}}},
         {$group: {_id: '$_id', tanggal: {$push: '$tanggal'}, totalEkor: {$sum: '$qty'}, tonase: {$sum: '$beratBadan'}, totalPenjualan: {$sum: '$penjualan'}}},
         {$project: {tanggal: '$tanggal', totalTonase: {$multiply: ['$totalEkor', '$tonase']}, totalEkor: '$totalEkor', totalPenjualan: '$totalPenjualan'}}
-    ])
+    ]).cache()
     return penjualan
 }
 
 const getPembelianDOC = async (idPeriode) => {
-    const periode = await Periode.findById(idPeriode).select('populasi hargaSatuan -kemitraan -kandang -jenisDOC')
+    const periode = await Periode.findById(idPeriode).select('populasi hargaSatuan -kemitraan -kandang -jenisDOC').cache()
     const pembelianDOC = periode.populasi * periode.hargaSatuan
     return pembelianDOC
 }
 
 const getPembelianSapronak = async (idPeriode) => {
-    const findSapronak = await Sapronak.find({periode: idPeriode})
+    const findSapronak = await Sapronak.find({periode: idPeriode}).cache()
     const filterOVK = findSapronak.filter((x) => {return x.produk?.jenis === "OVK"})
     const filterPakan = findSapronak.filter((x) => {return x.produk?.jenis === "PAKAN"})
     const pembelianPakan = filterPakan.map((x) => {return x.zak * x.hargaSatuan})
@@ -45,7 +45,7 @@ const getKegiatanHarian = async (idPeriode) => {
         {$match: {periode: mongoose.Types.ObjectId(idPeriode)}},
         {$unwind: {'path': '$pakanPakai', "preserveNullAndEmptyArrays": true}},
         {$group: {_id: '$_id', totalPakan: {$sum: '$pakanPakai.beratPakan'}}}
-    ])
+    ]).cache()
     return dataPakan
 }
 
@@ -54,7 +54,7 @@ const ageByDaily = async (idPeriode) => {
     return findDaily.length - 1
 }
 const dailyChickenAge = async(idPeriode) => {
-    const dailyActivities = await KegiatanHarian.findOne({ periode: idPeriode }).sort({tanggal: -1});
+    const dailyActivities = await KegiatanHarian.findOne({ periode: idPeriode }).sort({tanggal: -1}).cache();
     const startDate = dayjs(new Date(dailyActivities?.tanggal));
     const today = dayjs(new Date());
     const age = Math.round(Math.abs(today.diff(startDate, 'day')));
@@ -62,14 +62,14 @@ const dailyChickenAge = async(idPeriode) => {
 }
 
 const getSortedDailyActivities = async(idPeriode) => {
-    return await KegiatanHarian.find({periode: idPeriode}).sort({ tanggal: 1 });
+    return await KegiatanHarian.find({periode: idPeriode}).sort({ tanggal: 1 }).cache();
 }
 
 const getDataDeplesi = async(idPeriode) => {
     const dataDeplesi = await KegiatanHarian.aggregate([
         {$match: {periode: mongoose.Types.ObjectId(idPeriode)}},
         {$group: {_id: '$_id', totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
-    ])
+    ]).cache()
 
     return dataDeplesi;
 }
@@ -85,7 +85,7 @@ const accumulateDeplesi = async(idPeriode) => {
 const actualRemainingChicken = async(idPeriode) => {
     const getSales = await getPenjualan(idPeriode);
     const accumulateTotalHarvest = getSales.reduce((a, {totalEkor}) => a + totalEkor, 0)
-    const periode = await Periode.findById(idPeriode);
+    const periode = await Periode.findById(idPeriode).cache();
     const totalDeplesi = await accumulateDeplesi(idPeriode);
     const remainingChicken = periode.populasi - totalDeplesi - accumulateTotalHarvest;
     return remainingChicken;
@@ -93,13 +93,13 @@ const actualRemainingChicken = async(idPeriode) => {
 
 const liveChickenPrecentage = async(idPeriode) => {
     const remainingChicken = await actualRemainingChicken(idPeriode);
-    const periode = await Periode.findById(idPeriode);
+    const periode = await Periode.findById(idPeriode).cache();
     const livePrecentage = (remainingChicken/periode.populasi)*100;
     return livePrecentage;
 }
 
 const AvgDailyWeight = async(idPeriode, day) => {
-    const periode = await Periode.findById(idPeriode);
+    const periode = await Periode.findById(idPeriode).cache();
     const dailyActivities = await getSortedDailyActivities(idPeriode);
 
     if (periode && dailyActivities.length) {
@@ -156,13 +156,13 @@ const getWeightClosing = async (idPeriode) => {
 const getpersentaseAyamHidupClosing = async (idPeriode) => {
     const getSales = await getPenjualan(idPeriode)
     const accumulateTotalHarvest = getSales.reduce((a, {totalEkor}) => a + totalEkor, 0)
-    const periode = await Periode.findById(idPeriode)
+    const periode = await Periode.findById(idPeriode).cache()
     const presentase = (accumulateTotalHarvest / periode.populasi) * 100
     return presentase
 }
 
 const getAvgAge = async (idPeriode) => {
-    const findPeriode = await Periode.findById(idPeriode)
+    const findPeriode = await Periode.findById(idPeriode).cache()
     const startDate = new Date(findPeriode.tanggalMulai)
     const getHarvest = await getPenjualan(idPeriode)
     const mapping = getHarvest.map((x) => {

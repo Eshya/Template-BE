@@ -127,7 +127,7 @@ exports.insert = async (req, res, next) => {
         let minutesFormat = data.tanggal.getMinutes() >=10 ? data.tanggal.getMinutes() : '0'+data.tanggal.getMinutes();
         data.jamKunjungan = `${data.tanggal.getHours()}:${minutesFormat} WIB`
         const results = await Model.create(data);
-
+        clearKey(Model.collection.collectionName);
         res.json({
             data: delCreator(results),
             message: 'Success'
