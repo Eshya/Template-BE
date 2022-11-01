@@ -338,15 +338,17 @@ exports.findKunjungan = async (req, res, next) => {
             $gte:new Date(tanggal).addHours(GMT_TIME).today(),
             $lt:new Date(tanggal).addHours(GMT_TIME).tonight()
         }
-        let findAbsensi = await Model.find(queryMoongose).sort({ tanggal: -1 }).cache();
+        let findAbsensi = await Model.find(queryMoongose).sort({ tanggal: -1 }).cache()
         let GroupByCreator = findAbsensi.reduce((group,value)=>{
             group[value.createdBy._id] = group[value.createdBy._id] ?? []
             group[value.createdBy._id].push(value)
             return group;
         },{})
-        Object.keys(GroupByCreator).forEach(key=>{
-            GroupByCreator[key].forEach((element,index)=>{
-                element.kunjunganKe = GroupByCreator[key].length - index;
+        let GroupByCreator2 = JSON.parse(JSON.stringify(GroupByCreator))
+        Object.keys(GroupByCreator2).forEach(key=>{
+            GroupByCreator2[key].forEach((element,index)=>{
+                element.kunjunganKe = GroupByCreator2[key].length - index;
+                console.log(element)
                 newData.push(element)
             })
         })
