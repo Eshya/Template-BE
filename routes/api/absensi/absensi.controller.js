@@ -39,6 +39,7 @@ function filterKunjugan(array,search){
         let regex = new RegExp(search, 'i')
         if(regex.test(JSON.stringify(arr.namaKandang)))return true;
         else if(regex.test(JSON.stringify(arr.createdBy.fullname)))return true;
+        else if(regex.test(JSON.stringify(arr.createdBy.kemitraanUser)))return true;
         else return false;
     })
 }
@@ -249,7 +250,7 @@ exports.findListPPL = async (req,res,next) =>{
         filter.role = "61d5608d4a7ba5b05c9c7ae3";
         filter.deleted = false;
         filter.isPPLActive = true
-        const listPPL = await PPL.find(filter).limit(limit).skip(offset).sort({ fullname: 1 }).select('_id fullname')
+        const listPPL = await PPL.find(filter).limit(limit).skip(offset).collation({locale: "en"}).sort({ fullname: 1 }).select('_id fullname')
         let newData = []
         listPPL.forEach(element=>{
             newData.push({_id:element._id,namaPPL:element.fullname})
@@ -352,7 +353,8 @@ exports.findKunjungan = async (req, res, next) => {
             offsetPaging = (offset / 10 + 1)
         }
         
-        newData = filterKunjugan(newData,search)
+        newData = filterKunjugan(newData,req.user.kemitraanUser._id); // filter kemitraan
+        newData = filterKunjugan(newData,search); // filter query search
         let count = newData.length
         newData = paginate(newData,parseInt(limit),parseInt(offsetPaging)) 
         // findAbsensi.forEach(element =>{
