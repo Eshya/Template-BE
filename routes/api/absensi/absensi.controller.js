@@ -347,7 +347,7 @@ exports.findKunjungan = async (req, res, next) => {
         let GroupByCreator2 = JSON.parse(JSON.stringify(GroupByCreator))
         Object.keys(GroupByCreator2).forEach(key=>{
             GroupByCreator2[key].forEach((element,index)=>{
-                element.kunjunganKe = GroupByCreator2[key].length - index;
+                element.kunjunganKe = index + 1;
                 console.log(element)
                 newData.push(element)
             })
