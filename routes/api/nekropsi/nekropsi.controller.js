@@ -1,6 +1,7 @@
 const Model = require('./nekropsi.model')
 const {parseQuery} = require('../../helpers');
 const {admin} = require('../../../configs/firebase.conf')
+const {clearKey} = require('../../../configs/redis.conf')
 
 const _beforeSave = (data) => {
     if(!data.actionPlan1) {
@@ -55,6 +56,7 @@ exports.insert = async (req, res, next) => {
     const data = req.body;
     try {
         const results = Model.create(data);
+        clearKey(Model.collection.collectionName);
         res.json({
             data: results,
             message: 'Ok'
@@ -69,6 +71,7 @@ exports.updateById = async (req, res, next) => {
     const data = req.body;
     try {
         const results = await Model.findByIdAndUpdate(id, data, {new: true}).exec();
+        clearKey(Model.collection.collectionName);
         res.json({
             data: results,
             message: 'Ok'

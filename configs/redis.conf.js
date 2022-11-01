@@ -7,7 +7,10 @@ const Periode = require('../routes/api/periode/periode.model')
 const KegiatanHarian = require('../routes/api/kegiatan-harian/kegiatan-harian.model')
 const fs = require('fs');
 const files = fs.readdirSync(`${__dirname}/../routes/api`);
-let listNotIcludedModel = ['createdBy','jenisDOC','tipe','berat','ovkPakai','jenisOVK','image','pakanPakai','jenisPakan','idKandang','fotoKandang','fotoRecording']
+const PATH_REDIS_SPACE = 3 ;
+let listNotIcludedModel = ['createdBy','jenisDOC','tipe','berat','ovkPakai','jenisOVK','image','pakanPakai','jenisPakan','idKandang','fotoKandang','fotoRecording',
+                            'kepala','hidung','kotoran','mata','telapakKaki','kulit','otot','mulut','tenggorokan','bronkus','parum','kantungHawa','tembolok','proventikulus','ventrikulus',
+                            'usus','ginjal','jantung','hati','thymus','pancreas','kuningTelur','caecaTonsil','bursaFabricius','statusAyam','jenisPenyakit']
 listNotIcludedModel.forEach(model =>{files.push(model)})
 console.log(files)
 
@@ -27,23 +30,62 @@ const getAsync = util.promisify(client.hget).bind(client);
 //     console.error(error);
 //   });
 const exec = mongoose.Query.prototype.exec;
+const execAgr = mongoose.Aggregate.prototype.exec;
+const find = mongoose.Query.prototype.find;
+const findOne = mongoose.Query.prototype.findOne;
+const findById = mongoose.Query.prototype.findById;
+const countDocuments = mongoose.Query.prototype.countDocuments;
+//use this command untuk membedakan find and findOne
+// if findOne query => codeCRUD = 1
+// if find query => codeCRUD = 0
+mongoose.Query.prototype.find = function(){
+    this.cmd = 0
+    return find.apply(this,arguments);
+}
+
+mongoose.Query.prototype.findOne = function(){
+    this.cmd = 1
+    return findOne.apply(this,arguments);
+}
+mongoose.Query.prototype.findById = function(){
+    this.cmd = 1
+    return findById.apply(this,arguments);
+}
+mongoose.Query.prototype.countDocuments = function(){
+    this.cmd = 2
+    return countDocuments.apply(this,arguments);
+}
 
 mongoose.Query.prototype.cache = function(options = { time: process.env.REDIS_TIME }) {
     this.useCache = true;
     this.time = options.time;
     this.hashKey = JSON.stringify(options.key || this.mongooseCollection.name);
-  
     return this;
 };
+mongoose.Aggregate.prototype.cache = function(options = { time: process.env.REDIS_TIME }) {
+    this.useCache = true;
+    this.time = options.time;
+    this.hashKey = JSON.stringify(options.key || this._model.collection.name);
+    return this;
+};
+
+
+
 
 mongoose.Query.prototype.exec = async function() {
     
     if (!this.useCache) {
     return await exec.apply(this, arguments);
     }
+    
+    if(this.cmd==0)client.select(redisPATH)
+    else if(this.cmd==1)client.select(parseInt(redisPATH) + PATH_REDIS_SPACE)
+    else if(this.cmd==2)client.select((parseInt(redisPATH) + (PATH_REDIS_SPACE*2)))
+    else client.select(redisPATH)
+    
     RegExp.prototype.toJSON = RegExp.prototype.toString;
     const key = JSON.stringify({
-    ...this.getQuery()
+    ...this.getQuery(),...this.getOptions()
     });
     
     // const cacheValue = await client.HGETALL(this.hashKey, key);
@@ -71,6 +113,37 @@ mongoose.Query.prototype.exec = async function() {
     
     return result;
 };
+mongoose.Aggregate.prototype.exec = async function() {
+    if (!this.useCache) {
+        return await execAgr.apply(this, arguments);
+    }
+    client.select((parseInt(redisPATH) + (PATH_REDIS_SPACE*3)))
+    const key = JSON.stringify(this._pipeline)
+        
+        // const cacheValue = await client.HGETALL(this.hashKey, key);
+    const cacheValue = await getAsync(this.hashKey,key)
+    if (cacheValue !== null) {
+        const doc = JSON.parse(cacheValue);
+        // const cacheParse = keyExists(obj)
+        
+        // console.log(cacheParse)
+
+        return Array.isArray(doc)
+        ? arrayJson(doc)
+        : keyExists(doc);
+        // console.log(doc.length())
+    }
+
+    const result = await execAgr.apply(this, arguments);
+    // console.log(result)
+    let clientHset =  client.hset(this.hashKey,key, JSON.stringify(result))
+
+    let clientExpire =  client.expire(this.hashKey, this.time);
+    
+    await Promise.all([clientHset, clientExpire]);
+
+    return result;
+}
 
 const keyExists = (obj) => {
     
@@ -79,7 +152,9 @@ const keyExists = (obj) => {
     }
     /// convertData
     if (obj.hasOwnProperty('_id')) {
-      obj['_id']=mongoose.Types.ObjectId(obj['_id'])
+        if(mongoose.Types.ObjectId.isValid(obj['_id'])){
+            obj['_id']=mongoose.Types.ObjectId(obj['_id'])
+        }
     }
     if (obj.hasOwnProperty('createdBy')) {
         if(mongoose.Types.ObjectId.isValid(obj['createdBy'])){
@@ -123,7 +198,6 @@ const keyExists = (obj) => {
             }
         }
     });
-    
     return obj;
   };
 
@@ -136,6 +210,14 @@ function arrayJson(array){
 }
 module.exports = {
     clearKey(hashKey) {
-    client.del(JSON.stringify(hashKey));
+        for(let i = 0; i < 4;i++){
+            if(i==0)client.select(redisPATH)
+            else if(i==1)client.select(parseInt(redisPATH) + PATH_REDIS_SPACE)
+            else if(i==2)client.select((parseInt(redisPATH) + (PATH_REDIS_SPACE*2)))
+            else if(i==3)client.select((parseInt(redisPATH) + (PATH_REDIS_SPACE*3)))
+            
+            client.del(JSON.stringify(hashKey));
+        }
+        
     }
 };

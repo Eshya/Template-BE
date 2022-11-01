@@ -129,7 +129,7 @@ exports.insert = async (req, res, next) => {
         let minutesFormat = data.tanggal.getMinutes() >=10 ? data.tanggal.getMinutes() : '0'+data.tanggal.getMinutes();
         data.jamKunjungan = `${data.tanggal.getHours()}:${minutesFormat} WIB`
         const results = await Model.create(data);
-        
+        clearKey(Model.collection.collectionName);
         res.json({
             data: delCreator(results),
             message: 'Success'
@@ -205,7 +205,7 @@ exports.findKunjunganHistory = async (req,res,next) =>{
             $gte: new Date(startDate).addHours(GMT_TIME).today(),
             $lt: new Date(endDate).addHours(GMT_TIME).tonight()
         }
-        let findAbsensi = await Model.find(queryMoongose).sort({ tanggal: -1 });
+        let findAbsensi = await Model.find(queryMoongose).sort({ tanggal: -1 }).cache();
         let groupByDate = findAbsensi.reduce((group,value)=>{
             let strTanggal = moment(value.tanggal).add(GMT_TIME,'hours').format('YYYY-MM-DD')
             group[strTanggal] = group[strTanggal] ?? []

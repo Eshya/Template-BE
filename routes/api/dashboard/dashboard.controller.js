@@ -78,12 +78,12 @@ exports.dashboardKemitraan =  async (req, res, next) => {
         const totalPeternak = removeDuplicatesData(resultPeternak)
 
         // get total PPL
-        const totalKemitraan = await User.countDocuments(filterPPL).cache();
+        const totalKemitraan = await User.countDocuments(filterPPL).cache()
 
         filterPPL.role = '61d5608d4a7ba5b05c9c7ae3';
         filterPPL.deleted = false;
 
-        const totalPPl = await User.countDocuments(filterPPL).cache();
+        const totalPPl = await User.countDocuments(filterPPL).cache()
         return res.json({
             totalKandangActive: resultKandangActive.length,
             totalPPL: totalPPl,
@@ -108,7 +108,7 @@ exports.dashboardKemitraanPopulasi =  async (req, res, next) => {
         }
         filter.deleted = false;
 
-        const getKandang = await Kandang.find(filter).cache();
+        const getKandang = await Kandang.find(filter).cache();;
         const users = await fetch(`${urlAuth}/api/users/`, {
             method: 'GET',
             headers: {'Authorization': token,
@@ -128,7 +128,7 @@ exports.dashboardKemitraanPopulasi =  async (req, res, next) => {
                 filterPeriod.kemitraan = kemitraanId
             }
 
-            let periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 }).cache()
+            let periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 }).cache();
             if (periode && periode.kandang && periode.kemitraan && periode.kandang.createdBy) {
                 // get usia
                 let now = new Date(Date.now());
@@ -259,7 +259,7 @@ exports.dashboardSalesKetersediaan =  async (req, res, next) => {
             sort = { createdAt: -1 }
         }
 
-        const dataKandang = await Kandang.find(filter).sort(sort).select('_id').cache()
+        const dataKandang = await Kandang.find(filter).sort(sort).select('_id').cache();
         // console.log(dataKandang)
         const dataKemitraan = await Kemitraan.countDocuments(filter).cache()
 

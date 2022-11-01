@@ -13,6 +13,7 @@ const Promise = require("bluebird");
 const fetch = require('node-fetch')
 const dayjs = require('dayjs');
 const formula = require('../../helpers/formula')
+const {clearKey} = require('../../../configs/redis.conf')
 
 const ONE_DAY = 24 * 60 * 60 * 1000;
 const reducer = (acc, value) => acc + value
@@ -199,6 +200,7 @@ exports.insert = async (req, res, next) => {
         const dataPeriode = Model.create(data)
 
         const results = await Promise.all([isActive, dataPeriode])
+        clearKey(Model.collection.collectionName);
         res.json({
             data: results[1],
             message: 'Ok'
@@ -230,6 +232,7 @@ exports.updateById = async (req, res, next) => {
     const where = req.body
     try {
         const data = await Model.findByIdAndUpdate(id, where, {new: true}).exec();
+        clearKey(Model.collection.collectionName);
         res.json({data: data, message: 'Ok'})
     } catch (error) {
         next(error);
