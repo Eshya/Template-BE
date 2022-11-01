@@ -198,6 +198,7 @@ exports.findKunjunganHistory = async (req,res,next) =>{
     try {
         let {limit, offset,startDate,endDate,idPPL} = req.query;
         let queryMoongose = new Object()
+        const token = req.headers['authorization']
         let newData = []
         if(isNaN(limit))limit=10;
         if(isNaN(offset))offset=0;
@@ -207,25 +208,35 @@ exports.findKunjunganHistory = async (req,res,next) =>{
             $lt: new Date(endDate).addHours(GMT_TIME).tonight()
         }
         let findAbsensi = await Model.find(queryMoongose).sort({ tanggal: -1 }).cache();
-        let groupByDate = findAbsensi.reduce((group,value)=>{
+        let findAbsensiObject = JSON.parse(JSON.stringify(findAbsensi))
+        var results = await Promise.all(findAbsensiObject.map(async(x) => {
+            let getImage = await fetch(`${process.env.AUTH_URL}/api/user-image/${x.createdBy.image}`, {
+                method: 'GET',
+                headers: {'Authorization': token,  "Content-Type": "application/json"}
+            }).then(res => res.json()).then(data => data.data)
+            x.createdBy.image = getImage;
+            return x;
+        }))
+        let groupByDate = results.reduce((group,value)=>{
             let strTanggal = moment(value.tanggal).add(GMT_TIME,'hours').format('YYYY-MM-DD')
             group[strTanggal] = group[strTanggal] ?? []
             group[strTanggal].push(value)
             return group;
         },{})
+        
         Object.keys(groupByDate).forEach(key => {
             let newGroupByDate = new Object()
             newGroupByDate.tanggal =  key;
             newGroupByDate.detail = groupByDate[key]
             newData.push(newGroupByDate)
         });
+        
         let offsetPaging;
         if (offset == 0) {
             offsetPaging = 1
         } else {
             offsetPaging = (offset / 10 + 1)
         }
-        console.log(newData.length)
         newData = paginate(newData,parseInt(limit),parseInt(offsetPaging)) 
         res.status(200).json({
             data:newData,
@@ -366,6 +377,7 @@ exports.findKunjungan = async (req, res, next) => {
         // findAbsensi.forEach(element =>{
 
         // })
+        console.log(newData)
         return res.send({
                 count: count,
                 data: newData,
