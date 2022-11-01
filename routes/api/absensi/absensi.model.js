@@ -48,12 +48,6 @@ const scheme = new Schema({
         autopopulate: {maxDepth: 1},
         default: null
     }],
-    createdBy: {
-        type: Schema.Types.ObjectId,
-        ref: PPL, select: true,
-        autopopulate: {maxDepth: 1},
-        default: null
-    },
     device: {
         id: {
             type: String,
@@ -63,7 +57,13 @@ const scheme = new Schema({
             type: String,
             default: null
         }
-    }
+    },
+    createdBy: {
+        type: Schema.Types.ObjectId,
+        ref: PPL, select: true,
+        autopopulate: {maxDepth: 1},
+        default: null
+    },
 }, {versionKey: false, timestamps: true})
 scheme.plugin(require('mongoose-autopopulate'));
 module.exports = model('Absensi', scheme, 'absensi');

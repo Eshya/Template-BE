@@ -28,8 +28,8 @@ const getPembelianSapronak = async (idPeriode) => {
     const filterPakan = findSapronak.filter((x) => {return x.produk?.jenis === "PAKAN"})
     const pembelianPakan = filterPakan.map((x) => {return x.zak * x.hargaSatuan})
     const pembelianOVK = filterOVK.map((x) => {return x.kuantitas * x.hargaSatuan})
-    const totalPembelianPakan = pembelianPakan.reduce((a, b) => a + b, 0)
     const totalPembelianOVK = pembelianOVK.reduce((a, b) => a + b, 0)
+    const totalPembelianPakan = pembelianPakan.reduce((a, b) => a + b, 0)
     const totalPembelianSapronak = totalPembelianOVK + totalPembelianPakan
     return {totalPembelianOVK, totalPembelianPakan, totalPembelianSapronak}
 }
@@ -204,9 +204,16 @@ exports.IPClosing = async (idPeriode) => {
     return IP
 }
 
+const getFeedIntake = async(idPeriode) => {
+    const dailyFeedIntake = await getKegiatanHarian(idPeriode);
+    const accumulateFeedIntake = dailyFeedIntake.reduce((a, {totalPakan}) => a + totalPakan, 0);
+    return accumulateFeedIntake
+}
+
 const penjualanAyamBesar = async (idPeriode) => {
     const penjualan = await getPenjualan(idPeriode)
     const akumulasiPenjualan = penjualan.reduce((a, {totalPenjualan}) => a + totalPenjualan, 0)
+    
     return akumulasiPenjualan
 }
 
@@ -215,17 +222,10 @@ const estimateRevenue = async (idPeriode) => {
     const pembelianDOC = await getPembelianDOC(idPeriode)
     const pembelianSapronak = await getPembelianSapronak(idPeriode)
     const revenue = akumulasiPenjualan - pembelianDOC - pembelianSapronak.totalPembelianSapronak
-    console.log(akumulasiPenjualan, pembelianDOC, pembelianSapronak.totalPembelianSapronak)
     return revenue
 }
 
 
-
-const getFeedIntake = async(idPeriode) => {
-    const dailyFeedIntake = await getKegiatanHarian(idPeriode);
-    const accumulateFeedIntake = dailyFeedIntake.reduce((a, {totalPakan}) => a + totalPakan, 0);
-    return accumulateFeedIntake
-}
 
 exports.FCRClosing = getFCRClosing
 exports.persentaseAyamHidupClosing = getpersentaseAyamHidupClosing

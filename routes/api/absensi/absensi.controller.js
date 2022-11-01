@@ -10,6 +10,8 @@ const {clearKey} = require('../../../configs/redis.conf')
 const _MS_PER_DAY = 1000 * 60 * 60 * 24;
 const GMT_TIME = 7;
 const CACHE_ABSENSI_TIME = 1 * 24 * 60 * 60;
+const fetch = require('node-fetch')
+
 let dateDiffInDays = (a, b) => {
     // Discard the time and time-zone information.
     const utc1 = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
@@ -44,12 +46,12 @@ Date.prototype.addHours= function(gmt){
     this.setHours(this.getHours()+gmt);
     return this;
 }
-Date.prototype.today= function(gmt){
+Date.prototype.today= function(d){
     this.setHours(0)
     this.setMinutes(1)
     return this;
 }
-Date.prototype.tonight= function(gmt){
+Date.prototype.tonight= function(d){
     this.setHours(23)
     this.setMinutes(59)
     return this;
@@ -200,8 +202,8 @@ exports.findKunjunganHistory = async (req,res,next) =>{
         if(isNaN(offset))offset=0;
         if(idPPL !== undefined)queryMoongose.createdBy=mongoose.Types.ObjectId(idPPL);
         queryMoongose.tanggal = {
-            $gte:new Date(startDate).addHours(GMT_TIME).today(),
-            $lt:new Date(endDate).addHours(GMT_TIME).tonight()
+            $gte: new Date(startDate).addHours(GMT_TIME).today(),
+            $lt: new Date(endDate).addHours(GMT_TIME).tonight()
         }
         let findAbsensi = await Model.find(queryMoongose).sort({ tanggal: -1 }).cache();
         let groupByDate = findAbsensi.reduce((group,value)=>{
@@ -242,8 +244,8 @@ exports.findListPPL = async (req,res,next) =>{
         if (search) {
             filter.fullname = new RegExp(search, 'i') 
         }
-        if(isNaN(limit))limit=10;
-        if(isNaN(offset))offset=0;
+        if(isNaN(limit)) limit=10;
+        if(isNaN(offset)) offset=0;
         filter.role = "61d5608d4a7ba5b05c9c7ae3";
         filter.deleted = false;
         filter.isPPLActive = true
@@ -268,7 +270,7 @@ exports.findListPPL = async (req,res,next) =>{
 function filterByRef(array1, array2) {
     return array1.filter(object1 => {
       return !array2.some(object2 => {
-        return object1.createdBy === object2._id;
+        return object1._id === object2;
       });
     });
   }
@@ -288,12 +290,29 @@ exports.findPPLNotAttend = async (req, res, next) => {
     Array.prototype.limit = arrLimit
     Array.prototype.skip = arrSkip
     const {limit, offset} = parseQuery(req.query);
+    const token = req.headers['authorization']
     try {
+        let tmpPPL = []
+        let tmpAttend = []
+        let results = []
         const now  = new Date()
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-        const findPPL = await PPL.find({isPPLActive: true}, {kemitraanUser: 0, province: 0, regency: 0, role: 0}).select('fullname')
-        const findAttendToday = await Model.find({tanggal: {$gte: today}}).select('createdBy -idKandang -fotoRecording -fotoKandang')
-        var results = [...filterByRef(findPPL, findAttendToday), ...filterByRef(findAttendToday, findPPL)];
+        const findPPL = await fetch(`${process.env.AUTH_URL}/api/users?where[isPPLActive]=true`, {
+            method: 'GET',
+            headers: {'Authorization': token,  "Content-Type": "application/json"}
+        }).then(res => res.json()).then(data => data.data)
+        findPPL.forEach(c => {tmpPPL.push(c._id)})
+        const findAttendToday = await Model.find({createdBy: tmpPPL, tanggal: {$gte: today}}, {}, {autopopulate: false})
+        findAttendToday.forEach(({createdBy}) => tmpAttend.push(createdBy.toString()))
+        var unique = tmpAttend.reduce(function (acc, curr) {
+            if (!acc.includes(curr))
+                acc.push(curr);
+            return acc;
+        }, []);
+        const filter = filterByRef(findPPL, unique)
+        filter.forEach(c => {
+            results.push({_id: c._id, fullname: c.fullname, image: c.image})
+        })
         results = Number.isNaN(offset) ? results : results.skip(offset)
         results = Number.isNaN(limit) ? results : results.limit(limit)
         res.status(200).json({data: results, message: "success", status: res.statusCode})
@@ -362,16 +381,15 @@ exports.kandangNotVisit = async (req, res, next) => {
         const tmp = []
         const now  = new Date()
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-        const findAttendToday = await Model.find({tanggal: {$lt: today}}).select('tanggal createdBy -fotoRecording -fotoKandang')
-        console.log(findAttendToday)
-        findAttendToday.forEach(e => {
-            e.idKandang?._id ? tmp.push(e.idKandang?._id) : true
+        const findAttendToday = await Model.find({tanggal: {$gte: today}}).select('tanggal createdBy -fotoRecording -fotoKandang')
+        findAttendToday.forEach(({idKandang}) => {
+            idKandang?._id ? tmp.push(idKandang?._id) : true
         })
-        const findPeriode = await Periode.find({isEnd: false, kandang: tmp}, {jenisDOC: 0, ppl: 1, kemitraan: 0}).select('kandang')
+        const findPeriode = await Periode.find({isEnd: false, kandang: {$nin: tmp}, isActivePPL: true}, {jenisDOC: 0, ppl: 1, kemitraan: 0}).select('kandang')
         const groupPeriode = arrGroup('ppl')
         var results = await Promise.all(Object.keys(groupPeriode(findPeriode)).map(async(x) => {
             const findPPL = mongoose.Types.ObjectId.isValid(x) ? await PPL.findById(x) : null
-            return {_idPPL: x, namePPL: findPPL ? findPPL.namePPL : null, image: findPPL ? findPPL?.image : null, kandang: groupPeriode(findPeriode)[x]};
+            return {_idPPL: x, namaPPL: findPPL ? findPPL.fullname : null, image: findPPL ? findPPL?.image : null, kandang: groupPeriode(findPeriode)[x]};
         }))
         results = Number.isNaN(offset) ? results : results.skip(offset)
         results = Number.isNaN(limit) ? results : results.limit(limit)

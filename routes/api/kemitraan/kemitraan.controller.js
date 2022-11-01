@@ -139,7 +139,30 @@ exports.getKandangPeriode = async (req, res, next) => {
                 const bawah = FCR*(dataPakan.length-1)
                 // const IP = (atas / bawah) * 100
                 var IP = await formula.dailyIP(itemPeriode._id)
-                const pendapatanPeternak = await formula.estimateRevenue(itemPeriode._id)
+
+
+                // get total penjualan
+                let harian = []
+                let pembelianPakan = 0
+                let pembelianOVK = 0
+                const getSapronak = await Sapronak.find({periode: itemPeriode._id});
+                for (let i = 0; i < getSapronak.length; i++) {
+                    if (getSapronak[i].produk && (getSapronak[i].produk.jenis === 'PAKAN')) {
+                        const compliment = getSapronak[i].kuantitas * getSapronak[i].hargaSatuan
+                        pembelianPakan += compliment
+                    } else {
+                        const compliment = getSapronak[i].kuantitas * getSapronak[i].hargaSatuan
+                        pembelianOVK += compliment
+                    }
+                }
+                const pembelianDoc = itemPeriode.populasi * itemPeriode.hargaSatuan
+                const getPenjualan = await Penjualan.find({periode: itemPeriode._id})
+                getPenjualan.forEach(x => {
+                    harian.push(x.beratBadan * x.harga * x.qty)
+                })
+                const penjualanAyamBesar = harian.reduce(reducer, 0);
+                const pendapatanPeternak = penjualanAyamBesar - pembelianDoc - pembelianOVK - pembelianPakan
+
                 // get periode ke
                 const kandang = await Periode.find({kandang: itemPeriode.kandang._id}).sort('tanggalMulai')
                 let dataPeriode = [];

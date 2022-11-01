@@ -6,4 +6,5 @@ node_modules
 .gitlab-ci.yml
 docker-compose.local*
 docker-compose-redis.yml
-
+/coverage
+/.jest

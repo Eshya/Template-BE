@@ -8,7 +8,8 @@ const Penjualan = require("../penjualan/penjualan.model");
 const Sapronak = require("../sapronak/sapronak.model");
 const Data = require('../data/data.model');
 const selectPublic = '-createdAt -updatedAt'
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
+const Promise = require("bluebird");
 const fetch = require('node-fetch')
 const dayjs = require('dayjs');
 const formula = require('../../helpers/formula')
@@ -262,37 +263,6 @@ exports.removeById = async (req, res, next) => {
     try {
         const data = await Model.findByIdAndRemove(req.params.id)
         res.json({data})
-    } catch (error) {
-        next(error)
-    }
-}
-
-exports.getBudidaya = async (req, res, next) => {
-    const id = req.params.id
-    try {
-        let kematian = []
-        const doc = await Model.findById(id);
-        const pembelianDOC = await formula.pembelianDOC(id)
-        const getKegiatan = await KegiatanHarian.find({periode: id})
-        getKegiatan.forEach(x => {
-            kematian.push(x.deplesi + x.pemusnahan)
-        });
-        const totalKematian = kematian.reduce(reducer, 0);
-        const populasiAkhir = doc.populasi - totalKematian
-        const penjualanAyamBesar = await formula.penjualanAyamBesar(id)
-        const pendapatanPeternak = await formula.estimateRevenue(id)
-        const pendapatanPerEkor = pendapatanPeternak / populasiAkhir
-        const pembelianSapronak = await formula.pembelianSapronak(id)
-        res.json({
-            'penjualanAyamBesar': penjualanAyamBesar,
-            'pembelianPakan': pembelianSapronak.totalPembelianPakan,
-            'pembelianOVK': pembelianSapronak.totalPembelianOVK,
-            'pembelianDOC': pembelianDOC,
-            'pendapatanPeternak': pendapatanPeternak,
-            'pendapatanPerEkor': pendapatanPerEkor,
-            'totalPembelianSapronak': pembelianSapronak.totalPembelianSapronak,
-            message: 'Ok'
-        })
     } catch (error) {
         next(error)
     }
@@ -585,9 +555,10 @@ exports.autoClosingCultivation = async (req, res, next) => {
           const periodeActiveDate = dayjs(periode[0].createdAt).add(10, "day");
 
           if (
-            chickenShedAge >= 50 &&
+            chickenShedAge >= 60 &&
             today.format("YYYY-MM-DD") >= periodeActiveDate.format("YYYY-MM-DD")
           ) {
+
             if (periode[0].ppl) {
               periode[0].isActivePPL = false;
             }
@@ -612,38 +583,210 @@ exports.autoClosingCultivation = async (req, res, next) => {
 exports.reActivateChickenSheds = async (req, res, next) => {
     try {
       const periods = await Model.find({ isEnd: true, tanggalAkhir: null });
+      const chickenShedIds = periods.map(({ kandang }) => kandang?._id);
 
-      if (!periods.length) {
-        return res.json({ status: 500, message: err.message });
-      }
-
-      const chickenShedIds = periods.map(({ kandang }) => kandang._id);
-
-      await Promise.all([
-        Model.bulkWrite([
-            {
-                "updateMany": {
-                    "filter": { "isEnd": true, "tanggalAkhir": null },
-                    "update": { "$set": { "isEnd": false, "isAutoClosing": false }}
-                }
-            },
-            {
-             "updateMany": {
-                "filter": { "ppl": { "$ne": null }},
-                "update": { "$set": { "isActivePPL": true }},
-                },
-            }
-        ]),
-
-        Kandang.updateMany({ _id: { $in: chickenShedIds }}, {$set: { isActive: true }})
+      const [updatedPeriode, updatedKandang] = await Promise.all([
+        // Update periode when is end is true and doesn't have tanggal akhir will be update isEnd status to false
+        Model.updateMany({ isEnd: true, tanggalAkhir: null },{ $set: { isEnd: false, isAutoClosing: false }}),
+        // Activate kandang
+        Kandang.updateMany({ _id: { $in: chickenShedIds }, deleted: false}, { $set: { isActive: true }})
       ]);
 
       return res.json({
         status: 200,
-        message: "Successfully Reactivate Chicken Sheds",
+        message: `Successfully Reactivate ${updatedPeriode.nModified} periode, and ${updatedKandang.nModified} kandang`,
       });
 
     } catch (error) {
       return res.json({ status: 500, message: error.message });
     }
   };
+
+exports.revenueChart = async(req, res, next) => {
+    try {
+        const periods = await Model.find({ kandang: req.params.id, isEnd: true }, {_id: 1, populasi: 1, hargaSatuan: 1}).sort({tanggalMulai: 1});
+
+        const totalRevenue = await Promise.map(periods, async(periode, index) => {
+            const estimateRevenue = await formula.estimateRevenue(periode._id);
+            const periodIndex = periods.findIndex(index => index._id === periode._id);
+            return {
+                actual: estimateRevenue || 0,
+                urutanPeriode: periodIndex+1
+            }
+        })
+
+        return res.json({ data: totalRevenue, message: 'success', status: 200})
+    } catch(error) {
+        return res.json({ status: 500, message: error.message });
+    }
+}
+exports.reactivatePPLChickenShed = async(req, res, next) => {
+    try {
+        const periods = await Model.find({ tanggalAkhir: {$ne: null}, ppl: {$ne: null}, isEnd: true, isActivePPL: true });
+        const chickenShedIds = periods.map(({ kandang }) => kandang?._id);
+
+        const [updatedPeriode, updatedKandang] = await Promise.all([
+          // Update periode when is end is true, isActivePPL true, and have tanggal akhir will be update isEnd status to false and isActivePPL status to true
+          Model.updateMany({ tanggalAkhir: { $ne: null }, ppl: {$ne: null}, isEnd: true, isActivePPL: true },{ $set: { isEnd: false, isActivePPL: true }}),
+          // Update periode with have ppl and tanggal akhir, but isEnd is true will be updated status isActivePPL to false
+          Kandang.updateMany({ _id: { $in: chickenShedIds }, deleted: false}, { $set: { isActive: true }})
+        ]);
+
+        return res.json({
+          status: 200,
+          message: `Successfully Reactivate ${updatedPeriode.nModified} periode, and ${updatedKandang.nModified} kandang`,
+        });
+
+      } catch (error) {
+        return res.json({ status: 500, message: error.message });
+    }
+}
+
+exports.weightChart = async (req, res, next) => {
+    try {
+      // actual
+      const actual = [];
+      const periods = await Model.find({kandang: req.params.id, isEnd: true}).sort({tanggalMulai: 1}).distinct("_id");
+      if (periods.length) {
+          const weightChart = await Promise.map(periods, async(periodeData) => {
+              const avgWeight = await formula.weightClosing(periodeData._id);
+              const periodIndex = periods.findIndex(index => index._id === periodeData);
+              return {
+                  actual: avgWeight || 0,
+                  urutanPeriode: periodIndex+1
+              }
+          })
+  
+          actual.push(...weightChart);
+      }
+   
+      return res.json({ data: actual, message: 'success', status: 200  });
+    } catch (error) {
+      return res.json({ status: 500, message: error.message });
+    }
+  };
+
+  exports.feedIntakeChart = async (req, res, next) => {
+    try {
+      const actual = [];
+      const periods = await Model.find({ kandang: req.params.id, isEnd: true }, {_id: 1, populasi: 1}).sort({
+        tanggalMulai: 1,
+      });
+
+      if (periods?.length) {
+        const feedIntakeChart = await Promise.map(
+          periods,
+          async (periodeData) => {
+            const [totalDeplesi, dailyFeedIntake] = await Promise.all([
+              periodeData ? formula.accumulateDeplesi(periodeData._id) : 0,
+              periodeData ? formula.getFeedIntake(periodeData._id) : 0,
+            ]);
+  
+            const currentPopulation = periodeData.populasi - totalDeplesi;
+            const feedIntake = (dailyFeedIntake * 1000) / currentPopulation;
+            const periodIndex = periods.findIndex(
+              (index) => index._id === periodeData._id
+            );
+            return {
+              actual: feedIntake,
+              urutanPeriode: periodIndex+1,
+            };
+          }
+        );
+  
+        actual.push(...feedIntakeChart);
+      }
+  
+      return res.json({ data: actual, message: "success", status: 200 });
+    } catch (error) {
+      return res.json({ status: 500, message: error.message });
+    }
+  };
+
+  exports.deplesiChart = async (req, res, next) => {
+    const actual = [];
+    try {
+      const periods = await Model.find({kandang: req.params.id, isEnd: true}, {_id: 1, populasi: 1}).sort({tanggalMulai: 1});
+      if (periods?.length) {
+          const deplesiChart = await Promise.map(periods, async(periodeData) => {
+              const totalDeplesi = periodeData ? await formula.accumulateDeplesi(periodeData._id) : 0;
+              const deplesi = (periodeData.populasi - (periodeData.populasi - totalDeplesi)) * 100 / periodeData.populasi;
+              const periodIndex = periods.findIndex(index => index._id === periodeData._id);
+              return {
+                  actual: deplesi,
+                  urutanPeriode: periodIndex+1
+              }
+          })
+      
+          actual.push(...deplesiChart)
+      }
+
+      return res.json({ data: actual, message: 'success', status: 200 });
+    } catch (error) {
+      return res.json({ status: 500, message: error.message });
+    }
+  };
+
+exports.getBudidaya = async (req, res, next) => {
+    const id = req.params.id
+    try {
+        let kematian = []
+        
+        const doc = await Model.findById(id);
+        const getKegiatan = await KegiatanHarian.find({periode: id})
+        const pembelianDOC = await formula.pembelianDOC(id)
+
+        getKegiatan.forEach(x => {
+            kematian.push(x.deplesi + x.pemusnahan)
+        });
+
+        const totalKematian = kematian.reduce(reducer, 0);
+        const populasiAkhir = doc.populasi - totalKematian
+        const penjualanAyamBesar = await formula.penjualanAyamBesar(id)
+        const pendapatanPeternak = await formula.estimateRevenue(id)
+        const pembelianSapronak = await formula.pembelianSapronak(id)
+        const pendapatanPerEkor = pendapatanPeternak / populasiAkhir
+        res.json({
+            'penjualanAyamBesar': penjualanAyamBesar,
+            'pembelianOVK': pembelianSapronak.totalPembelianOVK,
+            'pembelianPakan': pembelianSapronak.totalPembelianPakan,
+            'pembelianDOC': pembelianDOC,
+            'pendapatanPeternak': pendapatanPeternak,
+            'pendapatanPerEkor': pendapatanPerEkor,
+            'totalPembelianSapronak': pembelianSapronak.totalPembelianSapronak + pembelianDOC,
+            message: 'Ok'
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+exports.reactivateIsAutoClosing = async(req, res, next) => {
+    try {
+        const periods = await Model.find({ tanggalAkhir: {$ne: null}, ppl: {$ne: null}, isEnd: true, isActivePPL: true, isAutoClosing: true });
+        const chickenShedIds = periods.map(({ kandang }) => kandang?._id);
+
+        const [updatedPeriode, updatedKandang] = await Promise.all([
+          // Update periode when is end is true, isActivePPL true, and have tanggal akhir will be update isEnd status to false and isActivePPL status to true
+          Model.updateMany({ 
+            tanggalAkhir: {$ne: null},
+            ppl: {$ne: null},
+            isEnd: true,
+            isActivePPL: true,
+            isAutoClosing: true
+        }, { 
+            $set: { isEnd: false, isActivePPL: true, isAutoClosing: false }
+        }),
+
+        // Update periode with have ppl and tanggal akhir, but isEnd is true will be updated status isActivePPL to false
+          Kandang.updateMany({ _id: { $in: chickenShedIds }, deleted: false}, { $set: { isActive: true }})
+        ]);
+
+        return res.json({
+          status: 200,
+          message: `Successfully Reactivate ${updatedPeriode.nModified} periode, and ${updatedKandang.nModified} kandang`,
+        });
+
+      } catch (error) {
+        return res.json({ status: 500, message: error.message });
+    }
+}
