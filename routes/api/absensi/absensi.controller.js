@@ -290,7 +290,7 @@ function arrGroup (c) {
 exports.findPPLNotAttend = async (req, res, next) => {
     Array.prototype.limit = arrLimit
     Array.prototype.skip = arrSkip
-    const {limit, offset} = req.query;
+    let {limit, offset} = req.query;
     const token = req.headers['authorization']
     try {
         let tmpPPL = []
@@ -318,9 +318,7 @@ exports.findPPLNotAttend = async (req, res, next) => {
         filter.forEach(c => {
             results.push({_id: c._id, fullname: c.fullname, image: c.image})
         })
-        results = Number.isNaN(parseInt(offset)) ? results : results.skip(parseInt(offset))
-        results = Number.isNaN(parseInt(limit)) ? results : results.limit(parseInt(limit))
-        res.status(200).json({data: results, message: "success", status: res.statusCode})
+        res.status(200).json({count: results.length, data: results, message: "success", status: res.statusCode})
     } catch (error) {
         res.status(500).json({error: res.statusCode, message: error.message})
         next(error)
@@ -338,7 +336,7 @@ exports.findKunjungan = async (req, res, next) => {
             $gte:new Date(tanggal).addHours(GMT_TIME).today(),
             $lt:new Date(tanggal).addHours(GMT_TIME).tonight()
         }
-        let findAbsensi = await Model.find(queryMoongose).sort({ tanggal: 1 }).cache()
+        let findAbsensi = await Model.find(queryMoongose).sort({ tanggal: -1 }).cache()
         let GroupByCreator = findAbsensi.reduce((group,value)=>{
             group[value.createdBy._id] = group[value.createdBy._id] ?? []
             group[value.createdBy._id].push(value)
@@ -384,11 +382,12 @@ exports.findKunjungan = async (req, res, next) => {
 exports.kandangNotVisit = async (req, res, next) => {
     Array.prototype.limit = arrLimit
     Array.prototype.skip = arrSkip
-    const {limit, offset} = req.query;
+    let {limit, offset} = req.query;
     const token = req.headers['authorization']
     try {
+        if(isNaN(limit))limit=10;
+        if(isNaN(offset))offset=0;
         const tmp = []
-        const lengthKandang = []
         const now  = new Date()
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
         const findAttendToday = await Model.find({tanggal: {$gte: today}}).select('tanggal createdBy -fotoRecording -fotoKandang')
@@ -411,9 +410,13 @@ exports.kandangNotVisit = async (req, res, next) => {
             let jumlahKandang = dataKandang.length
             return {_idPPL: x, namaPPL: findPPL?.fullname, image: findPPL?.image, kandang: dataKandang, jumlahKandang};
         }))
+        if (offset == 0) {
+            offset = 1
+        } else {
+            offset = (offset / 10 + 1)
+        }
         let totalKandang = results.reduce((a, {jumlahKandang}) => a + jumlahKandang, 0)
-        results = Number.isNaN(parseInt(offset)) ? results : results.skip(parseInt(offset))
-        results = Number.isNaN(parseInt(limit)) ? results : results.limit(parseInt(limit))
+        results = paginate(results, parseInt(limit), parseInt(offset))
         res.status(200).json({count: totalKandang, data: results, message: "success", status: res.statusCode})
     } catch (error) {
         res.status(500).json({error: res.statusCode, message: error.message})
