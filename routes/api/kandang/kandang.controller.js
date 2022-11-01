@@ -19,7 +19,7 @@ const moment = require('moment');
 const excelJS = require("exceljs");
 const dayjs = require('dayjs');
 const formula = require('../../helpers/formula')
-
+const {clearKey} = require('../../../configs/redis.conf')
 var urlIOT = process.env.IOT_URL
 var urlAuth =`${process.env.AUTH_URL}`
 const handleQuerySort = (query) => {
@@ -129,7 +129,7 @@ exports.findAllDataPool =  async (req, res, next) => {
         switch (role) {
           case "adminkemitraan":
             let offsetPaging;
-            const chickenSheds = await Model.find(filter).sort();
+            const chickenSheds = await Model.find(filter).sort().cache();
             const resultKemitraan = await handleChickenSheds(
               true,
               token,
@@ -151,12 +151,12 @@ exports.findAllDataPool =  async (req, res, next) => {
             break;
     
           default:
-            count = await Model.countDocuments(filter);
+            count = await Model.countDocuments(filter).cache()
             const chickenShedsData = await Model.find(filter)
               .limit(limit)
               .skip(offset)
-              .sort(sort);
-    
+              .sort(sort)
+              .cache();
             const resultNonKemitraan = await handleChickenSheds(
               false,
               token,
@@ -354,7 +354,7 @@ exports.grafikBobotDataPool =  async (req, res, next) => {
 exports.findOneDataPool =  async (req, res, next) => {
     try {
         const token = req.headers['authorization']
-        const periode = await Periode.findOne({kandang: req.params.id}).sort({ createdAt: -1 })
+        const periode = await Periode.findOne({kandang: req.params.id}).sort({ createdAt: -1 }).cache()
         let dataKandang;
         let dataHarian = [];
         let dataSapronak = [];
@@ -363,7 +363,7 @@ exports.findOneDataPool =  async (req, res, next) => {
         if (periode && periode.kandang) {
             // get IP
             const sapronak = await Sapronak.aggregate([
-                {$match: {periode: mongoose.Types.ObjectId(periode.id)}},
+                {$match: {periode: mongoose.Types.ObjectId(periode._id)}},
                 {$lookup:  {
                     "from": "produk",
                     "localField": "produk",
@@ -372,26 +372,26 @@ exports.findOneDataPool =  async (req, res, next) => {
                 }},
                 {$unwind: '$produk_info'},
                 {$group: {_id: '$produk_info.jenis', pakan_masuk: {$sum: '$kuantitas'}}}
-            ])
+            ]).cache()
 
             const penjualan = await Penjualan.aggregate([
-                {$match: {periode: mongoose.Types.ObjectId(periode.id)}},
+                {$match: {periode: mongoose.Types.ObjectId(periode._id)}},
                 {$group: {_id: '$_id', terjual: {$sum: '$qty'}}}
-            ])
+            ]).cache()
 
             const dataPakan = await KegiatanHarian.aggregate([
-                {$match: {periode: mongoose.Types.ObjectId(periode.id)}},
+                {$match: {periode: mongoose.Types.ObjectId(periode._id)}},
                 {$unwind: {'path': '$pakanPakai', "preserveNullAndEmptyArrays": true}},
                 {$group: {_id: '$_id', totalPakan: {$sum: '$pakanPakai.beratPakan'}}}
-            ])
+            ]).cache()
 
             const dataDeplesi = await KegiatanHarian.aggregate([
-                {$match: {periode: mongoose.Types.ObjectId(periode.id)}},
+                {$match: {periode: mongoose.Types.ObjectId(periode._id)}},
                 {$group: {_id: '$_id', totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
-            ])
+            ]).cache()
 
-            const getKegiatanHarian = await KegiatanHarian.find({periode: periode.id}).sort({'tanggal': -1}).limit(1).select('-periode')
-            const getKegiatan = await KegiatanHarian.find({periode: periode.id}).sort({'tanggal': -1})
+            const getKegiatanHarian = await KegiatanHarian.find({periode: periode._id}).sort({'tanggal': -1}).limit(1).select('-periode').cache()
+            const getKegiatan = await KegiatanHarian.find({periode: periode._id}).sort({'tanggal': -1}).cache()
                 const findBerat = getKegiatan.filter((x) => {
                     var berat = x.berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0)
                     return berat !== 0
@@ -453,7 +453,7 @@ exports.findOneDataPool =  async (req, res, next) => {
             const pendapatanPeternak = penjualanAyamBesar - pembelianDoc - pembelianOVK - pembelianPakan
 
             // get periode ke
-            const kandang = await Periode.find({kandang: periode.kandang._id}).sort('tanggalMulai')
+            const kandang = await Periode.find({kandang: periode.kandang._id}).sort('tanggalMulai').cache()
             let dataPeriode = [];
             await Promise.map(kandang, async (kandang, index) => {
                 if (kandang._id.toString() === periode._id.toString()) {
@@ -468,9 +468,9 @@ exports.findOneDataPool =  async (req, res, next) => {
 
             let feedIntakeACT = populasiAkhir === 0 ? 0 : latestFeed * 1000 / populasiAkhir
             // get Data STD
-            const STD = await DataSTD.findOne({day: usia})
-            const peternak = await PeternakModel.findById(periode.kandang.createdBy._id).select('fullname phoneNumber')
-            const findPPL = await PeternakModel.findById(periode?.ppl);
+            const STD = await DataSTD.findOne({day: usia}).cache()
+            const peternak = await PeternakModel.findById(periode.kandang.createdBy._id).select('fullname phoneNumber').cache()
+            const findPPL = await PeternakModel.findById(periode?.ppl).cache();
 
             /// iot flock 
             let flock = [];
@@ -528,7 +528,7 @@ exports.findOneDataPool =  async (req, res, next) => {
             }
 
             // get data harian
-            let kegiatanHarianResult = await KegiatanHarian.find({periode: periode.id}).select('-periode').sort({'tanggal': -1})
+            let kegiatanHarianResult = await KegiatanHarian.find({periode: periode._id}).select('-periode').sort({'tanggal': -1}).cache()
             await Promise.map(kegiatanHarianResult, async (kegiatanHarian, index) => {
                 //find usia ayam
                 const tanggal = new Date(kegiatanHarian.tanggal)
@@ -553,14 +553,14 @@ exports.findOneDataPool =  async (req, res, next) => {
                 const beratPakan = kegiatanHarian ? kegiatanHarian.pakanPakai.reduce((a, {beratPakan}) => a + beratPakan, 0) : 0
 
                 //sisa populasi
-                let sisaPopulasi = await KegiatanHarian.find({periode: periode.id, tanggal: {$lte: kegiatanHarian.tanggal}}).select('-periode')
+                let sisaPopulasi = await KegiatanHarian.find({periode: periode._id, tanggal: {$lte: kegiatanHarian.tanggal}}).select('-periode').cache()
                 let totalCulling = sisaPopulasi.reduce((a, {pemusnahan}) => a + pemusnahan, 0);
                 let totalMortalitas = sisaPopulasi.reduce((a, {deplesi}) => a + deplesi, 0);
                 // let ayamHidup = periode.populasi - (totalCulling + totalMortalitas);
                 // let ayamHidupPercentage = ayamHidup / periode.populasi * 100;
 
-                let ayamHidup = await formula.actualRemainingChicken(periode.id);
-                let ayamHidupPercentage = await formula.liveChickenPrecentage(periode.id);
+                let ayamHidup = await formula.actualRemainingChicken(periode._id);
+                let ayamHidupPercentage = await formula.liveChickenPrecentage(periode._id);
                 dataHarian.push({
                     usiaAyam: usiaAyam,
                     tanggal: kegiatanHarian.tanggal,
@@ -576,7 +576,7 @@ exports.findOneDataPool =  async (req, res, next) => {
             });
 
             // get sapronak
-            let sapronakResult = await Sapronak.find({periode: periode.id}).sort({'createdAt': -1})
+            let sapronakResult = await Sapronak.find({periode: periode._id}).sort({'createdAt': -1}).cache()
             await Promise.map(sapronakResult, async (sapronakResult, index) => {
                 //find usia ayam
                 const tanggal = new Date(sapronakResult.tanggal)
@@ -603,7 +603,7 @@ exports.findOneDataPool =  async (req, res, next) => {
             });
 
             // get nekropsi
-            let nekropsiResult = await Nekropsi.find({periode: periode.id}).sort({'tanggal': -1})
+            let nekropsiResult = await Nekropsi.find({periode: periode._id}).sort({'tanggal': -1}).cache()
             await Promise.map(nekropsiResult, async (nekropsiResult, index) => {
                 let penyakit = nekropsiResult.jenisPenyakit[0]
                 let namaPenyakit = ""
@@ -643,7 +643,7 @@ exports.findOneDataPool =  async (req, res, next) => {
             });
 
             // get penjualan
-            let penjualanResult = await Penjualan.find({periode: periode.id}).sort({'tanggal': -1})
+            let penjualanResult = await Penjualan.find({periode: periode._id}).sort({'tanggal': -1}).cache()
             await Promise.map(penjualanResult, async (penjualanResult, index) => {
                 dataPenjualan.push({
                     tanggal: penjualanResult.tanggal,
@@ -656,9 +656,9 @@ exports.findOneDataPool =  async (req, res, next) => {
                 });
             });
         } else {
-            let kandang = await Model.findOne({_id: req.params.id}).sort({ createdAt: -1 })
-            const peternak = await PeternakModel.findById(kandang.createdBy._id).select('fullname phoneNumber')
-            const findPPL = await PeternakModel.findById(periode?.ppl);
+            let kandang = await Model.findOne({_id: req.params.id}).sort({ createdAt: -1 }).cache()
+            const peternak = await PeternakModel.findById(kandang.createdBy._id).select('fullname phoneNumber').cache()
+            const findPPL = await PeternakModel.findById(periode?.ppl).cache();
             dataKandang = {
                 idPemilik: kandang.createdBy ? kandang.createdBy._id : null,
                 namaPemilik: peternak?.fullname,
@@ -715,7 +715,7 @@ exports.findOneDataPool =  async (req, res, next) => {
 
 exports.findOnePeriodeDataPool =  async (req, res, next) => {
     try {
-        const periode = await Periode.findOne({kandang: req.params.id, _id: req.params.periode}).sort({ createdAt: -1 })
+        const periode = await Periode.findOne({kandang: req.params.id, _id: req.params.periode}).sort({ createdAt: -1 }).cache()
         let dataKandang;
         let dataHarian = [];
         let dataSapronak = [];
@@ -724,7 +724,7 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
         if (periode && periode.kandang) {
             // get IP
             const sapronak = await Sapronak.aggregate([
-                {$match: {periode: mongoose.Types.ObjectId(periode.id)}},
+                {$match: {periode: mongoose.Types.ObjectId(periode._id)}},
                 {$lookup:  {
                     "from": "produk",
                     "localField": "produk",
@@ -733,30 +733,30 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
                 }},
                 {$unwind: '$produk_info'},
                 {$group: {_id: '$produk_info.jenis', pakan_masuk: {$sum: '$kuantitas'}}}
-            ])
+            ]).cache()
 
             const penjualan = await Penjualan.aggregate([
-                {$match: {periode: mongoose.Types.ObjectId(periode.id)}},
+                {$match: {periode: mongoose.Types.ObjectId(periode._id)}},
                 {$group: {_id: '$_id', terjual: {$sum: '$qty'}}}
-            ])
+            ]).cache()
 
             const dataPakan = await KegiatanHarian.aggregate([
-                {$match: {periode: mongoose.Types.ObjectId(periode.id)}},
+                {$match: {periode: mongoose.Types.ObjectId(periode._id)}},
                 {$unwind: {'path': '$pakanPakai', "preserveNullAndEmptyArrays": true}},
                 {$group: {_id: '$_id', totalPakan: {$sum: '$pakanPakai.beratPakan'}}}
-            ])
+            ]).cache()
 
             const dataDeplesi = await KegiatanHarian.aggregate([
-                {$match: {periode: mongoose.Types.ObjectId(periode.id)}},
+                {$match: {periode: mongoose.Types.ObjectId(periode._id)}},
                 {$group: {_id: '$_id', totalDeplesi: {$sum: '$deplesi'}, totalKematian: {$sum: '$pemusnahan'}}}
-            ])
+            ]).cache()
 
-            const getKegiatanHarian = await KegiatanHarian.find({periode: periode.id}).sort({'tanggal': -1}).limit(1).select('-periode')
+            const getKegiatanHarian = await KegiatanHarian.find({periode: periode._id}).sort({'tanggal': -1}).limit(1).select('-periode').cache()
             // const latestWeight = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0) : 0
             // const latestSampling = getKegiatan[0] ? getKegiatan[0].berat.reduce((a, {populasi}) => a + populasi, 0) : 0
             const latestFeed = getKegiatanHarian[0] ? getKegiatanHarian[0].pakanPakai.reduce((a, {beratPakan}) => a + beratPakan, 0) : 0
 
-            const getKegiatan = await KegiatanHarian.find({periode: periode.id}).sort({'tanggal': -1})
+            const getKegiatan = await KegiatanHarian.find({periode: periode._id}).sort({'tanggal': -1}).cache()
                 const findBerat = getKegiatan.filter((x) => {
                     var berat = x.berat.reduce((a, {beratTimbang}) => a + beratTimbang, 0)
                     return berat !== 0
@@ -796,7 +796,7 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
             let harian = []
             let pembelianPakan = 0
             let pembelianOVK = 0
-            const getSapronak = await Sapronak.find({periode: periode._id});
+            const getSapronak = await Sapronak.find({periode: periode._id}).cache();
             for (let i = 0; i < getSapronak.length; i++) {
                 if (getSapronak[i].produk && (getSapronak[i].produk.jenis === 'PAKAN')) {
                     const compliment = getSapronak[i].zak * getSapronak[i].hargaSatuan
@@ -807,7 +807,7 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
                 }
             }
             const pembelianDoc = periode.populasi * periode.hargaSatuan
-            const getPenjualan = await Penjualan.find({periode: periode._id})
+            const getPenjualan = await Penjualan.find({periode: periode._id}).cache()
             getPenjualan.forEach(x => {
                 harian.push(x.beratBadan * x.harga * x.qty)
             })
@@ -815,7 +815,7 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
             const pendapatanPeternak = penjualanAyamBesar - pembelianDoc - pembelianOVK - pembelianPakan
 
             // get periode ke
-            const kandang = await Periode.find({kandang: periode.kandang._id}).sort('tanggalMulai')
+            const kandang = await Periode.find({kandang: periode.kandang._id}).sort('tanggalMulai').cache()
             let dataPeriode = [];
             await Promise.map(kandang, async (kandang, index) => {
                 if (kandang._id.toString() === periode._id.toString()) {
@@ -831,9 +831,9 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
             let feedIntakeACT = populasiAkhir !== 0 ? latestFeed * 1000 / populasiAkhir : 0
 
             // get Data STD
-            const STD = await DataSTD.findOne({day: usia - 1})
-            const peternak = await PeternakModel.findById(periode.kandang.createdBy._id).select('fullname phoneNumber')
-            const findPPL = await PeternakModel.findById(periode?.ppl);
+            const STD = await DataSTD.findOne({day: usia - 1}).cache()
+            const peternak = await PeternakModel.findById(periode.kandang.createdBy._id).select('fullname phoneNumber').cache()
+            const findPPL = await PeternakModel.findById(periode?.ppl).cache();
 
             dataKandang = {
                 idPemilik: periode.kandang.createdBy ? periode.kandang.createdBy._id : null,
@@ -873,7 +873,7 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
             }
 
             // get data harian
-            let kegiatanHarianResult = await KegiatanHarian.find({periode: periode.id}).select('-periode').sort({'tanggal': -1})
+            let kegiatanHarianResult = await KegiatanHarian.find({periode: periode._id}).select('-periode').sort({'tanggal': -1}).cache()
             await Promise.map(kegiatanHarianResult, async (kegiatanHarian, index) => {
                 //find usia ayam
                 const tanggal = new Date(kegiatanHarian.tanggal)
@@ -907,7 +907,7 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
             });
 
             // get sapronak
-            let sapronakResult = await Sapronak.find({periode: periode.id}).sort({'createdAt': -1})
+            let sapronakResult = await Sapronak.find({periode: periode._id}).sort({'createdAt': -1}).cache()
             await Promise.map(sapronakResult, async (sapronakResult, index) => {
                 let totalHarga = 0;
                 let quantity = 0;
@@ -928,7 +928,7 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
             });
 
             // get nekropsi
-            let nekropsiResult = await Nekropsi.find({periode: periode.id}).sort({'tanggal': -1})
+            let nekropsiResult = await Nekropsi.find({periode: periode._id}).sort({'tanggal': -1}).cache()
             await Promise.map(nekropsiResult, async (nekropsiResult, index) => {
                 let penyakit = nekropsiResult.jenisPenyakit[0]
                 let namaPenyakit = ""
@@ -968,7 +968,7 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
             });
 
             // get penjualan
-            let penjualanResult = await Penjualan.find({periode: periode.id}).sort({'tanggal': -1})
+            let penjualanResult = await Penjualan.find({periode: periode._id}).sort({'tanggal': -1}).cache()
             await Promise.map(penjualanResult, async (penjualanResult, index) => {
                 dataPenjualan.push({
                     tanggal: penjualanResult.tanggal,
@@ -980,9 +980,9 @@ exports.findOnePeriodeDataPool =  async (req, res, next) => {
                 });
             });
         } else {
-            let kandang = await Model.findOne({_id: req.params.id}).sort({ createdAt: -1 })
-            const peternak = await PeternakModel.findById(periode.kandang.createdBy._id).select('fullname phoneNumber')
-            const findPPL = await PeternakModel.findById(periode?.ppl);
+            let kandang = await Model.findOne({_id: req.params.id}).sort({ createdAt: -1 }).cache()
+            const peternak = await PeternakModel.findById(periode.kandang.createdBy._id).select('fullname phoneNumber').cache()
+            const findPPL = await PeternakModel.findById(periode?.ppl).cache();
             dataKandang = {
                 idPemilik: kandang.createdBy ? kandang.createdBy._id : null,
                 namaPemilik: peternak?.fullname,
@@ -1449,6 +1449,7 @@ exports.insert = async (req, res, next) => {
         }
 
         const results = await Model.create({kode, alamat, tipe, isMandiri, kota, createdBy, populasi});
+        clearKey(Model.collection.collectionName);
         // console.log(results._id)
         // const body = {
         //     name: 'flock 1',
@@ -1485,6 +1486,7 @@ exports.updateById = async (req, res, next) => {
         }
 
         const results = await Model.findByIdAndUpdate(id, data, {new: true}).exec();
+        clearKey(Model.collection.collectionName);
         res.json({
             data: results,
             message: 'Ok'
@@ -2103,14 +2105,14 @@ const handleChickenSheds = async (
   const resultNonKemitraan = [];
 
   for (const chickenShed of chickenSheds) {
-    filterPeriod.kandang = chickenShed.id;
+    filterPeriod.kandang = chickenShed._id;
     if (isKemitraan) {
       filterPeriod.kemitraan = kemitraanId;
     }
-
+    
     const periode = await Periode.findOne(filterPeriod).sort({
       createdAt: -1,
-    });
+    }).cache();
 
     const user = await users.find(
       (userData) => userData._id.toString() === chickenShed.createdBy.toString()
@@ -2144,13 +2146,15 @@ const handleChickenSheds = async (
         return result.json();
       }
     });
-
+    
     if (periode && periode?.kandang) {
+
       const chickenShedPeriods = await Periode.find(filterPeriod).sort(
         "tanggalMulai"
-      );
-      const lastKegiatanHarian = await KegiatanHarian.find({periode: periode.id}).sort({'tanggal': -1}).limit(1).select('-periode')
-            
+      ).cache();
+      //use this command untuk membedakan find and findOne
+      const lastKegiatanHarian = await KegiatanHarian.find({periode: periode._id}).sort({'tanggal': -1}).limit(1).select('-periode').cache()
+    
       let dataPeriode = [];
       await Promise.map(chickenShedPeriods, async (chickenShedItem, index) => {
         if (chickenShedItem._id.toString() === periode._id.toString()) {

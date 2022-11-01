@@ -3,6 +3,7 @@ const {parseQuery} = require('../../helpers');
 const Model = require('./sapronak.model');
 const selectPublic = '-createdAt -updatedAt';
 const Produk = require('../produk/produk.model');
+const {clearKey} = require('../../../configs/redis.conf')
 
 const _find = async (req, isPublic = false) => {
     const {where, limit, offset, sort} = parseQuery(req.query);

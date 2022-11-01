@@ -5,7 +5,7 @@ const Penjualan = require('../penjualan/penjualan.model')
 const Periode = require('../periode/periode.model')
 const mongoose = require('mongoose');
 const selectPublic = '-createdAt -updatedAt';
-
+const {clearKey} = require('../../../configs/redis.conf')
 const _find = async (req, isPublic = false) => {
     const {where, limit, offset, sort} = parseQuery(req.query);
     const count = Model.countDocuments(where);
@@ -127,6 +127,7 @@ exports.insert = async (req, res, next) => {
         }
 
         const results = await Model.create(data)
+        clearKey(Model.collection.collectionName);
         res.json({
             data: results,
             message: 'Ok'
@@ -187,6 +188,7 @@ exports.updateById = async (req, res, next) => {
         }
        
         const results = await Model.findByIdAndUpdate(id, data, {new: true}).exec();
+        clearKey(Model.collection.collectionName);
         res.json({
             data: results,
             message: 'Ok'

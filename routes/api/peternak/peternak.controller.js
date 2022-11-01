@@ -10,6 +10,7 @@ const mongoose = require('mongoose');
 const fetch = require('node-fetch')
 const formula = require('../../helpers/formula');
 const reducer = (acc, value) => acc + value;
+
 var urlIOT = process.env.IOT_URL
 const handleQuerySort = (query) => {
     try{
