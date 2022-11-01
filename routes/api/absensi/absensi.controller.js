@@ -298,7 +298,11 @@ exports.findPPLNotAttend = async (req, res, next) => {
         let results = []
         const now  = new Date()
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-        const findPPL = await fetch(`${process.env.AUTH_URL}/api/users?where[isPPLActive]=true`, {
+        let where = `where[isPPLActive]=true`
+        if(req.user.role?.name == "adminkemitraan") {
+            where = `where[isPPLActive]=true&where[kemitraanUser]=${req.user.kemitraanUser._id}`
+        }
+        const findPPL = await fetch(`${process.env.AUTH_URL}/api/users?${where}`, {
             method: 'GET',
             headers: {'Authorization': token,  "Content-Type": "application/json"}
         }).then(res => res.json()).then(data => data.data)
@@ -387,15 +391,22 @@ exports.kandangNotVisit = async (req, res, next) => {
         findAttendToday.forEach(({idKandang}) => {
             idKandang?._id ? tmp.push(idKandang?._id) : true
         })
-        const findPeriode = await Periode.find({isEnd: false, kandang: {$nin: tmp}, isActivePPL: true}, {jenisDOC: 0, ppl: 1, kemitraan: 0}).select('kandang')
+        let where = {isEnd: false, kandang: {$nin: tmp}, isActivePPL: true}
+        if(req.user.role?.name == "adminkemitraan") {
+            where['kemitraan'] = req.user.kemitraanUser._id
+        }
+        const findPeriode = await Periode.find(where, {jenisDOC: 0, ppl: 1}).select('kandang')
+        console.log(findPeriode)
         const groupPeriode = arrGroup('ppl')
         var results = await Promise.all(Object.keys(groupPeriode(findPeriode)).map(async(x) => {
             const findPPL = mongoose.Types.ObjectId.isValid(x) ? await PPL.findById(x) : null
-            return {_idPPL: x, namaPPL: findPPL ? findPPL.fullname : null, image: findPPL ? findPPL?.image : null, kandang: groupPeriode(findPeriode)[x]};
+            let dataKandang = groupPeriode(findPeriode)[x]
+            return {_idPPL: x, namaPPL: findPPL ? findPPL.fullname : null, image: findPPL ? findPPL?.image : null, kandang: dataKandang, jumlahKandang: dataKandang.length};
         }))
+        let totalKandang = results.reduce((a, {jumlahKandang}) => a + jumlahKandang, 0);
         results = Number.isNaN(offset) ? results : results.skip(offset)
         results = Number.isNaN(limit) ? results : results.limit(limit)
-        res.status(200).json({count: results.length, data: results, message: "success", status: res.statusCode})
+        res.status(200).json({count: totalKandang, data: results, message: "success", status: res.statusCode})
     } catch (error) {
         res.status(500).json({error: res.statusCode, message: error.message})
         next(error)
