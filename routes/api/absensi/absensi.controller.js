@@ -357,7 +357,7 @@ exports.findKunjungan = async (req, res, next) => {
             offsetPaging = (offset / 10 + 1)
         }
         
-        newData = filterKunjugan(newData,req.user.kemitraanUser._id); // filter kemitraan
+        newData = filterKunjugan(newData,req.user.kemitraanUser?._id); // filter kemitraan
         newData = filterKunjugan(newData,search); // filter query search
         let count = newData.length
         newData = paginate(newData,parseInt(limit),parseInt(offsetPaging)) 
