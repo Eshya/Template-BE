@@ -290,7 +290,7 @@ function arrGroup (c) {
 exports.findPPLNotAttend = async (req, res, next) => {
     Array.prototype.limit = arrLimit
     Array.prototype.skip = arrSkip
-    const {limit, offset} = parseQuery(req.query);
+    const {limit, offset} = req.query;
     const token = req.headers['authorization']
     try {
         let tmpPPL = []
@@ -318,8 +318,8 @@ exports.findPPLNotAttend = async (req, res, next) => {
         filter.forEach(c => {
             results.push({_id: c._id, fullname: c.fullname, image: c.image})
         })
-        results = Number.isNaN(offset) ? results : results.skip(offset)
-        results = Number.isNaN(limit) ? results : results.limit(limit)
+        results = Number.isNaN(parseInt(offset)) ? results : results.skip(parseInt(offset))
+        results = Number.isNaN(parseInt(limit)) ? results : results.limit(parseInt(limit))
         res.status(200).json({data: results, message: "success", status: res.statusCode})
     } catch (error) {
         res.status(500).json({error: res.statusCode, message: error.message})
@@ -384,9 +384,11 @@ exports.findKunjungan = async (req, res, next) => {
 exports.kandangNotVisit = async (req, res, next) => {
     Array.prototype.limit = arrLimit
     Array.prototype.skip = arrSkip
-    const {limit, offset} = parseQuery(req.query);
+    const {limit, offset} = req.query;
+    const token = req.headers['authorization']
     try {
         const tmp = []
+        const lengthKandang = []
         const now  = new Date()
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
         const findAttendToday = await Model.find({tanggal: {$gte: today}}).select('tanggal createdBy -fotoRecording -fotoKandang')
@@ -398,16 +400,20 @@ exports.kandangNotVisit = async (req, res, next) => {
             where['kemitraan'] = req.user.kemitraanUser._id
         }
         const findPeriode = await Periode.find(where, {jenisDOC: 0, ppl: 1}).select('kandang')
-        console.log(findPeriode)
         const groupPeriode = arrGroup('ppl')
         var results = await Promise.all(Object.keys(groupPeriode(findPeriode)).map(async(x) => {
-            const findPPL = mongoose.Types.ObjectId.isValid(x) ? await PPL.findById(x) : null
+            const getPPL = await fetch(`${process.env.AUTH_URL}/api/users/${x}`, {
+                method: 'GET',
+                headers: {'Authorization': token,  "Content-Type": "application/json"}
+            }).then(res => res.json()).then(data => data.data)
+            const findPPL = mongoose.Types.ObjectId.isValid(x) ? await getPPL : null
             let dataKandang = groupPeriode(findPeriode)[x]
-            return {_idPPL: x, namaPPL: findPPL ? findPPL.fullname : null, image: findPPL ? findPPL?.image : null, kandang: dataKandang, jumlahKandang: dataKandang.length};
+            let jumlahKandang = dataKandang.length
+            return {_idPPL: x, namaPPL: findPPL?.fullname, image: findPPL?.image, kandang: dataKandang, jumlahKandang};
         }))
-        let totalKandang = results.reduce((a, {jumlahKandang}) => a + jumlahKandang, 0);
-        results = Number.isNaN(offset) ? results : results.skip(offset)
-        results = Number.isNaN(limit) ? results : results.limit(limit)
+        let totalKandang = results.reduce((a, {jumlahKandang}) => a + jumlahKandang, 0)
+        results = Number.isNaN(parseInt(offset)) ? results : results.skip(parseInt(offset))
+        results = Number.isNaN(parseInt(limit)) ? results : results.limit(parseInt(limit))
         res.status(200).json({count: totalKandang, data: results, message: "success", status: res.statusCode})
     } catch (error) {
         res.status(500).json({error: res.statusCode, message: error.message})
