@@ -10,6 +10,7 @@ const mongoose = require('mongoose');
 const fetch = require('node-fetch')
 const formula = require('../../helpers/formula');
 const reducer = (acc, value) => acc + value;
+const {clearKey} = require('../../../configs/redis.conf')
 
 var urlIOT = process.env.IOT_URL
 const handleQuerySort = (query) => {
@@ -54,9 +55,9 @@ exports.findAll =  async (req, res, next) => {
         let count;
         let result = [];
         if (role === "adminkemitraan") {
-            const data = await Model.find(filter).sort(sort)
+            const data = await Model.find(filter).sort(sort).cache()
             await Promise.map(data, async (dataItem) => {
-                const kandang = await Kandang.find({createdBy: dataItem._id, deleted: false})
+                const kandang = await Kandang.find({createdBy: dataItem._id, deleted: false}).cache()
                 await Promise.map(kandang, async (kandangItem, index) => {
                     // check status peternak
                     let status = false;
@@ -66,7 +67,7 @@ exports.findAll =  async (req, res, next) => {
                     let filterPeriod = {};
                     filterPeriod.kandang = kandangItem.id;
                     filterPeriod.kemitraan = kemitraanId
-                    const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 })
+                    const periode = await Periode.findOne(filterPeriod).sort({ createdAt: -1 }).cache()
                     if (periode && periode.kandang) {
                         result.push({
                             id: dataItem._id,
@@ -91,9 +92,9 @@ exports.findAll =  async (req, res, next) => {
             result = paginate(filteredResult, limit, (offset + 1))
         } else {
             count = await Model.countDocuments(filter)
-            const data = await Model.find(filter).limit(limit).skip(offset).sort(sort)
+            const data = await Model.find(filter).limit(limit).skip(offset).sort(sort).cache()
             await Promise.map(data, async (dataItem) => {
-                const kandang = await Kandang.find({createdBy: dataItem._id, deleted: false})
+                const kandang = await Kandang.find({createdBy: dataItem._id, deleted: false}).cache()
                 // check status peternak
                 let status = false;
                 if (kandang.some(e => e.isActive === true)) {
