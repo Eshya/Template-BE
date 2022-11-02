@@ -10,7 +10,8 @@ const files = fs.readdirSync(`${__dirname}/../routes/api`);
 const PATH_REDIS_SPACE = 3 ;
 let listNotIcludedModel = ['createdBy','jenisDOC','tipe','berat','ovkPakai','jenisOVK','image','pakanPakai','jenisPakan','idKandang','fotoKandang','fotoRecording',
                             'kepala','hidung','kotoran','mata','telapakKaki','kulit','otot','mulut','tenggorokan','bronkus','parum','kantungHawa','tembolok','proventikulus','ventrikulus',
-                            'usus','ginjal','jantung','hati','thymus','pancreas','kuningTelur','caecaTonsil','bursaFabricius','statusAyam','jenisPenyakit']
+                            'usus','ginjal','jantung','hati','thymus','pancreas','kuningTelur','caecaTonsil','bursaFabricius','statusAyam','jenisPenyakit',
+                            'role','kemitraanUser','kelola',]
 listNotIcludedModel.forEach(model =>{files.push(model)})
 console.log(files)
 
@@ -178,6 +179,10 @@ const keyExists = (obj) => {
     if (obj.hasOwnProperty('tanggalAkhir')) {
         obj['tanggalAkhir']= obj['tanggalAkhir'] !== null ? new Date(obj['tanggalAkhir']) : null
     }
+    if (obj.hasOwnProperty('resetPasswordExpires')) {
+        obj['tanggalAkhir']= obj['tanggalAkhir'] !== null ? new Date(obj['tanggalAkhir']) : null
+    }
+    
     
     /// recursive nested data 
     files.forEach((endpoint)=> {
