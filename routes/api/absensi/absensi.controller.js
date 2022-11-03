@@ -39,6 +39,8 @@ function filterKunjugan(array,search){
         let regex = new RegExp(search, 'i')
         if(regex.test(JSON.stringify(arr.namaKandang)))return true;
         else if(regex.test(JSON.stringify(arr.createdBy.fullname)))return true;
+        else if(regex.test(JSON.stringify(arr.createdBy.kemitraanUser)))return true;
+        else if(regex.test(JSON.stringify(arr.createdBy.kemitraanUser)))return true;
         else return false;
     })
 }
@@ -197,6 +199,7 @@ exports.findKunjunganHistory = async (req,res,next) =>{
     try {
         let {limit, offset,startDate,endDate,idPPL} = req.query;
         let queryMoongose = new Object()
+        const token = req.headers['authorization']
         let newData = []
         if(isNaN(limit))limit=10;
         if(isNaN(offset))offset=0;
@@ -206,25 +209,35 @@ exports.findKunjunganHistory = async (req,res,next) =>{
             $lt: new Date(endDate).addHours(GMT_TIME).tonight()
         }
         let findAbsensi = await Model.find(queryMoongose).sort({ tanggal: -1 }).cache();
-        let groupByDate = findAbsensi.reduce((group,value)=>{
+        let findAbsensiObject = JSON.parse(JSON.stringify(findAbsensi))
+        var results = await Promise.all(findAbsensiObject.map(async(x) => {
+            let getImage = await fetch(`${process.env.AUTH_URL}/api/user-image/${x.createdBy.image}`, {
+                method: 'GET',
+                headers: {'Authorization': token,  "Content-Type": "application/json"}
+            }).then(res => res.json()).then(data => data.data)
+            x.createdBy.image = getImage;
+            return x;
+        }))
+        let groupByDate = results.reduce((group,value)=>{
             let strTanggal = moment(value.tanggal).add(GMT_TIME,'hours').format('YYYY-MM-DD')
             group[strTanggal] = group[strTanggal] ?? []
             group[strTanggal].push(value)
             return group;
         },{})
+        
         Object.keys(groupByDate).forEach(key => {
             let newGroupByDate = new Object()
             newGroupByDate.tanggal =  key;
             newGroupByDate.detail = groupByDate[key]
             newData.push(newGroupByDate)
         });
+        
         let offsetPaging;
         if (offset == 0) {
             offsetPaging = 1
         } else {
             offsetPaging = (offset / 10 + 1)
         }
-        console.log(newData.length)
         newData = paginate(newData,parseInt(limit),parseInt(offsetPaging)) 
         res.status(200).json({
             data:newData,
@@ -249,7 +262,7 @@ exports.findListPPL = async (req,res,next) =>{
         filter.role = "61d5608d4a7ba5b05c9c7ae3";
         filter.deleted = false;
         filter.isPPLActive = true
-        const listPPL = await PPL.find(filter).limit(limit).skip(offset).sort({ fullname: 1 }).select('_id fullname')
+        const listPPL = await PPL.find(filter).limit(limit).skip(offset).collation({locale: "en"}).sort({ fullname: 1 }).select('_id fullname')
         let newData = []
         listPPL.forEach(element=>{
             newData.push({_id:element._id,namaPPL:element.fullname})
@@ -289,7 +302,7 @@ function arrGroup (c) {
 exports.findPPLNotAttend = async (req, res, next) => {
     Array.prototype.limit = arrLimit
     Array.prototype.skip = arrSkip
-    const {limit, offset} = parseQuery(req.query);
+    let {limit, offset} = req.query;
     const token = req.headers['authorization']
     try {
         let tmpPPL = []
@@ -297,7 +310,11 @@ exports.findPPLNotAttend = async (req, res, next) => {
         let results = []
         const now  = new Date()
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-        const findPPL = await fetch(`${process.env.AUTH_URL}/api/users?where[isPPLActive]=true`, {
+        let where = `where[isPPLActive]=true`
+        if(req.user.role?.name == "adminkemitraan") {
+            where = `where[isPPLActive]=true&where[kemitraanUser]=${req.user.kemitraanUser._id}`
+        }
+        const findPPL = await fetch(`${process.env.AUTH_URL}/api/users?${where}`, {
             method: 'GET',
             headers: {'Authorization': token,  "Content-Type": "application/json"}
         }).then(res => res.json()).then(data => data.data)
@@ -313,9 +330,7 @@ exports.findPPLNotAttend = async (req, res, next) => {
         filter.forEach(c => {
             results.push({_id: c._id, fullname: c.fullname, image: c.image})
         })
-        results = Number.isNaN(offset) ? results : results.skip(offset)
-        results = Number.isNaN(limit) ? results : results.limit(limit)
-        res.status(200).json({data: results, message: "success", status: res.statusCode})
+        res.status(200).json({count: results.length, data: results, message: "success", status: res.statusCode})
     } catch (error) {
         res.status(500).json({error: res.statusCode, message: error.message})
         next(error)
@@ -333,15 +348,17 @@ exports.findKunjungan = async (req, res, next) => {
             $gte:new Date(tanggal).addHours(GMT_TIME).today(),
             $lt:new Date(tanggal).addHours(GMT_TIME).tonight()
         }
-        let findAbsensi = await Model.find(queryMoongose).sort({ tanggal: -1 }).cache();
+        let findAbsensi = await Model.find(queryMoongose).sort({ tanggal: -1 }).cache()
         let GroupByCreator = findAbsensi.reduce((group,value)=>{
             group[value.createdBy._id] = group[value.createdBy._id] ?? []
             group[value.createdBy._id].push(value)
             return group;
         },{})
-        Object.keys(GroupByCreator).forEach(key=>{
-            GroupByCreator[key].forEach((element,index)=>{
-                element.kunjunganKe = GroupByCreator[key].length - index;
+        let GroupByCreator2 = JSON.parse(JSON.stringify(GroupByCreator))
+        Object.keys(GroupByCreator2).forEach(key=>{
+            GroupByCreator2[key].forEach((element,index)=>{
+                element.kunjunganKe = index + 1;
+                console.log(element)
                 newData.push(element)
             })
         })
@@ -352,12 +369,14 @@ exports.findKunjungan = async (req, res, next) => {
             offsetPaging = (offset / 10 + 1)
         }
         
-        newData = filterKunjugan(newData,search)
+        newData = filterKunjugan(newData,req.user.kemitraanUser?._id); // filter kemitraan
+        newData = filterKunjugan(newData,search); // filter query search
         let count = newData.length
         newData = paginate(newData,parseInt(limit),parseInt(offsetPaging)) 
         // findAbsensi.forEach(element =>{
 
         // })
+        console.log(newData)
         return res.send({
                 count: count,
                 data: newData,
@@ -376,8 +395,11 @@ exports.findKunjungan = async (req, res, next) => {
 exports.kandangNotVisit = async (req, res, next) => {
     Array.prototype.limit = arrLimit
     Array.prototype.skip = arrSkip
-    const {limit, offset} = parseQuery(req.query);
+    let {limit, offset} = req.query;
+    const token = req.headers['authorization']
     try {
+        if(isNaN(limit))limit=10;
+        if(isNaN(offset))offset=0;
         const tmp = []
         const now  = new Date()
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
@@ -385,15 +407,30 @@ exports.kandangNotVisit = async (req, res, next) => {
         findAttendToday.forEach(({idKandang}) => {
             idKandang?._id ? tmp.push(idKandang?._id) : true
         })
-        const findPeriode = await Periode.find({isEnd: false, kandang: {$nin: tmp}, isActivePPL: true}, {jenisDOC: 0, ppl: 1, kemitraan: 0}).select('kandang')
+        let where = {isEnd: false, kandang: {$nin: tmp}, isActivePPL: true}
+        if(req.user.role?.name == "adminkemitraan") {
+            where['kemitraan'] = req.user.kemitraanUser._id
+        }
+        const findPeriode = await Periode.find(where, {jenisDOC: 0, ppl: 1}).select('kandang')
         const groupPeriode = arrGroup('ppl')
         var results = await Promise.all(Object.keys(groupPeriode(findPeriode)).map(async(x) => {
-            const findPPL = mongoose.Types.ObjectId.isValid(x) ? await PPL.findById(x) : null
-            return {_idPPL: x, namaPPL: findPPL ? findPPL.fullname : null, image: findPPL ? findPPL?.image : null, kandang: groupPeriode(findPeriode)[x]};
+            const getPPL = await fetch(`${process.env.AUTH_URL}/api/users/${x}`, {
+                method: 'GET',
+                headers: {'Authorization': token,  "Content-Type": "application/json"}
+            }).then(res => res.json()).then(data => data.data)
+            const findPPL = mongoose.Types.ObjectId.isValid(x) ? await getPPL : null
+            let dataKandang = groupPeriode(findPeriode)[x]
+            let jumlahKandang = dataKandang.length
+            return {_idPPL: x, namaPPL: findPPL?.fullname, image: findPPL?.image, kandang: dataKandang, jumlahKandang};
         }))
-        results = Number.isNaN(offset) ? results : results.skip(offset)
-        results = Number.isNaN(limit) ? results : results.limit(limit)
-        res.status(200).json({count: results.length, data: results, message: "success", status: res.statusCode})
+        if (offset == 0) {
+            offset = 1
+        } else {
+            offset = (offset / 10 + 1)
+        }
+        let totalKandang = results.reduce((a, {jumlahKandang}) => a + jumlahKandang, 0)
+        results = paginate(results, parseInt(limit), parseInt(offset))
+        res.status(200).json({count: totalKandang, data: results, message: "success", status: res.statusCode})
     } catch (error) {
         res.status(500).json({error: res.statusCode, message: error.message})
         next(error)
