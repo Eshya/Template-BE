@@ -180,7 +180,7 @@ const keyExists = (obj) => {
         obj['tanggalAkhir']= obj['tanggalAkhir'] !== null ? new Date(obj['tanggalAkhir']) : null
     }
     if (obj.hasOwnProperty('resetPasswordExpires')) {
-        obj['tanggalAkhir']= obj['tanggalAkhir'] !== null ? new Date(obj['tanggalAkhir']) : null
+        obj['resetPasswordExpires']= obj['resetPasswordExpires'] !== null ? new Date(obj['resetPasswordExpires']) : null
     }
     
     
