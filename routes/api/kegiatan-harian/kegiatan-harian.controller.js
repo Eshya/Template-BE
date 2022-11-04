@@ -216,6 +216,7 @@ exports.remove = async (req, res, next) => {
     const {where} = parseQuery(req.query);
     try {
         const results = await Model.deleteMany(where).exec();
+        clearKey(Model.collection.collectionName);
         res.json({
             data: results,
             message: 'Ok'
@@ -242,6 +243,7 @@ exports.removeById = async (req, res, next) => {
         }))
 
         const results = await Model.findByIdAndRemove(id)
+        clearKey(Model.collection.collectionName);
         res.json({
             data: results,
             message: 'Ok'

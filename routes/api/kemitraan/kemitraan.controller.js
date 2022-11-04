@@ -253,6 +253,7 @@ exports.updateById = async (req, res, next) => {
 exports.removeById = async (req, res, next) => {
     try {
         const result = await Model.findByIdAndRemove(req.params.id).exec()
+        clearKey(Model.collection.collectionName);
         res.json({
             data: result,
             message: 'Ok'
@@ -266,6 +267,7 @@ exports.removeKemitraanById = async (req, res, next) => {
     let id = req.params.id;
     try {
         const result = await Model.findByIdAndUpdate(id, {deleted: true}, {new: true}).exec();
+        clearKey(Model.collection.collectionName);
         if (!result) {
             res.json({error: 404, message: 'Partnership not found.'})
         }

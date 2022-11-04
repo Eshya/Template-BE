@@ -71,7 +71,7 @@ exports.insert = async (req, res, next) => {
         // console.log(data)
         const insertSapronak = await Model.create(data)
         const updateStock = await Model.updateMany({periode: data.periode, _id: {$ne: insertSapronak._id}, produk: data.produk}, {$inc: findProduk.jenis === "OVK" ? {stockOVK: data.kuantitas} : {stock: data.kuantitas}});
-
+        clearKey(Model.collection.collectionName);
         res.json({
             data: insertSapronak,
             updated: updateStock,
@@ -95,6 +95,7 @@ exports.updateById = async (req, res, next) => {
             await Model.updateMany({periode: findSapronak.periode._id, produk: findSapronak.produk._id, _id: {$ne: req.params._id}}, {$inc: findProduk.jenis === "OVK" ? {stockOVK: diff} : {stock: diff}})
         }
         const results = await Model.findByIdAndUpdate(id, data, {new: true}).exec();
+        clearKey(Model.collection.collectionName);
         res.json({
             data: results,
             message: 'Ok'
@@ -122,6 +123,7 @@ exports.remove = async (req, res, next) => {
     const {where} = parseQuery(req.query);
     try {
         const results = await Model.deleteMany(where).exec();
+        clearKey(Model.collection.collectionName);
         res.json({
             data: results,
             message: 'Ok'
@@ -137,6 +139,7 @@ exports.removeById = async (req, res, next) => {
         const findProduk = await Produk.findById(findById.produk._id)
         const updateSapronak = await Model.updateMany({periode: findById.periode, _id: {$ne: req.params._id}, produk: findById.produk._id}, {$inc: findProduk.jenis === "OVK" ? {stockOVK: -findById.kuantitas} : {stock: -findById.kuantitas}})
         const deleteSapronak = await Model.findByIdAndRemove(req.params.id).exec();
+        clearKey(Model.collection.collectionName);
         res.json({
             updated: updateSapronak,
             data: deleteSapronak,

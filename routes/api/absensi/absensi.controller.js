@@ -144,6 +144,7 @@ exports.insert = async (req, res, next) => {
 exports.removeById = async (req, res, next) => {
     try {
         const results = await Model.findByIdAndRemove(req.params.id).exec();
+        clearKey(Model.collection.collectionName);
         res.json({
             data: results,
             message: 'Success'

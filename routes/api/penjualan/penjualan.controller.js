@@ -74,7 +74,7 @@ exports.insert = async (req, res, next) => {
         if(populasiAkhir < data.qty) return res.json({error: 1007, data: { populasiAktual: populasiAkhir }, message: 'kuantiti melebihi populasi akhir!'})
 
         const results = await Model.create(data);
-        
+        clearKey(Model.collection.collectionName);
         res.json({
             data: {populasiAktual: populasiAkhir, results},
             message: 'Ok'
@@ -120,6 +120,7 @@ exports.updateById = async (req, res, next) => {
             }
 
             const results = await Model.findByIdAndUpdate(id, data, {new: true}).exec();
+            clearKey(Model.collection.collectionName);
             res.json({
                 data: {populasiAktual: populasiAkhir, results},
                 message: 'Ok'
@@ -148,6 +149,7 @@ exports.remove = async (req, res, next) => {
     const {where} = parseQuery(req.query);
     try {
         const results = await Model.deleteMany(where).exec();
+        clearKey(Model.collection.collectionName);
         res.json({
             data: results,
             message: 'OK'
@@ -160,6 +162,7 @@ exports.remove = async (req, res, next) => {
 exports.removeById = async (req, res, next) => {
     try {
         const results = await Model.findByIdAndRemove(req.params.id).exec();
+        clearKey(Model.collection.collectionName);
         res.json({
             data: results,
             message: 'Ok'

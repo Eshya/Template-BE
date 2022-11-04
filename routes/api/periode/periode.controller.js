@@ -253,6 +253,7 @@ exports.remove = async (req, res, next) => {
     try {
         const where = parseWhere(req.query.where, req.query.i)
         const data = await Model.deleteMany(where)
+        clearKey(Model.collection.collectionName);
         res.json({data})
     } catch (error) {
         next(error)
@@ -262,6 +263,7 @@ exports.remove = async (req, res, next) => {
 exports.removeById = async (req, res, next) => {
     try {
         const data = await Model.findByIdAndRemove(req.params.id)
+        clearKey(Model.collection.collectionName);
         res.json({data})
     } catch (error) {
         next(error)
