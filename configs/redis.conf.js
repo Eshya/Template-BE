@@ -20,7 +20,7 @@ const redisPATH = process.env.REDIS_PATH
 const client = redis.createClient({
     host: process.env.REDIS_HOST,
     port: process.env.REDIS_PORT,
-    // password: process.env.REDIS_PASSWORD,
+    password: process.env.REDIS_PASSWORD,
     legacyMode: true,
     retry_strategy: () => 1000
 })
