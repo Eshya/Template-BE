@@ -17,15 +17,21 @@ console.log(files)
 
 const redisPATH = process.env.REDIS_PATH
 
-const client = redis.createClient({
-    host: process.env.REDIS_HOST,
-    port: process.env.REDIS_PORT,
-    password: process.env.REDIS_PASSWORD,
-    legacyMode: true,
-    retry_strategy: () => 1000
-})
-client.select(redisPATH, function() { console.log(`select redis db ${redisPATH}`); })
-const getAsync = util.promisify(client.hget).bind(client);
+var client ;
+var getAsync
+if (process.env.REDISMODE == 1){
+    client = redis.createClient({
+        host: process.env.REDIS_HOST,
+        port: process.env.REDIS_PORT,
+        password: process.env.REDIS_PASSWORD,
+        legacyMode: true,
+        retry_strategy: () => 1000
+    })
+    client.select(redisPATH, function() { console.log(`select redis db ${redisPATH}`); })
+    getAsync = util.promisify(client.hget).bind(client);
+}
+
+ 
 
 // client.on("error", function(error) {
 //     console.error(error);
@@ -75,10 +81,9 @@ mongoose.Aggregate.prototype.cache = function(options = { time: process.env.REDI
 
 mongoose.Query.prototype.exec = async function() {
     
-    if (!this.useCache) {
+    if (!this.useCache || process.env.REDISMODE != 1) {
     return await exec.apply(this, arguments);
     }
-    
     if(this.cmd==0)client.select(redisPATH)
     else if(this.cmd==1)client.select(parseInt(redisPATH) + PATH_REDIS_SPACE)
     else if(this.cmd==2)client.select((parseInt(redisPATH) + (PATH_REDIS_SPACE*2)))
@@ -115,7 +120,7 @@ mongoose.Query.prototype.exec = async function() {
     return result;
 };
 mongoose.Aggregate.prototype.exec = async function() {
-    if (!this.useCache) {
+    if (!this.useCache || process.env.REDISMODE != 1) {
         return await execAgr.apply(this, arguments);
     }
     client.select((parseInt(redisPATH) + (PATH_REDIS_SPACE*3)))
